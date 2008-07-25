@@ -9,7 +9,7 @@ configlocations = [
 
 configdefaults = {
         "title":"Tracker.py",
-        "version":"v3.0.1",
+        "version":"v0.20a",
         "screensaver":"on",
     }
 
@@ -162,7 +162,7 @@ class S60DataStorage(DataStorage):
             keys.sort()
             for key in keys:
                 list.append(dict[key])
-                
+
         return list
 
 
