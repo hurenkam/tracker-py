@@ -497,7 +497,7 @@ class ClockGauge(Gauge):
 
 class WXAppFrame(wx.Frame):
     def __init__(self):
-        wx.Frame.__init__(self,None,wx.ID_ANY, "Tracker v0.15a", size = (488,706))
+        wx.Frame.__init__(self,None,wx.ID_ANY, "Tracker v0.20a", size = (488,706))
 
         # A Statusbar in the bottom of the window
         self.CreateStatusBar()
