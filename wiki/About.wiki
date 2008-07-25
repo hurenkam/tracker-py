@@ -11,4 +11,13 @@ be found
 
 = Details =
 
-To be defined...
+Tracker.py is an application to aid hikers in determining their position on a digitized map using a mobile platform (currently Symbian S60).
+
+Current code is for pys60, the python interpreter for symbian S60 platform, port to posix/wxpython is ongoing, so that development can take place on osx or linux.
+
+== Features ==
+  * Show current position on digitized map
+  * Import map from any .jpg and calibrate on your device
+  * Add/show waypoints
+  * Record/show tracks
+  * Set proximity alarm for waypoint, and show heading/distance
