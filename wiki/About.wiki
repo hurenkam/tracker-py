@@ -1,4 +1,4 @@
-#summary About tracker.py.
+#summary Tracker.py GPS Trekking application for S60.
 
 = Introduction =
 
