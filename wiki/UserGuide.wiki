@@ -49,7 +49,7 @@ on the map.
 With 1 and 3 buttons you can switch between small and big scroll steps.
 By pressing the 5 button, you return to 'follow gps' mode, and the blue and black cursor
 overlap (you only see the black cursor), and the map is repositioned with each gps update.
-The * and # keys provide zoom in/out functions (as of v0.9).
+The '*' and '#' keys provide zoom in/out functions (as of v0.9).
 With v0.12, an infoview is introduced showing a mini compas, clock and a bar with location
 info. Switching this view on/off is done by pressing '0' key.
 With v0.12, I also introduced the possibility to switch waypoints and tracks view on/off
