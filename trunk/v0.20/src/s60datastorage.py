@@ -11,6 +11,9 @@ configdefaults = {
         "title":"Tracker.py",
         "version":"v0.20a",
         "screensaver":"on",
+        "mapdir":"e:\\data\\tracker\\maps",
+        "trackdir":"e:\\data\\tracker\\tracks",
+        "waypointfile":"e:\\data\\tracker\\waypoints",
     }
 
 class S60Waypoint(Waypoint):
@@ -25,9 +28,11 @@ class S60Waypoint(Waypoint):
 
 class S60DataStorage(DataStorage):
     def __init__(self):
+        DataStorage.__init__(self)
         DataStorage.instance = self
         self.lmdb = landmarks.OpenDefaultDatabase()
         self.__open_configdb__()
+        self.ScanMaps(self.configdb[u"mapdir"])
 
     def __open_configdb__(self):
         found = False
