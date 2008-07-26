@@ -1,5 +1,3 @@
-= About =
-
 I started to work on Tracker.py, because I enjoy hiking, and like to use my N95 to see my location on a digitized map.
 Although I usually leave well prepared for a trip (with respect to necessities), I generally go where the weather takes me, and so often find myself in a small village where finding even a paper map can be a tough job, let alone finding a decent digital map. Since I like to travel light, I usually don't bring a laptop or scanner, and so I very much wish to use my N95 camera to scan the map, and use that map to track my wereabouts while hiking.
 
