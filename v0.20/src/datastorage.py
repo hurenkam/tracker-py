@@ -34,27 +34,81 @@ class DataStorage:
     instance = None
 
     def __init__(self):
-        self.maplist = None
-        self.tracklist = None
-        self.waypointlist = None
+        self.maps = []
+        self.tracks = []
+        self.waypoints = []
         self.config = None
 
+    def __del__(self):
+        self.CloseAll()
 
     def GetInstance():
         return DataStorage.instance
 
 
+    def CloseAll(self):
+        if self.config is not None:
+            self.config.close()
+            self.config = None
+
+
+    def AddConfigDefaults(self,configdefaults):
+        for key in configdefaults.keys():
+            if key not in self.config.keys():
+                print "Adding item %s:" % key, configdefaults[key]
+                self.config[key] = configdefaults[key]
+            else:
+                print "Found item %s: " % key,self.config[key]
+        self.SyncConfigData()
+
+
+    def OpenDbm(self,file,mode):
+        pass
+
+    def OpenConfig(self,locations,defaults):
+        found = False
+        count = 0
+        while count < len(locations) and not found:
+            try:
+                self.OpenDbm(locations[count],"w")
+                print "Configfile %s found!" % locations[count]
+                found = True
+            except:
+                print "Configfile %s not found..." % locations[count]
+                count+=1
+
+        count = 0
+        while count < len(locations) and not found:
+            try:
+                self.OpenDbm(locations[count],"n")
+                print "Configfile %s created!" % locations[count]
+                found = True
+            except:
+                print "Configfile %s unable to create..." % locations[count]
+                count+=1
+
+        if not found:
+            raise "Unable to open config file"
+
+        self.AddConfigDefaults(defaults)
+
 
     def GetConfigItem(self,key):
-        pass
+        value = self.config[key]
+        print "got item %s: %s" % (key, value)
+        return value
 
     def SaveConfigItem(self,key,value):
-        pass
+        print "set item %s: %s" % (key, value)
+        self.config[u"%s" % key] = u"%s" % value
 
     def SyncConfigData(self):
         pass
 
 
+
+    def InitWaypointList(self,dir='.'):
+        pass
 
     def CreateWaypoint(self,name='',lat=0,lon=0,alt=0):
         pass
@@ -68,6 +122,10 @@ class DataStorage:
     def GetWaypoints(self):
         pass
 
+
+
+    def InitTrackList(self,dir='.'):
+        pass
 
     def CreateTrack(self,name=''):
         pass
@@ -86,7 +144,7 @@ class DataStorage:
     def LoadMapConfig(self,file):
         print "Loading map config: %s" % file
 
-    def ScanMaps(self,dir='.'):
+    def InitMapList(self,dir='.'):
         print "Scanning maps in directory %s..." % dir
         selector = FileSelector(dir,".xml")
         for file in selector.files.values():

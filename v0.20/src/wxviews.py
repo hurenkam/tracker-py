@@ -1,4 +1,6 @@
 from views import *
+from datastorage import *
+from dataprovider import *
 import wx
 import math
 import time
@@ -767,6 +769,7 @@ class WXApplication(Application,AlarmResponder):
     def __init__(self):
         Application.__init__(self)
         self.provider = DataProvider.GetInstance()
+        self.storage = DataStorage.GetInstance()
         self.app = wx.PySimpleApp()
         self.frame = WXAppFrame()
         self.view = WXDashView(self.frame)
@@ -812,6 +815,7 @@ class WXApplication(Application,AlarmResponder):
 
     def Exit(self):
         self.provider.StopGPS()
+        self.storage.CloseAll()
         Application.Exit(self)
 
 WXApplication()

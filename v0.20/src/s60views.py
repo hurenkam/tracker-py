@@ -8,7 +8,6 @@ import time
 import math
 from osal import *
 from datastorage import *
-#from s60datastorage import *
 
 def SetSystemApp(value):
     try:

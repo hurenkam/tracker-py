@@ -11,12 +11,14 @@ def Main():
 
 if __name__ == '__main__':
   if os.name == 'e32':
+    import s60datastorage
     import s60dataprovider
     import s60osal
     import s60views
     Main()
 
   elif os.name == 'posix':
+    import posixdatastorage
     import simdataprovider
     import posixosal
     import wxviews
