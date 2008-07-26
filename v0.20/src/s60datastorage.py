@@ -40,9 +40,8 @@ class S60DataStorage(DataStorage):
         self.InitMapList(self.config[u"mapdir"])
         self.InitTrackList(self.config[u"trackdir"])
 
-    def OpenDbm(self,file,mode):
+    def OpenDbmFile(self,file,mode):
         self.config = e32dbm.open(file,"%sf" % mode)
-
 
     def GetDefaultCategoryId(self):
         if self.lmdb is not None:
@@ -121,9 +120,9 @@ class S60DataStorage(DataStorage):
 
         return list
 
-#try:
-import landmarks
-S60DataStorage(True)
-#except:
-#    print "unable to use landmarks module"
-#    S60DataStorage(False)
+try:
+    import landmarks
+    S60DataStorage(True)
+except:
+    print "unable to use landmarks module"
+    S60DataStorage(False)

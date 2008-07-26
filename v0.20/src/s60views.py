@@ -835,13 +835,6 @@ class S60Application(Application, AlarmResponder):
         self.provider.StartGPS()
         self.view.Show()
 
-        if self.storage.GetConfigItem("screensaver")=="on":
-            print "Enabled screensaver"
-            self.screensaver = True
-        else:
-            print "Disabled screensaver"
-            self.screensaver = False
-
 
     def AlarmTriggered(self,alarm):
 
@@ -873,19 +866,23 @@ class S60Application(Application, AlarmResponder):
 
         self.view.Show()
 
+    def IsScreensaverActive(self):
+        if self.storage.config["screensaver"]=="on":
+            return True
+        return False
+
     def Run(self):
         osal = Osal.GetInstance()
         while self.running:
-            if not self.screensaver:
+            if not self.IsScreensaverActive():
                 e32.reset_inactivity()
             osal.Sleep(0.2)
 
     def Exit(self):
-        if self.screensaver:
-            self.storage.SaveConfigItem("screensaver","on")
+        if self.IsScreensaverActive():
+            self.storage.config["screensaver"]="off"
         else:
-            self.storage.SaveConfigItem("screensaver","off")
-        self.storage.SyncConfigData()
+            self.storage.config["screensaver"]="on"
 
         self.running = False
         appuifw.note(u"Exiting...", "info")

@@ -10,8 +10,8 @@ configdefaults = {
         "version":"v0.20a",
         "screensaver":"on",
         "mapdir":"~/.tracker/maps",
-        "trackdir":"~/.tracker/tracker/tracks",
-        "waypointfile":"~/.tracker/tracker/waypoints",
+        "trackdir":"~/.tracker/tracks",
+        "waypointfile":"~/.tracker/waypoints",
     }
 
 class PosixWaypoint(Waypoint):
@@ -24,11 +24,11 @@ class PosixDataStorage(DataStorage):
         DataStorage.__init__(self)
         DataStorage.instance = self
         self.OpenConfig(configlocations,configdefaults)
-        self.InitWaypointList(self.config[u"waypointfile"])
-        self.InitMapList(self.config[u"mapdir"])
-        self.InitTrackList(self.config[u"trackdir"])
+        self.InitWaypointList(os.path.expanduser(self.config[u"waypointfile"]))
+        self.InitMapList(os.path.expanduser(self.config[u"mapdir"]))
+        self.InitTrackList(os.path.expanduser(self.config[u"trackdir"]))
 
-    def OpenDbm(self,file,mode):
+    def OpenDbmFile(self,file,mode):
         file = os.path.expanduser(file)
         self.config = dbm.open(file,mode)
 
