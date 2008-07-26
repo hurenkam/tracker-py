@@ -784,7 +784,7 @@ class S60Application(Application, AlarmResponder):
         self.position = Point()
         self.osal = Osal.GetInstance()
         appuifw.app.screen='full'
-        appuifw.app.title = u"Tracker v0.15a"
+        appuifw.app.title = u"Tracker v0.20a"
         canvas = appuifw.Canvas(
             event_callback=self.KeyboardEvent,
             redraw_callback=self.Redraw,
