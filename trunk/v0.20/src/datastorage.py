@@ -35,7 +35,9 @@ class DataStorage:
 
     def __init__(self):
         self.maps = []
+        self.maplist = []
         self.tracks = []
+        self.tracklist = []
         self.waypoints = []
         self.config = None
 
@@ -46,10 +48,15 @@ class DataStorage:
         return DataStorage.instance
 
 
+
+    def OpenDbmFile(self,file,mode):
+        pass
+
     def CloseAll(self):
         if self.config is not None:
             self.config.close()
             self.config = None
+
 
 
     def AddConfigDefaults(self,configdefaults):
@@ -61,16 +68,12 @@ class DataStorage:
                 print "Found item %s: " % key,self.config[key]
         self.SyncConfigData()
 
-
-    def OpenDbm(self,file,mode):
-        pass
-
     def OpenConfig(self,locations,defaults):
         found = False
         count = 0
         while count < len(locations) and not found:
             try:
-                self.OpenDbm(locations[count],"w")
+                self.OpenDbmFile(locations[count],"w")
                 print "Configfile %s found!" % locations[count]
                 found = True
             except:
@@ -80,7 +83,7 @@ class DataStorage:
         count = 0
         while count < len(locations) and not found:
             try:
-                self.OpenDbm(locations[count],"n")
+                self.OpenDbmFile(locations[count],"n")
                 print "Configfile %s created!" % locations[count]
                 found = True
             except:
@@ -91,16 +94,6 @@ class DataStorage:
             raise "Unable to open config file"
 
         self.AddConfigDefaults(defaults)
-
-
-    def GetConfigItem(self,key):
-        value = self.config[key]
-        print "got item %s: %s" % (key, value)
-        return value
-
-    def SaveConfigItem(self,key,value):
-        print "set item %s: %s" % (key, value)
-        self.config[u"%s" % key] = u"%s" % value
 
     def SyncConfigData(self):
         pass
@@ -125,7 +118,10 @@ class DataStorage:
 
 
     def InitTrackList(self,dir='.'):
-        pass
+        print "Scanning tracks in directory %s..." % dir
+        selector = FileSelector(dir,".gpx")
+        for file in selector.files.values():
+            self.tracklist.append(file)
 
     def CreateTrack(self,name=''):
         pass
@@ -141,14 +137,12 @@ class DataStorage:
 
 
 
-    def LoadMapConfig(self,file):
-        print "Loading map config: %s" % file
-
     def InitMapList(self,dir='.'):
         print "Scanning maps in directory %s..." % dir
         selector = FileSelector(dir,".xml")
         for file in selector.files.values():
-            self.LoadMapConfig(file)
+            print "Found map file: %s" % file
+            self.maplist.append(file)
 
     def CreateMap(self,name=''):
         pass
