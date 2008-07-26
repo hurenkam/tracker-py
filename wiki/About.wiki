@@ -1,23 +1,12 @@
-#summary Tracker.py GPS Trekking application for S60.
+= About =
 
-= Introduction =
+I started to work on Tracker.py, because I enjoy hiking, and like to use my N95 to see my location on a digitized map.
+Although I usually leave well prepared for a trip (with respect to necessities), I generally go where the weather takes me, and so often find myself in a small village where finding even a paper map can be a tough job, let alone finding a decent digital map. Since I like to travel light, I usually don't bring a laptop or scanner, and so I very much wish to use my N95 camera to scan the map, and use that map to track my wereabouts while hiking.
 
-This is the new home of tracker.py.
-Currently information is still being moved from
-it's old home, and so most information can still
-be found
-[http://hoth.xs4all.nl/~hurenkam/pys60 there]
+http://tracker-py.googlecode.com/svn/trunk/v0.14k/screenshots/campina5_track1.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.14k/screenshots/dash_fullscreen.jpg
 
-
-= Details =
-
-Tracker.py is an application to aid hikers in determining their position on a digitized map using a mobile platform (currently Symbian S60).
-
-Current code is for pys60, the python interpreter for symbian S60 platform, port to posix/wxpython is ongoing, so that development can take place on osx or linux.
-
-== Features ==
-  * Show current position on digitized map
-  * Import map from any .jpg and calibrate on your device
-  * Add/show waypoints
-  * Record/show tracks
-  * Set proximity alarm for waypoint, and show heading/distance
+The main purpose of Tracker.py, is to support this goal as much as possible. You can take a picture with the camera (I generally use a 3Mpix setting, but tested with 5Mpix as well), move it to the e:\maps directory (rename it to your liking), and then load it in Tracker.py.
+Once loaded, it requires at least 2 reference points to be set, and then it is ready for use. I usually calibrate a new map twice, first a short 15 minute walk to gather a basic calibration. Then after about an hour on my first restbreak, I recalibrate, and from then on the map is usually quite reliable.
+Besides showing your current position on the map, you can see some basic information in the dashview, where heading is shown (compas), altitude and speed, as well as a clock.
+(distance to waypoint, and current track distance, and current trip time are also implemented now ;-).
