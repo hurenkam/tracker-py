@@ -31,6 +31,9 @@ Color = {
           "darkgreen":'#00ff00',
           "darkred":'#ff0000',
 
+          "north":'#8080ff',
+          "waypoint":'#40ff40',
+
           "dashbg":'#e0e0e0',
           "dashfg":'#000000',
           "gaugebg":'#c0c0c0',
@@ -291,7 +294,7 @@ class Gauge:
             return
 
         x,y = self.CalculatePoint(heading,self.radius,length)
-        self.DrawPoint(x,y,color,handwith)
+        self.DrawPoint(x,y,color,handwidth)
 
 
     def DrawLineHand(self,heading,length,color=Color['black'],handwidth=2):
@@ -454,6 +457,62 @@ class SpeedGauge(TwoHandGauge):
     def Draw(self):
         TwoHandGauge.Draw(self)
 
+class WaypointGauge(Gauge):
+
+    def __init__(self,radius=None,tag="wpt"):
+        Gauge.__init__(self,radius)
+        self.tag = tag
+        self.heading = None
+        self.bearing = None
+        self.distance = None
+
+    def UpdateValues(self,heading,bearing,distance):
+        self.heading = heading
+        self.bearing = bearing
+        self.distance = distance
+        self.Draw()
+
+    def _sanevalues(self):
+        if self.heading is None or str(self.heading) is 'NaN':
+            self.heading = 0
+        if self.bearing is None or str(self.bearing) is 'NaN':
+            self.bearing = 0
+        if self.distance is None or str(self.distance) is'NaN':
+            self.distance = 0
+
+        north = 0 - self.heading
+        bearing = north + self.bearing
+        return north,bearing
+
+    def DrawCompas(self, north):
+        self.DrawScale(12,60,north)
+        self.DrawDotHand(north      ,self.radius-5,Color['north'],handwidth=7)
+        self.DrawDotHand(north +  90,self.radius-5,Color['black'],handwidth=5)
+        self.DrawDotHand(north + 180,self.radius-5,Color['black'],handwidth=5)
+        self.DrawDotHand(north + 270,self.radius-5,Color['black'],handwidth=7)
+
+    def DrawBearing(self, bearing):
+        if (self.radius >= 10):
+            self.DrawTriangleHand(bearing,     self.radius-10, Color['waypoint'], 8)
+            self.DrawTriangleHand(bearing+180, self.radius-10, Color['black'], 8)
+
+    def DrawInfo(self):
+        if (self.radius >= 40):
+            self.DrawText(((self.radius,0.5*self.radius+7)),u'%s' %self.tag)
+            self.DrawText(((self.radius,1.5*self.radius   )),u'%8.0f' % self.distance)
+            self.DrawText(((self.radius,1.5*self.radius+30)),u'%05.1f' % self.bearing)
+
+    def Draw(self):
+        if self.radius is None:
+            return
+
+        Gauge.Draw(self)
+        north, bearing = self._sanevalues()
+        self.DrawCompas(north)
+        self.DrawInfo()
+        self.DrawBearing(bearing)
+
+
 class ClockGauge(Gauge):
 
     def __init__(self,radius=None,tag="clock"):
@@ -537,7 +596,8 @@ class WXDashView(wx.PyControl,DashView):
 
         #self.clockgauge = ClockGauge(None)
         self.signalgauge = SignalGauge(None)
-        self.headinggauge = CompasGauge(None)
+        self.waypointgauge = WaypointGauge(None)
+        #self.headinggauge = CompasGauge(None)
         self.speedgauge = SpeedGauge(None)
         self.distancegauge = DistanceGauge(None)
         self.altitudegauge = AltitudeGauge(None)
@@ -554,7 +614,7 @@ class WXDashView(wx.PyControl,DashView):
                 self.distancegauge,
                 self.speedgauge,
                 self.altitudegauge,
-                self.headinggauge
+                self.waypointgauge
             ]
         self.spots = [
                 ((0,0),     (160,160)),
@@ -594,7 +654,7 @@ class WXDashView(wx.PyControl,DashView):
         bat = 7
         gsm = 0
         sat = signal.used
-        #self.signalgauge.UpdateValues({'bat':bat, 'gsm':gsm, 'sat':sat})
+        self.signalgauge.UpdateValues({'bat':bat, 'gsm':gsm, 'sat':sat})
 
     def UpdateTime(self,time):
         if self.time is None:
@@ -615,6 +675,10 @@ class WXDashView(wx.PyControl,DashView):
         if str(distance) != "NaN":
             self.distance += distance
         self.distancegauge.UpdateValue(self.distance/1000)
+        self.update = True
+
+    def UpdateWaypoint(self,heading,bearing,distance):
+        self.waypointgauge.UpdateValues(heading,bearing,distance)
         self.update = True
 
     def UpdateHeading(self,heading):
@@ -711,6 +775,7 @@ class WXApplication(Application,AlarmResponder):
         Application.Init(self)
         self.timealarm = TimeAlarm(None,1,self)
         self.positionalarm = PositionAlarm(None,10,self)
+        self.proximityalarm = None
         self.provider.SetAlarm(self.timealarm)
         self.provider.SetAlarm(self.positionalarm)
         self.provider.StartGPS()
@@ -724,9 +789,17 @@ class WXApplication(Application,AlarmResponder):
             self.view.UpdateTime(alarm.time)
 
         if alarm == self.positionalarm:
+            self.position = alarm.point
+
             self.view.UpdatePosition(alarm.point)
             self.view.UpdateDistance(alarm.distance)
-            self.view.UpdateHeading(alarm.avgheading)
+            if self.proximityalarm is not None:
+                bearing = self.proximityalarm.bearing
+                distance = self.proximityalarm.distance
+            else:
+                bearing = 0
+                distance = 0
+            self.view.UpdateWaypoint(alarm.avgheading,bearing,distance)
             self.view.UpdateSpeed(alarm.avgspeed)
 
         self.view.Refresh(True,wx.Rect(0,0,480,640))
