@@ -6,21 +6,19 @@ import math
 import time
 from osal import *
 
-ID_MAP_LOAD=201
-ID_MAP_SAVE=202
+ID_MAP_OPEN=201
+ID_MAP_CLOSE=202
 ID_MAP_IMPORT=203
 ID_MAP_ADDREF=204
 ID_MAP_DELREF=205
 ID_MAP_CLEAR=206
 
-ID_WP_LOAD=301
-ID_WP_SAVE=302
 ID_WP_ADD=304
 ID_WP_DEL=305
 ID_WP_CLEAR=306
 
-ID_TRACK_LOAD=401
-ID_TRACK_SAVE=402
+ID_TRACK_OPEN=401
+ID_TRACK_CLOSE=402
 ID_TRACK_DEL=405
 ID_TRACK_CLEAR=406
 ID_TRACK_START=407
@@ -579,8 +577,9 @@ class WXAppFrame(wx.Frame):
         trackmenu= wx.Menu()
         trackmenu.Append(ID_TRACK_START,"Start","Start recording a new track")
         trackmenu.Append(ID_TRACK_STOP,"Stop","Stop recording")
+        trackmenu.Append(ID_TRACK_OPEN,"Open","Load a track")
+        trackmenu.Append(ID_TRACK_CLOSE,"Close","Load a track")
         trackmenu.Append(ID_TRACK_DEL,"Delete","Delete a track")
-        trackmenu.Append(ID_TRACK_CLEAR,"Clear","Delete all tracks")
 
         # Creating the menubar.
         menuBar = wx.MenuBar()
@@ -609,6 +608,7 @@ class WXDashView(wx.PyControl,DashView):
         self.editwidget = TextWidget("Edit",fgcolor=Color['white'],bgcolor=Color['darkblue'])
         self.exitwidget = TextWidget("Exit",fgcolor=Color['white'],bgcolor=Color['darkblue'])
         #self.menuwidget.Draw()
+        self.track = None
 
         self.gauges = [
                 self.signalgauge,
@@ -637,8 +637,12 @@ class WXDashView(wx.PyControl,DashView):
             wx.WXK_DOWN:self.MoveDown
             }
 
-        wx.EVT_PAINT (self, self.OnPaint)
-        wx.EVT_KEY_DOWN (self, self.OnKeyDown)
+        wx.EVT_PAINT (self.frame, self.OnPaint)
+        wx.EVT_KEY_DOWN (self.frame, self.OnKeyDown)
+
+        wx.EVT_MENU(self.frame, ID_TRACK_START, self.OnTrackStart)
+        wx.EVT_MENU(self.frame, ID_TRACK_STOP, self.OnTrackStop)
+        wx.EVT_MENU(self.frame, ID_TRACK_DEL, self.OnTrackDelete)
 
     def MoveUp(self,event):
         i = self.spots[0]
@@ -726,6 +730,17 @@ class WXDashView(wx.PyControl,DashView):
             self.handledkeys[key](event)
         event.Skip()
 
+    def OnTrackStart(self,event):
+        print "Starting track"
+        self.track = DataStorage.GetInstance().OpenTrack('newtrack',True,25)
+
+    def OnTrackStop(self,event):
+        print "Stopping track"
+        DataStorage.GetInstance().StopRecording()
+
+    def OnTrackDelete(self,event):
+        print "Deleting track"
+        DataStorage.GetInstance().DeleteTrack('newtrack')
 
     def Draw(self,rect=None):
         self.update = False

@@ -813,9 +813,11 @@ class S60Application(Application, AlarmResponder):
                             ),
                             (u'Tracks',
                                 (
-                                    (u'Start',              self.Dummy),
-                                    (u'Stop',               self.Dummy),
-                                    (u'Delete',             self.Dummy),
+                                    (u'Start',              self.StartRecording),
+                                    (u'Stop',               self.StopRecording),
+                                    (u'Open',               self.OpenTrack),
+                                    (u'Close',              self.CloseTrack),
+                                    (u'Delete',             self.DeleteTrack),
                                 )
                             ),
                             (u'About',                      self.About)]
@@ -871,6 +873,39 @@ class S60Application(Application, AlarmResponder):
             return True
         return False
 
+    def StartRecording(self):
+        trackname = appuifw.query(u"Trackname:","text")
+        if trackname is not None:
+            self.storage.OpenTrack(trackname,True,25)
+            appuifw.note(u"Started recording track %s." % trackname, "info")
+
+    def StopRecording(self):
+        self.storage.StopRecording()
+        appuifw.note(u"Recording stopped.")
+
+    def OpenTrack(self):
+        tracks = self.storage.tracklist.keys()
+        id = appuifw.selection_list(tracks)
+        if id is not None:
+            print "opening %s" % tracks[id]
+            self.storage.OpenTrack(tracks[id])
+            appuifw.note(u"Track %s deleted." % tracks[id], "info")
+        else:
+            print "no file selected for deletion"
+
+    def CloseTrack(self):
+        pass
+
+    def DeleteTrack(self):
+        tracks = self.storage.tracklist.keys()
+        id = appuifw.selection_list(tracks)
+        if id is not None:
+            print "deleting %s" % tracks[id]
+            self.storage.DeleteTrack(tracks[id])
+            appuifw.note(u"Track %s deleted." % tracks[id], "info")
+        else:
+            print "no file selected for deletion"
+
     def Run(self):
         osal = Osal.GetInstance()
         while self.running:
@@ -879,16 +914,13 @@ class S60Application(Application, AlarmResponder):
             osal.Sleep(0.2)
 
     def Exit(self):
-        if self.IsScreensaverActive():
-            self.storage.config["screensaver"]="off"
-        else:
-            self.storage.config["screensaver"]="on"
-
-        self.running = False
+        self.view.Hide()
         appuifw.note(u"Exiting...", "info")
+        self.provider.StopGPS()
+        self.running = False
         self.provider.DeleteAlarm(self.timealarm)
         self.provider.DeleteAlarm(self.positionalarm)
-        self.view.Hide()
+        self.storage.CloseAll()
         SetSystemApp(0)
         Application.Exit(self)
 
@@ -956,7 +988,11 @@ class S60Application(Application, AlarmResponder):
 
     def ToggleScreenSaver(self):
         print "Toggled screensaver"
-        self.screensaver = not self.screensaver
+        if self.IsScreensaverActive():
+            self.storage.config["screensaver"]="off"
+        else:
+            self.storage.config["screensaver"]="on"
+
 
     def About(self):
         appuifw.note(u"Tracker\n(c) 2007,2008 by Mark Hurenkamp\nThis program is licensed under GPLv2.", "info")

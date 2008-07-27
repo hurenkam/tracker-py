@@ -44,6 +44,14 @@ class S60DataStorage(DataStorage):
     def OpenDbmFile(self,file,mode):
         return e32dbm.open(file,"%sf" % mode)
 
+    def GetTrackPattern(self):
+        return '.e32dbm'
+
+    def GetTrackFilename(self,name):
+        filename = os.path.join(self.config["trackdir"],name+self.GetTrackPattern())
+        print "GetTrackFilename: %s" % filename
+        return filename
+
     def GetDefaultCategoryId(self):
         if self.lmdb is not None:
             tsc = landmarks.CreateCatNameCriteria(u'Waypoint')
