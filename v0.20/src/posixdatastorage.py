@@ -29,7 +29,14 @@ class PosixDataStorage(DataStorage):
         self.InitTrackList(os.path.expanduser(self.config[u"trackdir"]))
 
     def OpenDbmFile(self,file,mode):
+        print file,mode
         file = os.path.expanduser(file)
         return dbm.open(file,mode)
+
+    def GetTrackPattern(self):
+        return '.db'
+
+    def GetTrackFilename(self,name):
+        return os.path.join(os.path.expanduser(self.config["trackdir"]),name+'.db')
 
 PosixDataStorage()

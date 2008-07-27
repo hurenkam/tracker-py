@@ -15,10 +15,14 @@ class Refpoint(Point):
         self.y = y
 
 class Track:
-    def __init__(self,name,storage,filename):
+    def __init__(self,name,storage):
         self.storage = storage
-        self.Open(filename)
+        filename = self.storage.GetTrackFilename(name)
+        b,e = os.path.splitext(filename)
+        self.Open(b)
         self.data[u"name"]=u"%s" % name
+        self.storage.tracklist[name] = filename
+        self.storage.tracks.append(self)
 
     def Open(self,filename):
         try:
@@ -38,6 +42,7 @@ class Track:
 
     def Close(self):
         self.data.close()
+
 
 class FileSelector:
     def __init__(self,dir=".",ext='.jpg'):
@@ -82,10 +87,23 @@ class DataStorage(AlarmResponder):
     def OpenDbmFile(self,file,mode):
         pass
 
+    def GetTrackPattern(self):
+        pass
+
+    def GetTrackFilename(self,name):
+        pass
+
+    def GetMapFilename(self,name):
+        pass
+
+
     def CloseAll(self):
         if self.config is not None:
             self.config.close()
             self.config = None
+
+        for track in self.tracks:
+            track.Close()
 
 
 
@@ -151,9 +169,9 @@ class DataStorage(AlarmResponder):
 
     def InitTrackList(self,dir='.'):
         print "Scanning tracks in directory %s..." % dir
-        selector = FileSelector(dir,".db")
-        for file in selector.files.values():
-            self.tracklist.append(file)
+        selector = FileSelector(dir,self.GetTrackPattern())
+        self.tracklist = selector.files
+        print self.tracklist
 
     def StartRecording(self,track,interval):
         self.recording = track
@@ -166,26 +184,30 @@ class DataStorage(AlarmResponder):
         self.recording = None
 
     def OpenTrack(self,name='',record=False,interval=25):
-        filename = os.path.join(self.config["trackdir"],name)
-        track = Track(name,self,filename)
-        self.tracklist.append(filename)
-        self.tracks.append(track)
+        track = Track(name,self)
         if record:
-            StartRecording(track,interval)
+            self.StartRecording(track,interval)
         return track
 
     def CloseTrack(self,track):
-        track.data.close()
+        track.Close()
         self.tracks.remove(track)
 
     def DeleteTrack(self,track):
         if track in self.tracks:
             if track is self.recording:
                 self.StopRecording()
-            CloseTrack(track)
-        filename = os.path.join(self.config["trackdir"],track.name)
-        self.tracklist.remove(filename)
-        os.remove(filename)
+            name = track.data["name"]
+            self.CloseTrack(track)
+        elif track in self.tracklist.keys():
+            name = track
+        else:
+            print "Track not found"
+            return
+
+        print "Deleting track %s" % name
+        del self.tracklist[name]
+        os.remove(self.GetTrackFilename(name))
 
 
     def InitMapList(self,dir='.'):
