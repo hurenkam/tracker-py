@@ -17,6 +17,9 @@ class PosixOsal(Osal):
     def GetTime(self):
         return time.time()
 
+    def GetIsoTime(self):
+        return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(ts))
+
 PosixOsal()
 
 if __name__ == '__main__':

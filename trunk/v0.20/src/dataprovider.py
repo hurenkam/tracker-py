@@ -118,13 +118,14 @@ class TimeAlarm(Alarm):
         return False
 
 class Point:
-    def __init__(self,lat=0,lon=0,alt=0):
+    def __init__(self,time=0,lat=0,lon=0,alt=0):
+        self.time = time
         self.latitude = lat
         self.longitude = lon
         self.altitude = alt
 
     def __repr__(self):
-        return "Point(%f,%f,%f)" % (self.latitude, self.longitude, self.altitude)
+        return "Point(%f,%f,%f,%f)" % (self.time,self.latitude, self.longitude, self.altitude)
 
     def DistanceAndBearing(self,point):
         return datums.CalculateDistanceAndBearing(

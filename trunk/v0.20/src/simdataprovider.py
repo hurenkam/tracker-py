@@ -38,7 +38,7 @@ class SimDataProvider(Thread, DataProvider):
                  { 'horizontal_dop': 2.34999990463257,
                    'used_satellites': 5,
                    'vertical_dop': 2.29999995231628,
-                   'time': 1187167353.0,
+                   'time': 1187167354.0,
                    'satellites': 11,
                    'time_dop': 1.26999998092651 },
               'position':
@@ -57,7 +57,7 @@ class SimDataProvider(Thread, DataProvider):
                  { 'horizontal_dop': 2.34999990463257,
                    'used_satellites': 5,
                    'vertical_dop': 2.29999995231628,
-                   'time': 1187167353.0,
+                   'time': 1187167355.0,
                    'satellites': 11,
                    'time_dop': 1.26999998092651 },
               'position':
@@ -117,6 +117,7 @@ SimDataProvider()
 
 class SimPoint(Point):
     def __init__(self,data):
+        self.time = Osal.GetInstance().GetTime()
         self.latitude = data['position']['latitude']
         self.longitude = data['position']['longitude']
         self.altitude = data['position']['altitude']

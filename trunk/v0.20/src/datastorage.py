@@ -1,4 +1,4 @@
-from dataprovider import Point
+from dataprovider import *
 import os
 
 
@@ -14,6 +14,30 @@ class Refpoint(Point):
         self.x = x
         self.y = y
 
+class Track:
+    def __init__(self,name,storage,filename):
+        self.storage = storage
+        self.Open(filename)
+        self.data[u"name"]=u"%s" % name
+
+    def Open(self,filename):
+        try:
+            self.data = self.storage.OpenDbmFile(filename,"w")
+            print "Trackfile %s found!" % filename
+        except:
+            print "Trackfile %s not found, creating it now" % filename
+            self.data = self.storage.OpenDbmFile(filename,"n")
+
+    def AddPoint(self,point):
+        print "Adding point to track"
+        self.data[str(point.time)] = u"(%s,%s,%s)" % (point.latitude,point.longitude,point.altitude)
+
+    def Dump(self):
+        for key in self.data.keys():
+            print key, self.data[key]
+
+    def Close(self):
+        self.data.close()
 
 class FileSelector:
     def __init__(self,dir=".",ext='.jpg'):
@@ -30,7 +54,7 @@ class FileSelector:
         os.path.walk(self.dir,iter,self)
 
 
-class DataStorage:
+class DataStorage(AlarmResponder):
     instance = None
 
     def __init__(self):
@@ -40,6 +64,8 @@ class DataStorage:
         self.tracklist = []
         self.waypoints = []
         self.config = None
+        self.recording = None
+        self.alarm = None
 
     def __del__(self):
         self.CloseAll()
@@ -47,6 +73,10 @@ class DataStorage:
     def GetInstance():
         return DataStorage.instance
 
+    def AlarmTriggered(self,alarm):
+        if alarm is self.alarm:
+            if self.recording is not None:
+                self.recording.AddPoint(alarm.point)
 
 
     def OpenDbmFile(self,file,mode):
@@ -59,21 +89,22 @@ class DataStorage:
 
 
 
-    def AddConfigDefaults(self,configdefaults):
+    def AddConfigDefaults(self,config,configdefaults):
         for key in configdefaults.keys():
-            if key not in self.config.keys():
+            if key not in config.keys():
                 print "Adding item %s:" % key, configdefaults[key]
-                self.config[key] = configdefaults[key]
+                config[key] = configdefaults[key]
             else:
-                print "Found item %s: " % key,self.config[key]
+                print "Found item %s: " % key,config[key]
         self.SyncConfigData()
 
     def OpenConfig(self,locations,defaults):
         found = False
         count = 0
+        config = None
         while count < len(locations) and not found:
             try:
-                self.OpenDbmFile(locations[count],"w")
+                config = self.OpenDbmFile(locations[count],"w")
                 print "Configfile %s found!" % locations[count]
                 found = True
             except:
@@ -83,7 +114,7 @@ class DataStorage:
         count = 0
         while count < len(locations) and not found:
             try:
-                self.OpenDbmFile(locations[count],"n")
+                config = self.OpenDbmFile(locations[count],"n")
                 print "Configfile %s created!" % locations[count]
                 found = True
             except:
@@ -93,7 +124,8 @@ class DataStorage:
         if not found:
             raise "Unable to open config file"
 
-        self.AddConfigDefaults(defaults)
+        self.AddConfigDefaults(config,defaults)
+        return config
 
     def SyncConfigData(self):
         pass
@@ -119,22 +151,41 @@ class DataStorage:
 
     def InitTrackList(self,dir='.'):
         print "Scanning tracks in directory %s..." % dir
-        selector = FileSelector(dir,".gpx")
+        selector = FileSelector(dir,".db")
         for file in selector.files.values():
             self.tracklist.append(file)
 
-    def CreateTrack(self,name=''):
-        pass
+    def StartRecording(self,track,interval):
+        self.recording = track
+        self.alarm = PositionAlarm(None,interval,self)
+        DataProvider.GetInstance().SetAlarm(self.alarm)
 
-    def SaveTrack(self,track):
-        pass
+    def StopRecording(self):
+        DataProvider.GetInstance().DeleteAlarm(self.alarm)
+        self.alarm = None
+        self.recording = None
+
+    def OpenTrack(self,name='',record=False,interval=25):
+        filename = os.path.join(self.config["trackdir"],name)
+        track = Track(name,self,filename)
+        self.tracklist.append(filename)
+        self.tracks.append(track)
+        if record:
+            StartRecording(track,interval)
+        return track
+
+    def CloseTrack(self,track):
+        track.data.close()
+        self.tracks.remove(track)
 
     def DeleteTrack(self,track):
-        pass
-
-    def GetTracks(self):
-        pass
-
+        if track in self.tracks:
+            if track is self.recording:
+                self.StopRecording()
+            CloseTrack(track)
+        filename = os.path.join(self.config["trackdir"],track.name)
+        self.tracklist.remove(filename)
+        os.remove(filename)
 
 
     def InitMapList(self,dir='.'):
@@ -144,16 +195,13 @@ class DataStorage:
             print "Found map file: %s" % file
             self.maplist.append(file)
 
-    def CreateMap(self,name=''):
+    def OpenMap(self,name=''):
         pass
 
-    def SaveMap(self,map):
+    def CloseMap(self,map):
         pass
 
     def DeleteMap(self,map):
-        pass
-
-    def GetMaps(self):
         pass
 
     GetInstance = staticmethod(GetInstance)

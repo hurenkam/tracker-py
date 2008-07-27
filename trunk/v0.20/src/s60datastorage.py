@@ -1,5 +1,6 @@
 from datastorage import *
 import e32dbm
+from osal import *
 
 configlocations = [
     u"e:\\data\\tracker\\config",
@@ -31,7 +32,7 @@ class S60DataStorage(DataStorage):
         global configdefaults
         DataStorage.__init__(self)
         DataStorage.instance = self
-        self.OpenConfig(configlocations,configdefaults)
+        self.config = self.OpenConfig(configlocations,configdefaults)
         if use_landmarks:
             self.lmdb = landmarks.OpenDefaultDatabase()
         else:
@@ -41,7 +42,7 @@ class S60DataStorage(DataStorage):
         self.InitTrackList(self.config[u"trackdir"])
 
     def OpenDbmFile(self,file,mode):
-        self.config = e32dbm.open(file,"%sf" % mode)
+        return e32dbm.open(file,"%sf" % mode)
 
     def GetDefaultCategoryId(self):
         if self.lmdb is not None:
@@ -59,6 +60,7 @@ class S60DataStorage(DataStorage):
     def CreateWaypoint(self,name='',lat=0,lon=0,alt=0):
         wpt = S60Waypoint()
         wpt.name = name
+        wpt.time = Osal.GetTime()
         wpt.latitude = lat
         wpt.longitude = lon
         wpt.altitude = alt
