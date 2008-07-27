@@ -45,6 +45,7 @@ provider = S60DataProvider()
 
 class S60Point(Point):
     def __init__(self,data):
+        self.time = data['satellites']['time']
         self.latitude = data['position']['latitude']
         self.longitude = data['position']['longitude']
         self.altitude = data['position']['altitude']

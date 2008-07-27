@@ -23,13 +23,13 @@ class PosixDataStorage(DataStorage):
         global configlocations
         DataStorage.__init__(self)
         DataStorage.instance = self
-        self.OpenConfig(configlocations,configdefaults)
+        self.config = self.OpenConfig(configlocations,configdefaults)
         self.InitWaypointList(os.path.expanduser(self.config[u"waypointfile"]))
         self.InitMapList(os.path.expanduser(self.config[u"mapdir"]))
         self.InitTrackList(os.path.expanduser(self.config[u"trackdir"]))
 
     def OpenDbmFile(self,file,mode):
         file = os.path.expanduser(file)
-        self.config = dbm.open(file,mode)
+        return dbm.open(file,mode)
 
 PosixDataStorage()

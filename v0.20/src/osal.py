@@ -1,9 +1,9 @@
 class Osal:
     instance = None
-    
+
     def GetInstance():
         return Osal.instance
-    
+
     def ShowInfo(self,text):
         pass
 
@@ -14,6 +14,9 @@ class Osal:
         pass
 
     def GetTime(self):
+        pass
+
+    def GetIsoTime(self):
         pass
 
     GetInstance = staticmethod(GetInstance)
