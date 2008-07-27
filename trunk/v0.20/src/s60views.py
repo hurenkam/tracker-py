@@ -796,12 +796,12 @@ class S60Application(Application, AlarmResponder):
                             (u'About',                      self.About),
                             (u'Map',
                                 (
-                                    (u'Select',             self.Dummy),
+                                    (u'Open',               self.Dummy),
+                                    (u'Close',              self.Dummy),
+                                    (u'Import',             self.Dummy),
                                     (u'Add WGS84 Refpoint', self.Dummy),
                                     (u'Add RD Refpoint',    self.Dummy),
                                     (u'Clear Refpoints',    self.Dummy),
-                                    (u'Import',             self.Dummy),
-                                    (u'Unload',             self.Dummy),
                                 )
                             ),
                             (u'Waypoints',
@@ -818,6 +818,12 @@ class S60Application(Application, AlarmResponder):
                                     (u'Open',               self.OpenTrack),
                                     (u'Close',              self.CloseTrack),
                                     (u'Delete',             self.DeleteTrack),
+                                )
+                            ),
+                            (u'GPX',
+                                (
+                                    (u'Import',             self.GPXImport),
+                                    (u'Export',             self.GPXExport),
                                 )
                             ),
                             (u'About',                      self.About)]
@@ -873,39 +879,6 @@ class S60Application(Application, AlarmResponder):
             return True
         return False
 
-    def StartRecording(self):
-        trackname = appuifw.query(u"Trackname:","text")
-        if trackname is not None:
-            self.storage.OpenTrack(trackname,True,25)
-            appuifw.note(u"Started recording track %s." % trackname, "info")
-
-    def StopRecording(self):
-        self.storage.StopRecording()
-        appuifw.note(u"Recording stopped.")
-
-    def OpenTrack(self):
-        tracks = self.storage.tracklist.keys()
-        id = appuifw.selection_list(tracks)
-        if id is not None:
-            print "opening %s" % tracks[id]
-            self.storage.OpenTrack(tracks[id])
-            appuifw.note(u"Track %s deleted." % tracks[id], "info")
-        else:
-            print "no file selected for deletion"
-
-    def CloseTrack(self):
-        pass
-
-    def DeleteTrack(self):
-        tracks = self.storage.tracklist.keys()
-        id = appuifw.selection_list(tracks)
-        if id is not None:
-            print "deleting %s" % tracks[id]
-            self.storage.DeleteTrack(tracks[id])
-            appuifw.note(u"Track %s deleted." % tracks[id], "info")
-        else:
-            print "no file selected for deletion"
-
     def Run(self):
         osal = Osal.GetInstance()
         while self.running:
@@ -923,6 +896,14 @@ class S60Application(Application, AlarmResponder):
         self.storage.CloseAll()
         SetSystemApp(0)
         Application.Exit(self)
+
+
+
+    def SelectWaypoint(self,waypoints):
+        items = []
+        for i in range(len(waypoints)):
+            items.append(waypoints[i].name)
+        return appuifw.selection_list(items)
 
     def AddWaypoint(self):
         latitude = appuifw.query(u"Waypoint Latitude:","float",self.position.latitude)
@@ -963,11 +944,51 @@ class S60Application(Application, AlarmResponder):
                 self.provider.SetAlarm(self.proximityalarm)
                 appuifw.note(u"Monitoring waypoint %s, notify when within %8.0f meters." % (waypoints[id].name, distance), "info")
 
-    def SelectWaypoint(self,waypoints):
-        items = []
-        for i in range(len(waypoints)):
-            items.append(waypoints[i].name)
-        return appuifw.selection_list(items)
+
+
+
+    def StartRecording(self):
+        trackname = appuifw.query(u"Trackname:","text")
+        if trackname is not None:
+            self.storage.OpenTrack(trackname,True,25)
+            appuifw.note(u"Started recording track %s." % trackname, "info")
+
+    def StopRecording(self):
+        self.storage.StopRecording()
+        appuifw.note(u"Recording stopped.")
+
+    def OpenTrack(self):
+        tracks = self.storage.tracklist.keys()
+        id = appuifw.selection_list(tracks)
+        if id is not None:
+            print "opening %s" % tracks[id]
+            self.storage.OpenTrack(tracks[id])
+            appuifw.note(u"Track %s opened." % tracks[id], "info")
+        else:
+            print "no file selected for opening"
+
+    def CloseTrack(self):
+        tracks = self.storage.tracklist.keys()
+        id = appuifw.selection_list(tracks)
+        if id is not None:
+            print "closing %s" % tracks[id]
+            self.storage.OpenTrack(tracks[id])
+            appuifw.note(u"Track %s closed." % tracks[id], "info")
+        else:
+            print "no file selected for closing"
+
+    def DeleteTrack(self):
+        tracks = self.storage.tracklist.keys()
+        id = appuifw.selection_list(tracks)
+        if id is not None:
+            print "deleting %s" % tracks[id]
+            self.storage.DeleteTrack(tracks[id])
+            appuifw.note(u"Track %s deleted." % tracks[id], "info")
+        else:
+            print "no file selected for deletion"
+
+
+
 
     def KeyboardEvent(self,event):
         self.view.KeyboardEvent(event)
@@ -992,7 +1013,6 @@ class S60Application(Application, AlarmResponder):
             self.storage.config["screensaver"]="off"
         else:
             self.storage.config["screensaver"]="on"
-
 
     def About(self):
         appuifw.note(u"Tracker\n(c) 2007,2008 by Mark Hurenkamp\nThis program is licensed under GPLv2.", "info")
