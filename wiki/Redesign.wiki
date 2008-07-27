@@ -23,7 +23,7 @@ aimed at having the application run on multiple platforms.
   * s60osal
   * s60views
 
-=== OSX modules ===
+=== OSX/Linux modules ===
 
   * posixdatastorage
   * simdataprovider
