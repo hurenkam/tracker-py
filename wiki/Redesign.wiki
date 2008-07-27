@@ -9,6 +9,10 @@ modules.
 Because I'm mainly developping on OSX and Linux, the redesign is also
 aimed at having the application run on multiple platforms.
 
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0001.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0002.jpg
+
+
 === Generic modules ===
 
   * datastorage
