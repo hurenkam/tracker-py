@@ -1,2 +1,38 @@
 = Redesign: Tracker v0.20x =
 
+== Code architecture ==
+The code is now split into several files, I know, having all in one
+place makes it easy to run, but from coding perspective it's a real
+nightmare. So, now functionality has been grouped into different
+modules.
+
+Because I'm mainly developping on OSX and Linux, the redesign is also
+aimed at having the application run on multiple platforms.
+
+=== Generic modules ===
+
+  * datastorage
+  * dataprovider
+  * osal
+  * views
+
+=== S60 modules ===
+
+  * s60datastorage
+  * s60dataprovider
+  * s60osal
+  * s60views
+
+=== OSX modules ===
+
+  * posixdatastorage
+  * simdataprovider
+  * posixosal
+  * wxviews
+
+=== Windows modules ===
+
+  * simdataprovider
+  * ntosal
+  * wxviews
+
