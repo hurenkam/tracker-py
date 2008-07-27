@@ -1,5 +1,8 @@
 = Redesign: Tracker v0.20x =
 
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0001.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0002.jpg
+
 == Code architecture ==
 The code is now split into several files, I know, having all in one
 place makes it easy to run, but from coding perspective it's a real
@@ -8,9 +11,6 @@ modules.
 
 Because I'm mainly developping on OSX and Linux, the redesign is also
 aimed at having the application run on multiple platforms.
-
-http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0001.jpg
-http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0002.jpg
 
 
 === Generic modules ===
