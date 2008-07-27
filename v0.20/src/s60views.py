@@ -989,6 +989,15 @@ class S60Application(Application, AlarmResponder):
 
 
 
+    def GPXExport(self):
+        name = appuifw.query(u"GPX Filename:","text")
+        if name is not None:
+            self.storage.GPXExport(name)
+            appuifw.note(u"Exported waypoints and tracks to %s." % name, "info")
+
+    def GPXImport(self):
+        pass
+
 
     def KeyboardEvent(self,event):
         self.view.KeyboardEvent(event)

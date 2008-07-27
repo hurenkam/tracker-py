@@ -28,6 +28,7 @@ class Track:
         try:
             self.data = self.storage.OpenDbmFile(filename,"w")
             print "Trackfile %s found!" % filename
+            self.Dump()
         except:
             print "Trackfile %s not found, creating it now" % filename
             self.data = self.storage.OpenDbmFile(filename,"n")
@@ -41,8 +42,10 @@ class Track:
             print key, self.data[key]
 
     def Close(self):
-        self.data.close()
-
+        try:
+            self.data.close()
+        except:
+            print "unable to close track"
 
 class FileSelector:
     def __init__(self,dir=".",ext='.jpg'):
@@ -64,9 +67,9 @@ class DataStorage(AlarmResponder):
 
     def __init__(self):
         self.maps = []
-        self.maplist = []
+        self.maplist = {}
         self.tracks = []
-        self.tracklist = []
+        self.tracklist = {}
         self.waypoints = []
         self.config = None
         self.recording = None
@@ -210,12 +213,14 @@ class DataStorage(AlarmResponder):
         os.remove(self.GetTrackFilename(name))
 
 
+    def LoadMapConfig(self,name,filename):
+        pass
+
     def InitMapList(self,dir='.'):
         print "Scanning maps in directory %s..." % dir
         selector = FileSelector(dir,".xml")
-        for file in selector.files.values():
-            print "Found map file: %s" % file
-            self.maplist.append(file)
+        for key in selector.files.keys():
+            self.LoadMapConfig(key,selector.files[key])
 
     def OpenMap(self,name=''):
         pass
@@ -225,5 +230,13 @@ class DataStorage(AlarmResponder):
 
     def DeleteMap(self,map):
         pass
+
+
+    def GPXExport(self,name):
+        pass
+
+    def GPXImport(self,name):
+        pass
+
 
     GetInstance = staticmethod(GetInstance)
