@@ -43,6 +43,7 @@ class Track:
 
     def Close(self):
         try:
+            print "closing track"
             self.data.close()
         except:
             print "unable to close track"
