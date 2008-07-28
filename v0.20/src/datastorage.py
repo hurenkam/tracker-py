@@ -27,14 +27,11 @@ class Track:
     def Open(self,filename):
         try:
             self.data = self.storage.OpenDbmFile(filename,"w")
-            print "Trackfile %s found!" % filename
             self.Dump()
         except:
-            print "Trackfile %s not found, creating it now" % filename
             self.data = self.storage.OpenDbmFile(filename,"n")
 
     def AddPoint(self,point):
-        print "Adding point to track"
         self.data[str(point.time)] = u"(%s,%s,%s)" % (point.latitude,point.longitude,point.altitude)
 
     def Dump(self):
@@ -43,7 +40,6 @@ class Track:
 
     def Close(self):
         try:
-            print "closing track"
             self.data.close()
         except:
             print "unable to close track"
@@ -114,10 +110,7 @@ class DataStorage(AlarmResponder):
     def AddConfigDefaults(self,config,configdefaults):
         for key in configdefaults.keys():
             if key not in config.keys():
-                print "Adding item %s:" % key, configdefaults[key]
                 config[key] = configdefaults[key]
-            else:
-                print "Found item %s: " % key,config[key]
         self.SyncConfigData()
 
     def OpenConfig(self,locations,defaults):
@@ -127,20 +120,16 @@ class DataStorage(AlarmResponder):
         while count < len(locations) and not found:
             try:
                 config = self.OpenDbmFile(locations[count],"w")
-                print "Configfile %s found!" % locations[count]
                 found = True
             except:
-                print "Configfile %s not found..." % locations[count]
                 count+=1
 
         count = 0
         while count < len(locations) and not found:
             try:
                 config = self.OpenDbmFile(locations[count],"n")
-                print "Configfile %s created!" % locations[count]
                 found = True
             except:
-                print "Configfile %s unable to create..." % locations[count]
                 count+=1
 
         if not found:
@@ -172,10 +161,8 @@ class DataStorage(AlarmResponder):
 
 
     def InitTrackList(self,dir='.'):
-        print "Scanning tracks in directory %s..." % dir
         selector = FileSelector(dir,self.GetTrackPattern())
         self.tracklist = selector.files
-        print self.tracklist
 
     def StartRecording(self,track,interval):
         self.recording = track

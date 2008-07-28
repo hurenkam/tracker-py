@@ -56,7 +56,6 @@ class S60DataStorage(DataStorage):
 
     def GetTrackFilename(self,name):
         filename = os.path.join(self.config["trackdir"],name+self.GetTrackPattern())
-        print "GetTrackFilename: %s" % filename
         return filename
 
     def GetDefaultCategoryId(self):
@@ -141,7 +140,6 @@ class S60DataStorage(DataStorage):
 
     def GetGPXFilename(self,name):
         filename = os.path.join(self.config["gpxdir"],name+'.gpx')
-        print "GetGPXFilename: %s" % filename
         return filename
 
     def GPXExport(self,name):

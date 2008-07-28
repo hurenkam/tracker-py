@@ -669,6 +669,7 @@ class S60DashView(View):
                 g.Resize(r)
 
         self.update = True
+        self.Draw()
 
     def UpdateSignal(self,signal):
         bat = sysinfo.battery()
@@ -844,6 +845,17 @@ class S60Application(Application, AlarmResponder):
         self.proximityalarm = None
         self.provider.SetAlarm(self.timealarm)
         self.provider.SetAlarm(self.positionalarm)
+        try:
+            name = self.storage.config["waypoint"]
+            distance = eval(self.storage.config["distance"])
+            waypoints = self.storage.GetWaypoints()
+            for w in waypoints:
+                if w.name == name:
+                    self.proximityalarm=ProximityAlarm(w,distance,self)
+                    self.provider.SetAlarm(self.proximityalarm)
+        except:
+            print "no waypoint found"
+
         self.provider.StartGPS()
         self.view.Show()
 
@@ -875,6 +887,14 @@ class S60Application(Application, AlarmResponder):
                  Vibrate(500,100)
                  self.osal.Sleep(0.5)
             self.proximityalarm = None
+            try:
+                del self.storage.config["waypoint"]
+                del self.storage.config["distance"]
+                print "deleted waypoint from config"
+            except:
+                print "unable to delete waypoint from config"
+                pass
+
 
         self.view.Show()
 
@@ -947,6 +967,9 @@ class S60Application(Application, AlarmResponder):
                 self.proximityalarm = ProximityAlarm(self.monitorwaypoint,distance,self)
                 self.provider.SetAlarm(self.proximityalarm)
                 appuifw.note(u"Monitoring waypoint %s, notify when within %8.0f meters." % (waypoints[id].name, distance), "info")
+                self.storage.config["waypoint"]=waypoints[id].name
+                self.storage.config["distance"]=str(distance)
+                print "stored waypoint in config"
 
 
 
