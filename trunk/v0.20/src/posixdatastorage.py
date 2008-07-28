@@ -61,7 +61,10 @@ class PosixDataStorage(DataStorage):
             name = ET.SubElement(trk,"name")
             name.text = track.data["name"]
             trkseg = ET.SubElement(trk,"trkseg")
-            for key in track.data.keys():
+            keys = track.data.keys()
+            keys.remove("name")
+            keys.sort()
+            for key in keys:
                 if key is not "name":
                     try:
                         WriteTrackPoint(trkseg,track.data[key])
@@ -78,6 +81,12 @@ class PosixDataStorage(DataStorage):
             ele.text = str(waypoint.altitude)
 
         root = ET.Element('gpx')
+        root.set("version","1.0")
+        root.set("creator","Tracker.py 0.20 - http://tracker-py.googlecode.com")
+        root.set("xmlns:xsi","http://www.w3.org/2001/XMLSchema-instance")
+        root.set("xmlns","http://www.topografix.com/GPX/1/0")
+        root.set("xsi:schemaLocation","http://www.topografix.com/GPX/1/0 http:/www.topografix.com/GPX/1/0/gpx.xsd")
+
         #waypoints = self.GetWaypoints()
         #for waypoint in waypoints:
         #    WriteWaypoint(root,waypoint)
