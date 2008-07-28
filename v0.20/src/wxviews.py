@@ -24,6 +24,9 @@ ID_TRACK_CLEAR=406
 ID_TRACK_START=407
 ID_TRACK_STOP=408
 
+ID_GPX_EXPORT=501
+ID_GPX_IMPORT=502
+
 Color = {
           "black":'#000000',
           "white":'#ffffff',
@@ -581,11 +584,17 @@ class WXAppFrame(wx.Frame):
         trackmenu.Append(ID_TRACK_CLOSE,"Close","Load a track")
         trackmenu.Append(ID_TRACK_DEL,"Delete","Delete a track")
 
+        # Setting up the track menu.
+        gpxmenu= wx.Menu()
+        gpxmenu.Append(ID_GPX_EXPORT,"Export","Export open waypoints and tracks to a gpx file")
+        gpxmenu.Append(ID_GPX_IMPORT,"Import","Import waypoints and tracks from a gpx file")
+
         # Creating the menubar.
         menuBar = wx.MenuBar()
         menuBar.Append(mapmenu,"Map") # Adding the "filemenu" to the MenuBar
         menuBar.Append(wpmenu,"Waypoint") # Adding the "filemenu" to the MenuBar
         menuBar.Append(trackmenu,"Track") # Adding the "filemenu" to the MenuBar
+        menuBar.Append(gpxmenu,"GPX") # Adding the "filemenu" to the MenuBar
         self.SetMenuBar(menuBar)  # Adding the MenuBar to the Frame content.
         self.Show(True)
 
@@ -642,7 +651,12 @@ class WXDashView(wx.PyControl,DashView):
 
         wx.EVT_MENU(self.frame, ID_TRACK_START, self.OnTrackStart)
         wx.EVT_MENU(self.frame, ID_TRACK_STOP, self.OnTrackStop)
+        wx.EVT_MENU(self.frame, ID_TRACK_OPEN, self.OnTrackOpen)
+        wx.EVT_MENU(self.frame, ID_TRACK_CLOSE, self.OnTrackClose)
         wx.EVT_MENU(self.frame, ID_TRACK_DEL, self.OnTrackDelete)
+
+        wx.EVT_MENU(self.frame, ID_GPX_EXPORT, self.OnGPXExport)
+        wx.EVT_MENU(self.frame, ID_GPX_IMPORT, self.OnGPXImport)
 
     def MoveUp(self,event):
         i = self.spots[0]
@@ -738,9 +752,24 @@ class WXDashView(wx.PyControl,DashView):
         print "Stopping track"
         DataStorage.GetInstance().StopRecording()
 
+    def OnTrackOpen(self,event):
+        print "Opening track"
+        self.track = DataStorage.GetInstance().OpenTrack('newtrack')
+
+    def OnTrackClose(self,event):
+        print "Closing track"
+        DataStorage.GetInstance().CloseTrack(self.track)
+
     def OnTrackDelete(self,event):
         print "Deleting track"
         DataStorage.GetInstance().DeleteTrack('newtrack')
+
+    def OnGPXExport(self,event):
+        print "Export to GPX"
+        DataStorage.GetInstance().GPXExport('newtrack')
+
+    def OnGPXImport(self,event):
+        pass
 
     def Draw(self,rect=None):
         self.update = False

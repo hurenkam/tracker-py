@@ -145,13 +145,16 @@ class S60DataStorage(DataStorage):
 
     def GPXExport(self,name):
 
-        def WriteTrackPoint(root,point):
-            lat,lon,ele = eval(point)
+        def WriteTrackPoint(root,point,time=None):
+            lat,lon,alt = eval(point)
             trkpt = ET.SubElement(root,"trkpt")
-            trkpt.set("lat",lat)
-            trkpt.set("lon",lon)
+            trkpt.set("lat",str(lat))
+            trkpt.set("lon",str(lon))
             ele = ET.SubElement(trkpt,"ele")
-            ele.text = ele
+            ele.text = str(alt)
+            if time != None:
+                t = ET.SubElement(trkpt,"time")
+                t.text = time
 
         def WriteTrack(root,track):
             trk = ET.SubElement(root,"trk")
@@ -167,12 +170,12 @@ class S60DataStorage(DataStorage):
 
         def WriteWaypoint(root,waypoint):
             wpt = ET.SubElement(root,"wpt")
-            name = ET.SubElement(wpt,"name")
-            name.text = waypoint.name
             wpt.set("lat",str(waypoint.latitude))
             wpt.set("lon",str(waypoint.longitude))
             ele = ET.SubElement(wpt,"ele")
             ele.text = str(waypoint.altitude)
+            name = ET.SubElement(wpt,"name")
+            name.text = waypoint.name
 
         root = ET.Element('gpx')
         waypoints = self.GetWaypoints()
