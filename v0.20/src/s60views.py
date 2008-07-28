@@ -940,12 +940,18 @@ class S60Application(Application, AlarmResponder):
             appuifw.note(u"Cancelled.", "info")
             return
 
-        name = appuifw.query(u"Waypoint name:","text")
+        try:
+            prevname = self.storage.config["prevwpname"]
+        except:
+            prevname = ""
+
+        name = appuifw.query(u"Waypoint name:","text",prevname)
         if name is None:
             appuifw.note(u"Cancelled.", "info")
             return
 
         self.storage.SaveWaypoint(self.storage.CreateWaypoint(name,latitude,longitude))
+        self.storage.config["prevwpname"]=name
 
     def DeleteWaypoint(self):
         waypoints = self.storage.GetWaypoints()
@@ -975,10 +981,16 @@ class S60Application(Application, AlarmResponder):
 
 
     def StartRecording(self):
-        trackname = appuifw.query(u"Trackname:","text")
+        try:
+            prevname = self.storage.config["prevtrackname"]
+        except:
+            prevname = ""
+
+        trackname = appuifw.query(u"Trackname:","text",prevname)
         if trackname is not None:
             self.storage.OpenTrack(trackname,True,25)
             appuifw.note(u"Started recording track %s." % trackname, "info")
+            self.storage.config["prevtrackname"]=trackname
 
     def StopRecording(self):
         self.storage.StopRecording()
