@@ -14,6 +14,7 @@ configdefaults = {
         "trackdir":"~/.tracker/tracks",
         "waypointfile":"~/.tracker/waypoints",
         "gpxdir":"~/.tracker/gpx",
+        "zoomedgauge":"0"
     }
 
 class PosixWaypoint(Waypoint):

@@ -602,6 +602,7 @@ class WXDashView(wx.PyControl,DashView):
     def __init__(self,frame):
         wx.PyControl.__init__(self,frame)
         DashView.__init__(self)
+        self.storage = DataStorage.GetInstance()
         self.frame = frame
 
         #self.clockgauge = ClockGauge(None)
@@ -635,6 +636,7 @@ class WXDashView(wx.PyControl,DashView):
                 ((320,320), (160,160)),
                 ((0,160),   (320,320)),
                 ]
+        self.zoomedgauge = eval(self.storage.config["zoomedgauge"])
 
         self.distance = 0
         self.time = None
@@ -659,15 +661,15 @@ class WXDashView(wx.PyControl,DashView):
         wx.EVT_MENU(self.frame, ID_GPX_IMPORT, self.OnGPXImport)
 
     def MoveUp(self,event):
-        i = self.spots[0]
-        del self.spots[0]
-        self.spots.append(i)
+        self.zoomedgauge = (self.zoomedgauge +1) % (len(self.spots))
+        print self.zoomedgauge
+        self.storage.config["zoomedgauge"]=str(self.zoomedgauge)
         self.Resize()
 
     def MoveDown(self,event):
-        i = self.spots[-1]
-        del self.spots[-1]
-        self.spots.insert(0,i)
+        self.zoomedgauge = (self.zoomedgauge -1) % (len(self.spots))
+        print self.zoomedgauge
+        self.storage.config["zoomedgauge"]=str(self.zoomedgauge)
         self.Resize()
 
     def UpdateSignal(self,signal):
@@ -718,10 +720,11 @@ class WXDashView(wx.PyControl,DashView):
         self.dc.SelectObject(self.bitmap)
 
         for i in range(0,len(self.spots)):
+            j = (self.zoomedgauge+i) % (len(self.spots))
             g = self.gauges[i]
             if g:
-                p = self.spots[i][0]
-                s = self.spots[i][1]
+                p = self.spots[j][0]
+                s = self.spots[j][1]
                 r = s[0]/2 -2
                 g.Resize(r)
 
@@ -780,9 +783,10 @@ class WXDashView(wx.PyControl,DashView):
         self.dc.SetPen(wx.Pen(Color['dashfg'],1))
 
         for i in range(0,len(self.spots)):
+            j = (self.zoomedgauge+i) % (len(self.spots))
             g = self.gauges[i]
             if g:
-                x,y = self.spots[i][0]
+                x,y = self.spots[j][0]
                 w,h = g.dc.GetSize()
                 self.dc.Blit(
                     x+2,y+2,w,h,
