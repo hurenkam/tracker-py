@@ -19,7 +19,8 @@ configdefaults = {
         "mapdir":"e:\\data\\tracker\\maps",
         "trackdir":"e:\\data\\tracker\\tracks",
         "waypointfile":"e:\\data\\tracker\\waypoints",
-        "gpxdir":"e:\\data\\tracker\\gpx"
+        "gpxdir":"e:\\data\\tracker\\gpx",
+        "zoomedgauge":"0"
     }
 
 class S60Waypoint(Waypoint):

@@ -597,6 +597,7 @@ class WaypointGauge(Gauge):
 class S60DashView(View):
     def __init__(self):
         DashView.instance = self
+        self.storage = DataStorage.GetInstance()
         self.osal = Osal.GetInstance()
 
         self.signalgauge = SignalGauge(None)
@@ -629,6 +630,7 @@ class S60DashView(View):
                 ((160,160), (80,80)),
                 ((0,80),    (160,160)),
                 ]
+        self.zoomedgauge = eval(self.storage.config["zoomedgauge"])
 
         self.distance = 0
         self.longitude = 0
@@ -642,16 +644,15 @@ class S60DashView(View):
             }
 
     def MoveUp(self,event):
-        i = self.spots[0]
-        del self.spots[0]
-        self.spots.append(i)
+        self.zoomedgauge = (self.zoomedgauge +1) % (len(self.spots))
+        self.storage.config["zoomedgauge"]=str(self.zoomedgauge)
         self.Resize()
 
     def MoveDown(self,event):
-        i = self.spots[-1]
-        del self.spots[-1]
-        self.spots.insert(0,i)
+        self.zoomedgauge = (self.zoomedgauge -1) % (len(self.spots))
+        self.storage.config["zoomedgauge"]=str(self.zoomedgauge)
         self.Resize()
+
 
     def Resize(self,rect=None):
         size = appuifw.app.body.size
@@ -659,10 +660,11 @@ class S60DashView(View):
         self.image.clear(0xc0c0c0)
 
         for i in range(0,len(self.spots)):
+            j = (self.zoomedgauge+i) % (len(self.spots))
             g = self.gauges[i]
             if g:
-                p = self.spots[i][0]
-                s = self.spots[i][1]
+                p = self.spots[j][0]
+                s = self.spots[j][1]
                 r = s[0]/2 -2
                 g.Resize(r)
 
@@ -710,9 +712,11 @@ class S60DashView(View):
     	self.update = False
 
         for i in range(0,len(self.spots)):
+            j = (self.zoomedgauge+i) % (len(self.spots))
+
             g = self.gauges[i]
             if g:
-                x,y = self.spots[i][0]
+                x,y = self.spots[j][0]
                 self.image.blit(
                     image = g.GetImage(),
                     target = (x+2,y+2),
