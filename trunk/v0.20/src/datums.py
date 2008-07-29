@@ -35,7 +35,8 @@
 #    Programmers: The JavaScript source code in this document may be
 #    copied and reused without restriction.
 #
-#
+
+
 # Author(s):
 #
 #    Ed Stevenhagen	Stevenhagen <at> xs4all.nl
