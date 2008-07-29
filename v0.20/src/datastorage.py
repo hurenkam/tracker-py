@@ -1,7 +1,6 @@
 from dataprovider import *
 import os
 
-
 class Waypoint(Point):
     def __init__(self,name='',lat=0,lon=0,alt=0):
         Point.__init__(self,lat,lon,alt)
@@ -57,6 +56,67 @@ class FileSelector:
                     fileselector.files[u'%s' % b] = os.path.join(dir,file)
 
         os.path.walk(self.dir,iter,self)
+
+
+class GPXFile(file):
+    def __init__(self,name,mode):
+        file.__init__(self,name,mode)
+        self.mode = mode
+        if self.mode == "w":
+            self.write("<gpx\n")
+            self.write("  version=\"1.0\"\n")
+            self.write("  creator=\"Tracker.py 0.20 - http://tracker-py.googlecode.com\"\n")
+            self.write("  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n")
+            self.write("  xmlns=\"http://www.topografix.com/GPX/1/0\"\n")
+            self.write("  xsi:schemaLocation=\"http://www.topografix.com/GPX/1/0 http:/www.topografix.com/GPX/1/0/gpx.xsd\">\n")
+        elif self.mode == "r":
+            pass
+        else:
+            raise "Unknown mode"
+
+    def close(self):
+        if self.mode == "w":
+            self.write("</gpx>")
+        elif self.mode == "r":
+            pass
+        else:
+            raise "Unknown mode"
+        file.close(self)
+
+    def __writeTrackpoint__(self,point,time=None):
+        lat,lon,alt = eval(point)
+        self.write("        <trkpt lat=\"%f\" lon=\"%f\"><ele>%f</ele>" % (lat,lon,alt))
+        if time != None:
+            self.write("<time>%s</time>" % time)
+        self.write("</trkpt>\n")
+
+    def writeWaypoint(self,waypoint):
+        self.write("<wpt lat=\"%f\" lon=\"%f\"><ele>%f</ele><name>%s</name></wpt>\n" %
+                   (waypoint.latitude, waypont.longitude, waypoint.altitude, waypoint.name) )
+
+    def writeTrack(self,track):
+        self.write("<trk><name>%s</name>\n" % track.data["name"])
+        self.write("    <trkseg>\n")
+        keys = track.data.keys()
+        keys.remove("name")
+        keys.sort()
+        for key in keys:
+            self.__writeTrackpoint__(track.data[key])
+        self.write("    </trkseg>\n")
+        self.write("</trk>\n")
+
+    def writeRoute(self,route):
+        pass
+
+    def readWaypoint(self):
+        return None
+
+    def readRoute(self):
+        return None
+
+    def readTrack(self):
+        return None
+
 
 
 class DataStorage(AlarmResponder):
@@ -156,7 +216,7 @@ class DataStorage(AlarmResponder):
         pass
 
     def GetWaypoints(self):
-        pass
+        return []
 
 
 
@@ -200,6 +260,13 @@ class DataStorage(AlarmResponder):
         del self.tracklist[name]
         os.remove(self.GetTrackFilename(name))
 
+    def GetTracks(self):
+        return self.tracks
+
+
+    def GetRoutes(self):
+        return []
+
 
     def LoadMapConfig(self,name,filename):
         pass
@@ -221,10 +288,29 @@ class DataStorage(AlarmResponder):
 
 
     def GPXExport(self,name):
-        pass
+        file = GPXFile(self.GetGPXFilename(name),"w")
+        for waypoint in self.GetWaypoints():
+            file.writeWaypoint(waypoint)
+        for route in self.GetRoutes():
+            file.writeRoute(route)
+        for track in self.GetTracks():
+            file.writeTrack(track)
+        file.close()
+
 
     def GPXImport(self,name):
-        pass
+        file = GPXFile(self.GetGPXFilename(name),"r")
+
+        while file.readWaypoint() != None:
+            pass
+
+        while file.readRoute() != None:
+            pass
+
+        while file.readTrack() != None:
+            pass
+
+        file.close()
 
 
     GetInstance = staticmethod(GetInstance)
