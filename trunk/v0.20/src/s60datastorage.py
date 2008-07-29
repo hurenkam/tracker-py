@@ -70,15 +70,17 @@ class S60DataStorage(DataStorage):
     def CreateWaypoint(self,name='',lat=0,lon=0,alt=0):
         wpt = S60Waypoint()
         wpt.name = name
-        wpt.time = Osal.GetTime()
+        wpt.time = Osal.GetInstance().GetTime()
         wpt.latitude = lat
         wpt.longitude = lon
         wpt.altitude = alt
+        print "Created waypoint %s" % name
         return wpt
 
     def SaveWaypoint(self,waypoint):
         if self.lmdb is not None:
             if waypoint.lmid is None:
+                print "adding waypoint %s to lmdb" % waypoint.name
                 landmark = landmarks.CreateLandmark()
                 landmark.SetLandmarkName(u'%s' % waypoint.name)
                 landmark.SetPosition(waypoint.latitude,waypoint.longitude,waypoint.altitude,0,0)
@@ -94,6 +96,7 @@ class S60DataStorage(DataStorage):
                 self.lmdb.UpdateLandmark(landmark)
                 landmark.Close()
         else:
+            print "lmdb not open"
             DataStorage.SaveWaypoint(self,waypoint)
 
     def DeleteWaypoint(self,waypoint):
