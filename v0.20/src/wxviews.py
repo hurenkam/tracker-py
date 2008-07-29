@@ -772,7 +772,8 @@ class WXDashView(wx.PyControl,DashView):
         DataStorage.GetInstance().GPXExport('newtrack')
 
     def OnGPXImport(self,event):
-        pass
+        print "Import from GPX"
+        DataStorage.GetInstance().GPXImport('newtrack')
 
     def Draw(self,rect=None):
         self.update = False

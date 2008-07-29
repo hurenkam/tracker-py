@@ -1,4 +1,5 @@
 from dataprovider import *
+from XmlParser import *
 import os
 
 class Waypoint(Point):
@@ -12,6 +13,7 @@ class Refpoint(Point):
         Point.__init__(self,lat,lon)
         self.x = x
         self.y = y
+        print "Created refpoint"
 
 class Track:
     def __init__(self,name,storage):
@@ -22,11 +24,12 @@ class Track:
         self.data[u"name"]=u"%s" % name
         self.storage.tracklist[name] = filename
         self.storage.tracks.append(self)
+        print "Created track %s" % name
 
     def Open(self,filename):
         try:
             self.data = self.storage.OpenDbmFile(filename,"w")
-            self.Dump()
+            #self.Dump()
         except:
             self.data = self.storage.OpenDbmFile(filename,"n")
 
@@ -60,28 +63,27 @@ class FileSelector:
 
 class GPXFile(file):
     def __init__(self,name,mode):
-        file.__init__(self,name,mode)
-        self.mode = mode
-        if self.mode == "w":
+        if mode == "w":
+            file.__init__(self,name,mode)
+            self.parser=None
             self.write("<gpx\n")
             self.write("  version=\"1.0\"\n")
             self.write("  creator=\"Tracker.py 0.20 - http://tracker-py.googlecode.com\"\n")
             self.write("  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n")
             self.write("  xmlns=\"http://www.topografix.com/GPX/1/0\"\n")
             self.write("  xsi:schemaLocation=\"http://www.topografix.com/GPX/1/0 http:/www.topografix.com/GPX/1/0/gpx.xsd\">\n")
-        elif self.mode == "r":
-            pass
+            print "Opening gpx file %s for writing" % name
+        elif mode == "r":
+            self.parser = XMLParser()
+            self.parser.parseXMLFile(name)
+            print "Opening gpx file %s for reading" % name
         else:
             raise "Unknown mode"
 
     def close(self):
-        if self.mode == "w":
+        if self.parser == None:
             self.write("</gpx>")
-        elif self.mode == "r":
-            pass
-        else:
-            raise "Unknown mode"
-        file.close(self)
+            file.close(self)
 
     def __writeTrackpoint__(self,point,time=None):
         lat,lon,alt = eval(point)
@@ -108,14 +110,70 @@ class GPXFile(file):
     def writeRoute(self,route):
         pass
 
-    def readWaypoint(self):
+    def readWaypoints(self):
+        if self.parser.root is None:
+            print "parser.root not found"
+            return
+
+        keys = self.parser.root.childnodes.keys()
+        if 'wpt' not in keys:
+            print "no waypoints found"
+            return
+
+        for wpt in self.parser.root.childnodes['wpt']:
+            lat = eval(wpt.properties['lat'])
+            lon = eval(wpt.properties['lon'])
+            keys = wpt.childnodes.keys()
+            if 'name' in keys:
+                name = wpt.childnodes['name'][0].content
+                #print "importing waypoint %s" % name
+            else:
+                name = ''
+                print "name tag not found"
+
+            if 'ele' in keys:
+                alt = eval(wpt.childnodes['ele'][0].content)
+                w=DataStorage.GetInstance().CreateWaypoint(name,lat,lon,alt)
+            else:
+                w=DataStorage.GetInstance().CreateWaypoint(name,lat,lon)
+            DataStorage.GetInstance().SaveWaypoint(w)
+
+
+    def readRoutes(self):
         return None
 
-    def readRoute(self):
-        return None
+    def readTracks(self):
+        if self.parser.root is None:
+            print "parser.root not found"
+            return
 
-    def readTrack(self):
-        return None
+        keys = self.parser.root.childnodes.keys()
+        if 'trk' not in keys:
+            print "no tracks found"
+            return
+
+        for trk in self.parser.root.childnodes['trk']:
+            keys = trk.childnodes.keys()
+            if 'name' in keys:
+                name = trk.childnodes['name'][0].content
+            else:
+                name = ''
+            track = DataStorage.GetInstance().OpenTrack(name)
+
+            for trkseg in trk.childnodes['trkseg']:
+                for trkpt in trkseg.childnodes['trkpt']:
+
+                    lat = trkpt.properties['lat']
+                    lon = trkpt.properties['lon']
+
+                    keys = trkpt.childnodes.keys()
+                    if 'ele' in keys:
+                        alt = eval(trkpt.childnodes['ele'][0].content)
+                        track.AddPoint(Point(lat,lon,alt))
+                    else:
+                        track.AddPoint(Point(lat,lon))
+
+            track.Close()
 
 
 
@@ -204,19 +262,19 @@ class DataStorage(AlarmResponder):
 
 
     def InitWaypointList(self,dir='.'):
-        pass
+        print "InitWaypointList(%s)" % dir
 
     def CreateWaypoint(self,name='',lat=0,lon=0,alt=0):
-        pass
+        self.waypoints.append(Waypoint(name,lat,lon,alt))
 
     def SaveWaypoint(self,waypoint):
-        pass
+        self.waypoints.append(waypoint)
 
     def DeleteWaypoint(self,waypoint):
-        pass
+        self.waypoints.remove(waypoint)
 
     def GetWaypoints(self):
-        return []
+        return self.waypoints
 
 
 
@@ -298,18 +356,11 @@ class DataStorage(AlarmResponder):
         file.close()
 
 
-    def GPXImport(self,name):
-        file = GPXFile(self.GetGPXFilename(name),"r")
-
-        while file.readWaypoint() != None:
-            pass
-
-        while file.readRoute() != None:
-            pass
-
-        while file.readTrack() != None:
-            pass
-
+    def GPXImport(self,filename):
+        file = GPXFile(filename,"r")
+        file.readWaypoints()
+        file.readRoutes()
+        file.readTracks()
         file.close()
 
 
