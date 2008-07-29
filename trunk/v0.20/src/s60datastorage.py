@@ -1,10 +1,6 @@
 from datastorage import *
 import e32dbm
 from osal import *
-try:
-    import elementtree.ElementTree as ET
-except:
-    ET=False
 
 
 configlocations = [
@@ -141,59 +137,6 @@ class S60DataStorage(DataStorage):
     def GetGPXFilename(self,name):
         filename = os.path.join(self.config["gpxdir"],name+'.gpx')
         return filename
-
-    def GPXExport(self,name):
-
-        def WriteTrackPoint(root,point,time=None):
-            lat,lon,alt = eval(point)
-            trkpt = ET.SubElement(root,"trkpt")
-            trkpt.set("lat",str(lat))
-            trkpt.set("lon",str(lon))
-            ele = ET.SubElement(trkpt,"ele")
-            ele.text = str(alt)
-            if time != None:
-                t = ET.SubElement(trkpt,"time")
-                t.text = time
-
-        def WriteTrack(root,track):
-            trk = ET.SubElement(root,"trk")
-            name = ET.SubElement(trk,"name")
-            name.text = track.data["name"]
-            trkseg = ET.SubElement(trk,"trkseg")
-            keys = track.data.keys()
-            keys.remove("name")
-            keys.sort()
-            for key in keys:
-                WriteTrackPoint(trkseg,track.data[key])
-
-        def WriteWaypoint(root,waypoint):
-            wpt = ET.SubElement(root,"wpt")
-            wpt.set("lat",str(waypoint.latitude))
-            wpt.set("lon",str(waypoint.longitude))
-            ele = ET.SubElement(wpt,"ele")
-            ele.text = str(waypoint.altitude)
-            name = ET.SubElement(wpt,"name")
-            name.text = waypoint.name
-
-        root = ET.Element('gpx')
-        root.set("version","1.0")
-        root.set("creator","Tracker.py 0.20 - http://tracker-py.googlecode.com")
-        root.set("xmlns:xsi","http://www.w3.org/2001/XMLSchema-instance")
-        root.set("xmlns","http://www.topografix.com/GPX/1/0")
-        root.set("xsi:schemaLocation","http://www.topografix.com/GPX/1/0 http:/www.topografix.com/GPX/1/0/gpx.xsd")
-        waypoints = self.GetWaypoints()
-        for waypoint in waypoints:
-            WriteWaypoint(root,waypoint)
-
-        for track in self.tracks:
-            WriteTrack(root,track)
-
-        tree = ET.ElementTree(root)
-        tree.write(self.GetGPXFilename(name))
-
-
-    def GPXImport(self,name):
-        pass
 
 try:
     import landmarks
