@@ -825,10 +825,12 @@ class S60Application(Application, AlarmResponder):
                                     (u'Delete',             self.DeleteTrack),
                                 )
                             ),
-                            (u'GPX',
+                            (u'Im/Export',
                                 (
-                                    (u'Import',             self.GPXImport),
-                                    (u'Export',             self.GPXExport),
+                                    (u'Import GPX',         self.GPXImport),
+                                    (u'Import KML',         self.Dummy),
+                                    (u'Export GPX',         self.GPXExport),
+                                    (u'Export KML',         self.Dummy),
                                 )
                             ),
                             (u'About',                      self.About)]
@@ -1035,7 +1037,17 @@ class S60Application(Application, AlarmResponder):
             appuifw.note(u"Exported waypoints and tracks to %s." % name, "info")
 
     def GPXImport(self):
-        pass
+        files = FileSelector(self.storage.config["gpxdir"],".gpx").files
+        keys = files.keys()
+        keys.sort()
+        id = appuifw.selection_list(keys)
+        if id is not None:
+            print "importing %s" % files[keys[id]]
+            self.storage.GPXImport(files[keys[id]])
+            appuifw.note(u"GPX file %s imported." % files[keys[id]], "info")
+        else:
+            print "no file selected for opening"
+
 
 
     def KeyboardEvent(self,event):
