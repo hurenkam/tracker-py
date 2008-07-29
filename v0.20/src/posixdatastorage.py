@@ -14,7 +14,6 @@ configdefaults = {
         "trackdir":"~/.tracker/tracks",
         "waypointfile":"~/.tracker/waypoints",
         "gpxdir":"~/.tracker/gpx",
-        "zoomedgauge":"0"
     }
 
 class PosixWaypoint(Waypoint):
@@ -78,15 +77,16 @@ class PosixDataStorage(DataStorage):
             name.text = waypoint.name
             wpt.set("lat",str(waypoint.latitude))
             wpt.set("lon",str(waypoint.longitude))
-            ele = ET.SubElement(wpt,"ele")
-            ele.text = str(waypoint.altitude)
+            if str(waypoint.altitude) != "NaN":
+                ele = ET.SubElement(wpt,"ele")
+                ele.text = str(waypoint.altitude)
 
         root = ET.Element('gpx')
         root.set("version","1.0")
         root.set("creator","Tracker.py 0.20 - http://tracker-py.googlecode.com")
         root.set("xmlns:xsi","http://www.w3.org/2001/XMLSchema-instance")
         root.set("xmlns","http://www.topografix.com/GPX/1/0")
-        root.set("xsi:schemaLocation","http://www.topografix.com/GPX/1/0 http:/www.topografix.com/GPX/1/0/gpx.xsd")
+        root.set("xsi:schemaLocation","http://www.topografix.com/GPX/1/0 http://www.topografix.com/GPX/1/0/gpx.xsd")
 
         #waypoints = self.GetWaypoints()
         #for waypoint in waypoints:
