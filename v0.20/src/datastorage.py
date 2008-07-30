@@ -1,6 +1,7 @@
 from dataprovider import *
 from XmlParser import *
 import os
+from graphics import *
 
 class Waypoint(Point):
     def __init__(self,name='',lat=0,lon=0,alt=0):
@@ -177,12 +178,79 @@ class GPXFile(file):
 
 
 
+class MapFile(file):
+#<?xml version "1.0" ?>
+#<map imagefile="e:\maps\51g11_eindhoven.jpg">
+#    <refpoint lat="51.48097" x="0" lon="5.459179" y="0"/>
+#    <refpoint lat="51.44497" x="1600" lon="5.516659" y="1600"/>
+#</map>
+
+    def __init__(self,name,mode):
+        if mode == "w":
+            file.__init__(self,name,mode)
+            self.parser=None
+            self.write("<?xml version=\"1.0\" ?>\n")
+            self.write("<map imagefile=\"%s\">\n" % name)
+            print "Opening gpx file %s for writing" % name
+        elif mode == "r":
+            self.parser = XMLParser()
+            self.parser.parseXMLFile(name)
+            print "Opening gpx file %s for reading" % name
+        else:
+            raise "Unknown mode"
+
+    def close(self):
+        if self.parser == None:
+            self.write("</map>")
+            file.close(self)
+
+    def writeRefpoint(self,refpoint):
+        self.write("   <refpoint lat=\"%f\" lon=\"%f\" x=\"%i\" y=\"%i\"/>\n" %
+              (refpoint.latitude, refpoint.longitude, refpoint.x, refpoint.y) )
+
+    def readRefpoints(self):
+        if self.parser.root is None:
+            print "parser.root not found"
+            return
+
+        keys = self.parser.root.childnodes.keys()
+        if 'refpoint' not in keys:
+            print "no waypoints found"
+            return
+
+        refpoints = []
+        for refpoint in self.parser.root.childnodes['refpoint']:
+            lat = eval(refpoint.properties['lat'])
+            lon = eval(refpoint.properties['lon'])
+            x = eval(refpoint.properties['x'])
+            y = eval(refpoint.properties['y'])
+            refpoints.append(Refpoint(lat,lon,x,y))
+
+        return refpoints
+
+
+class Map:
+    def __init__(self,name=None,filename=None,refpoints=[]):
+        self.refpoints=refpoints
+        self.name=name
+        self.filename=filename
+        self.image=None
+
+    def Open(self):
+        print "opening map %s" % self.filename
+        self.image = Image.open(u"%s" % self.filename)
+        #self.image = Image.open(u"e:\\Data\\Tracker\\maps\\Val_de_Boi_12_23.jpg")
+        #Sprint "opened file %s" % self.filename
+
+    def Close(self):
+        self.image = None
+
+
 class DataStorage(AlarmResponder):
     instance = None
 
     def __init__(self):
         self.maps = []
-        self.maplist = {}
         self.tracks = []
         self.tracklist = {}
         self.waypoints = []
@@ -259,6 +327,16 @@ class DataStorage(AlarmResponder):
     def SyncConfigData(self):
         pass
 
+    def SetValue(self,key,value):
+        if str(value) == value:
+            self.config[key] = "\"%s\"" % value
+        else:
+            self.config[key] = str(value)
+
+    def GetValue(self,key):
+        return eval(self.config[key])
+
+
 
 
     def InitWaypointList(self,dir='.'):
@@ -326,14 +404,16 @@ class DataStorage(AlarmResponder):
         return []
 
 
-    def LoadMapConfig(self,name,filename):
-        pass
-
     def InitMapList(self,dir='.'):
         print "Scanning maps in directory %s..." % dir
         selector = FileSelector(dir,".xml")
         for key in selector.files.keys():
-            self.LoadMapConfig(key,selector.files[key])
+            filename = selector.files[key]
+            base,ext = os.path.splitext(filename)
+            f = MapFile(filename,"r")
+            refpoints = f.readRefpoints()
+            self.maps.append(Map(key,base+'.jpg',refpoints))
+            print "Found map %s" % key
 
     def OpenMap(self,name=''):
         pass
