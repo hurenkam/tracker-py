@@ -28,7 +28,7 @@ class Widget:
         self.fontsize=14
         self.font = ('normal',14)
         self.fgcolor = 0
-        self.bgcolor = 0xffffff
+        self.bgcolor = 0xf0f0f0
         self.Resize(size)
 
     def Resize(self,size=None):
@@ -73,7 +73,7 @@ class Widget:
         return (w,h)
 
 class TextWidget(Widget):
-    def __init__(self,text='',hpad=5,vpad=3,fgcolor=0,bgcolor=0xffffff):
+    def __init__(self,text='',hpad=5,vpad=3,fgcolor=0,bgcolor=0xf0f0f0):
         Widget.__init__(self)
         self.fgcolor = fgcolor
         self.bgcolor = bgcolor
@@ -115,6 +115,46 @@ class PositionWidget(Widget):
         else:
             w,h = self.DrawText( (5,5),     u"Position")
             w,h = self.DrawText( (5,5+h+2), u"Unknown")
+
+
+class MapWidget(Widget):
+    def __init__(self,size = None):
+        self.point = None
+        self.storage = DataStorage.GetInstance()
+        self.map = None
+        Widget.__init__(self,size)
+
+    def SetMap(self,map):
+        if self.map != None:
+            self.map.Close()
+        self.map = map
+        self.map.Open()
+        self.Draw()
+
+    def ClearMap(self):
+        if self.map != None:
+            self.map.Close()
+            self.map = None
+
+    def UpdatePosition(self,point):
+        self.position = point
+        self.Draw()
+
+    def Draw(self):
+        Widget.Draw(self)
+        s=self.image.size
+        self.image.rectangle((0,0,s[0],s[1]),outline=0x000000)
+        if self.map != None:
+            width,height = self.size
+            t1x = 2
+            t1y = 2
+            t2x = width-2
+            t2y = height-2
+            self.image.blit(
+                self.map.image,
+                target=(t1x, t1y, t2x, t2y),
+                source=(t1x, t1y, t2x, t2y),
+                scale=1)
 
 
 class Gauge:
@@ -780,6 +820,129 @@ class S60DashView(View):
         self.image.text(coords,text,font=f)
 
 
+class S60MapView(View):
+    def __init__(self):
+        DashView.instance = self
+        self.storage = DataStorage.GetInstance()
+        self.osal = Osal.GetInstance()
+
+        self.mapwidget = MapWidget((230,295))
+        self.menuwidget = TextWidget("Menu",fgcolor=0xffffff,bgcolor=0x0000ff)
+        self.editwidget = TextWidget("Edit",fgcolor=0xffffff,bgcolor=0x0000ff)
+        self.exitwidget = TextWidget("Exit",fgcolor=0xffffff,bgcolor=0x0000ff)
+
+        self.distance = 0
+        self.longitude = 0
+        self.latitude = 0
+        self.time = None
+        self.update = True
+        self.image = None
+
+        self.handledkeys = {
+            EKeyUpArrow:self.MoveUp,
+            EKeyDownArrow:self.MoveDown
+            }
+
+    def LoadMap(self,map):
+        self.mapwidget.SetMap(map)
+        self.Draw()
+
+    def UnloadMap(self):
+        self.mapwidget.ClearMap()
+        self.Draw()
+
+    def MoveUp(self,event):
+        pass
+
+    def MoveDown(self,event):
+        pass
+
+    def Resize(self,rect=None):
+        size = appuifw.app.body.size
+        self.image = Image.new(size)
+        self.image.clear(0xc0c0c0)
+        self.update = True
+        self.Draw()
+
+    def UpdateSignal(self,signal):
+        pass
+
+    def UpdateTime(self,time):
+        pass
+
+    def UpdatePosition(self,point):
+        pass
+
+    def UpdateDistance(self,distance):
+        pass
+
+    def UpdateWaypoint(self,heading,bearing,distance):
+        pass
+
+    def UpdateSpeed(self,speed):
+        pass
+
+    def GetImage(self):
+        return self.image
+
+    def Draw(self,rect=None):
+        self.update = False
+
+        w = self.mapwidget
+        s = w.GetImage().size
+        self.image.blit(
+            image = w.GetImage(),
+            target = (5,5),
+            source = ((0,0),s),
+            scale = 0 )
+
+        w = self.menuwidget
+        s = w.GetImage().size
+        self.image.blit(
+            image = w.GetImage(),
+            target = (5,320-s[1]),
+            source = ((0,0),s),
+            scale = 0 )
+
+        w = self.editwidget
+        s = w.GetImage().size
+        self.image.blit(
+            image = w.GetImage(),
+            target = (120-s[0]/2,320-s[1]),
+            source = ((0,0),s),
+            scale = 0 )
+
+        w = self.exitwidget
+        s = w.GetImage().size
+        self.image.blit(
+            image = w.GetImage(),
+            target = (235-s[0],320-s[1]),
+            source = ((0,0),s),
+            scale = 0 )
+
+    def Blit(self,rect=None):
+        if self.update:
+            self.Draw()
+        if self.image != None:
+            appuifw.app.body.blit(self.image)
+
+    def Show(self):
+        self.Blit()
+
+    def Hide(self):
+        pass
+
+    def KeyboardEvent(self,event):
+        key = event['keycode']
+        if key in self.handledkeys.keys():
+            self.handledkeys[key](event)
+
+    def DrawText(self,coords,text,size=1.0):
+        f = ('normal',int(14*size))
+        #box = self.image.measure_text(text,font=f)
+        self.image.text(coords,text,font=f)
+
+
 class S60Application(Application, AlarmResponder):
     def __init__(self):
         Application.__init__(self)
@@ -801,8 +964,8 @@ class S60Application(Application, AlarmResponder):
                             (u'About',                      self.About),
                             (u'Map',
                                 (
-                                    (u'Open',               self.Dummy),
-                                    (u'Close',              self.Dummy),
+                                    (u'Open',               self.OpenMap),
+                                    (u'Close',              self.CloseMap),
                                     (u'Import',             self.Dummy),
                                     (u'Add WGS84 Refpoint', self.Dummy),
                                     (u'Add RD Refpoint',    self.Dummy),
@@ -835,9 +998,23 @@ class S60Application(Application, AlarmResponder):
                             ),
                             (u'About',                      self.About)]
 
+        self.handledkeys = {
+            EKeyLeftArrow:self.SelectMapview,
+            EKeyRightArrow:self.SelectDashview,
+            }
+
         self.running = True
-        self.view = S60DashView()
-        self.Resize()
+        self.dashview = S60DashView()
+        self.mapview = S60MapView()
+        self.SelectDashview()
+
+    def SelectDashview(self,event=None):
+        self.view = self.dashview
+        self.view.Resize()
+
+    def SelectMapview(self,event=None):
+        self.view = self.mapview
+        self.view.Resize()
 
     def Init(self):
         Application.Init(self)
@@ -1030,6 +1207,28 @@ class S60Application(Application, AlarmResponder):
 
 
 
+    def OpenMap(self):
+        d = {}
+        for m in self.storage.maps:
+            d[m.name]=m
+
+        maps = d.keys()
+        maps.sort()
+
+        id = appuifw.selection_list(maps)
+        if id is not None:
+            print "opening %s" % maps[id]
+            self.mapview.LoadMap(d[maps[id]])
+            appuifw.note(u"Map %s opened." % maps[id], "info")
+        else:
+            print "no file selected for opening"
+
+    def CloseMap(self):
+        self.mapview.UnloadMap()
+        appuifw.note(u"Map closed.", "info")
+
+
+
     def GPXExport(self):
         name = appuifw.query(u"GPX Filename:","text")
         if name is not None:
@@ -1051,7 +1250,12 @@ class S60Application(Application, AlarmResponder):
 
 
     def KeyboardEvent(self,event):
-        self.view.KeyboardEvent(event)
+        key = event['keycode']
+        if key in self.handledkeys.keys():
+            self.handledkeys[key](event)
+        else:
+            self.view.KeyboardEvent(event)
+
 
     def Redraw(self,rect=None):
         try:
