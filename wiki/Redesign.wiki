@@ -2,6 +2,20 @@
 
 http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0001.jpg
 http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0002.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0004.jpg
+
+== Working features ==
+* Dashview with gauges (speed, distance, altitude, heading, signal, time)
+* Waypoint proximity alarm
+* Persistent storage of several settings
+* Integrated with landmarks database (anything in category 'Waypoints' shows up in tracker
+* Track recording
+* Im/export of tracks & waypoints in GPX format
+
+== Todo ==
+* Mapview features.
+* Import map
+* Calibrate map
 
 == Code architecture ==
 The code is now split into several files, I know, having all in one
@@ -11,7 +25,6 @@ modules.
 
 Because I'm mainly developping on OSX and Linux, the redesign is also
 aimed at having the application run on multiple platforms.
-
 
 === Generic modules ===
 
