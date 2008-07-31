@@ -30,13 +30,15 @@ if __name__ == '__main__':
     Main()
 
   elif os.name == 'nt':
+    import simdatastorage
     import simdataprovider
     import ntosal
-    try:
-        import wxviews
-    except:
-        print "import wxviews did not work, trying consoleviews"
-        import consoleviews
+    #try:
+    #    import wxviews
+    #except:
+    #    print "import wxviews did not work, trying consoleviews"
+    #    import consoleviews
+    import wxviews
     Main()
 
   else:

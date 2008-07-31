@@ -6,13 +6,11 @@ class SimDataProvider(Thread, DataProvider):
     current = None
     previous = None
 
-    def __init__(self,track=None):
+    def __init__(self):
         Thread.__init__(self)
         DataProvider.instance = self
         self.osal = Osal.GetInstance()
         self.running = False
-        self.track = track
-        self.prev = None
 
     def run(self):
         print "SimDataProvider GPS Started"
@@ -76,53 +74,15 @@ class SimDataProvider(Thread, DataProvider):
 
         o = Osal.GetInstance()
         p = DataProvider.GetInstance()
-        if self.track == None:
-            while self.running:
-                o.Sleep(0.5)
-                p.CallBack(data1)
-                o.Sleep(0.5)
-                p.CallBack(data2)
-                o.Sleep(0.5)
-                p.CallBack(data3)
-        else:
-            while self.running:
-                keys = self.track.data.keys()
-                keys.sort()
-                keys.remove("name")
-                for key in keys:
-                    gotoTrackpoint(key,eval(track.data[key]))
+        while self.running:
+            o.Sleep(0.5)
+            p.CallBack(data1)
+            o.Sleep(0.5)
+            p.CallBack(data2)
+            o.Sleep(0.5)
+            p.CallBack(data3)
 
         print "SimDataProvider GPS Stopped"
-
-    def MoveToPoint(self,key,(lat,lon,alt)):
-        if self.prev != None:
-            delta = key - self.prev
-            if delta > 0:
-                osal.sleep(delta)
-                # calc speed and heading
-
-        self.prev = key
-        data = { 'satellites':
-                 { 'horizontal_dop': 2.34999990463257,
-                   'used_satellites': 5,
-                   'vertical_dop': 2.29999995231628,
-                   'time': key,
-                   'satellites': 11,
-                   'time_dop': 1.26999998092651 },
-              'position':
-                 { 'latitude': lat,
-                   'altitude': alt,
-                   'vertical_accuracy': 58.0,
-                   'longitude': lon,
-                   'horizontal_accuracy': 47.531005859375 },
-              'course':
-                 { 'speed': 0.1200000007450581,
-                   'heading': 63.9599990844727,
-                   'heading_accuracy': 359.989990234375,
-                   'speed_accuracy': 99.9 } }
-
-        p.CallBack(data)
-
 
     def StartGPS():
         p = DataProvider.GetInstance()

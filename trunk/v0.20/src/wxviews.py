@@ -636,7 +636,7 @@ class WXDashView(wx.PyControl,DashView):
                 ((320,320), (160,160)),
                 ((0,160),   (320,320)),
                 ]
-        self.zoomedgauge = eval(self.storage.config["zoomedgauge"])
+        self.zoomedgauge = self.storage.GetValue("dashview_zoom")
 
         self.distance = 0
         self.time = None
@@ -645,7 +645,9 @@ class WXDashView(wx.PyControl,DashView):
         self.Resize()
         self.handledkeys = {
             wx.WXK_UP:self.MoveUp,
-            wx.WXK_DOWN:self.MoveDown
+            wx.WXK_DOWN:self.MoveDown,
+            wx.WXK_NUMPAD8:self.MoveUp,
+            wx.WXK_NUMPAD2:self.MoveDown
             }
 
         wx.EVT_PAINT (self.frame, self.OnPaint)
@@ -742,10 +744,13 @@ class WXDashView(wx.PyControl,DashView):
         dc.Blit(0,0,w,h,self.dc,0,0)
 
     def OnKeyDown(self,event):
-        key = event.GetKeyCode()
+        print "OnKeyDown"
+        key = event.KeyCode
         if key in self.handledkeys:
+            print "->Handlekey"
             self.handledkeys[key](event)
-        event.Skip()
+        else:
+            event.Skip()
 
     def OnTrackStart(self,event):
         print "Starting track"

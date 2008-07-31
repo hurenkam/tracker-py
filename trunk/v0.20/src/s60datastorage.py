@@ -9,14 +9,40 @@ configlocations = [
     ]
 
 configdefaults = {
-        "title":"Tracker.py",
-        "version":"v0.20a",
-        "screensaver":"on",
-        "mapdir":"e:\\data\\tracker\\maps",
-        "trackdir":"e:\\data\\tracker\\tracks",
-        "waypointfile":"e:\\data\\tracker\\waypoints",
-        "gpxdir":"e:\\data\\tracker\\gpx",
-        "zoomedgauge":"0"
+
+        # New code should use GetValue and SetValue, this will need strings to be
+        # predefined with extra quotes (because eval() will strip the outer pair.
+        # Old code should be reworked to use that as well, work in progress ;-)
+
+        # Application settings
+        "app_name":"u\"Tracker.py\"",
+        "app_version":"u\"v0.20a\"",
+        "app_screensaver":"True",
+        
+        # Map settings
+        "map_dir":"u\"e:\\\\data\\\\tracker\\\\maps\"",
+
+        # Waypoint settings
+        "wpt_dir":"u\"e:\\\\data\\\\tracker\"",
+        "wpt_name":"u\"Tracker-\"",
+        "wpt_tolerance":"100",
+        "wpt_monitor":"None",
+        
+        # Route settings
+        
+        # Track settings
+        "trk_dir":"u\"e:\\\\data\\\\tracker\\\\tracks\"",
+        "trk_name":"u\"Tracker-\"",
+        "trk_interval":"25",
+        "trk_recording":"None",
+
+        # GPX settings
+        "gpx_dir":"u\"e:\\\\data\\\\tracker\\\\gpx\"",
+        "gpx_name":"u\"Tracker-\"",
+        
+        # View settings
+        "dashview_zoom":"0",
+        "mapview_zoom":"0",
     }
 
 class S60Waypoint(Waypoint):
@@ -40,9 +66,9 @@ class S60DataStorage(DataStorage):
             self.lmdb = landmarks.OpenDefaultDatabase()
         else:
             self.lmdb = None
-            self.InitWaypointList(self.config[u"waypointfile"])
-        self.InitMapList(self.config[u"mapdir"])
-        self.InitTrackList(self.config[u"trackdir"])
+            self.InitWaypointList(self.GetValue("wpt_dir"))
+        self.InitMapList(self.GetValue("map_dir"))
+        self.InitTrackList(self.GetValue("trk_dir"))
 
     def OpenDbmFile(self,file,mode):
         return e32dbm.open(file,"%sf" % mode)
@@ -51,7 +77,7 @@ class S60DataStorage(DataStorage):
         return '.e32dbm'
 
     def GetTrackFilename(self,name):
-        filename = os.path.join(self.config["trackdir"],name+self.GetTrackPattern())
+        filename = os.path.join(self.GetValue("trk_dir"),name+self.GetTrackPattern())
         return filename
 
     def GetDefaultCategoryId(self):
@@ -138,7 +164,7 @@ class S60DataStorage(DataStorage):
 
 
     def GetGPXFilename(self,name):
-        filename = os.path.join(self.config["gpxdir"],name+'.gpx')
+        filename = os.path.join(self.GetValue("gpx_dir"),name+'.gpx')
         return filename
 
 try:
