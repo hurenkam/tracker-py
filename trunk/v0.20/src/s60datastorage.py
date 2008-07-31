@@ -18,6 +18,8 @@ configdefaults = {
         "app_name":"u\"Tracker.py\"",
         "app_version":"u\"v0.20a\"",
         "app_screensaver":"True",
+
+        "app_lastview":"1",
         "app_lastknownposition":"Point(0,51.47307,5.48952,66)",
 
         # Map settings
@@ -44,6 +46,7 @@ configdefaults = {
         # View settings
         "dashview_zoom":"0",
         "mapview_zoom":"0",
+        "mapview_lastmap":"u\"51g11_eindhoven\""
     }
 
 class S60Waypoint(Waypoint):
