@@ -1,20 +1,94 @@
 from dataprovider import *
 from XmlParser import *
 import os
-from graphics import *
 
 class Waypoint(Point):
     def __init__(self,name='',lat=0,lon=0,alt=0):
         Point.__init__(self,lat,lon,alt)
         self.name = name
 
+    def __repr__(self):
+        return u"Waypoint(\"%s\",%f,%f,%f)" % (self.name,self.latitude,self.longitude,self.altitude)
+
 
 class Refpoint(Point):
-    def __init(self,lat=0,lon=0,x=0,y=0):
-        Point.__init__(self,lat,lon)
+    def __init__(self,lat=0,lon=0,x=0,y=0):
+        print "Creating Refpoint(%f,%f,%f,%f)" % (lat,lon,x,y)
+        Point.__init__(self,0,lat,lon)
         self.x = x
         self.y = y
-        print "Created refpoint"
+
+    def __repr__(self):
+        return u"Refpoint(%f,%f,%f,%f)" % (self.latitude, self.longitude, self.x, self.y)
+
+
+class MapMetrics:
+    # Size defaults to 5M, this is the max resolution of an N95 camera
+    # larger values are not likely since the app would run out of RAM
+
+    def __init__(self,refpoints=None,size=(2582,1944)):
+        self.refpoints = refpoints
+        self.size=size
+        self.iscalibrated = False
+        self.Calibrate()
+
+    def Calibrate(self):
+        if len(self.refpoints) > 1:
+            r1 = self.refpoints[0]
+            r2 = self.refpoints[1]
+
+            dx = r2.x - r1.x
+            dy = r2.y - r1.y
+            dlon = r2.longitude - r1.longitude
+            dlat = r2.latitude - r1.latitude
+
+            print "Calibrate deltas: ", dx,dy,dlat,dlon
+
+            self.x = r1.x
+            self.y = r1.y
+            self.lat = r1.latitude
+            self.lon = r1.longitude
+            self.x2lon = dlon/dx
+            self.y2lat = dlat/dy
+            self.lon2x = dx/dlon
+            self.lat2y = dy/dlat
+
+            self.iscalibrated = True
+
+    def XY2Wgs(self,x,y):
+        if self.iscalibrated:
+            lon = (x - self.x)*self.x2lon + self.lon
+            lat = (y - self.y)*self.y2lat + self.lat
+            print "XY2Wgs(%f,%f): %f %f" %(x,y,lat,lon)
+            return lat,lon
+        else:
+            print "Not calibrated"
+            return None
+
+    def Wgs2XY(self,lat,lon):
+        if self.iscalibrated:
+            x = (lon - self.lon)*self.lon2x + self.x
+            y = (lat - self.lat)*self.lat2y + self.y
+            print "Wgs2XY(%f,%f): %f %f" %(lat,lon,x,y)
+            return x,y
+        else:
+            print "Not calibrated"
+            return None
+
+    def SetSize(self,size):
+        self.size=size
+
+    def PointOnMap(self,lat,lon):
+        if self.size == None:
+            return None
+
+        w,h = self.size
+        x,y = self.Wgs2XY(lat,lon)
+        if x <= 0 or x > w or y <= 0 or y > h:
+            return None
+
+        return x,y
+
 
 class Track:
     def __init__(self,name,storage):
@@ -181,6 +255,7 @@ class GPXFile(file):
 class MapFile(file):
 #<?xml version "1.0" ?>
 #<map imagefile="e:\maps\51g11_eindhoven.jpg">
+#    <resolution width="1600" height="1600"/>
 #    <refpoint lat="51.48097" x="0" lon="5.459179" y="0"/>
 #    <refpoint lat="51.44497" x="1600" lon="5.516659" y="1600"/>
 #</map>
@@ -204,9 +279,29 @@ class MapFile(file):
             self.write("</map>")
             file.close(self)
 
+    def writeResolution(self,size):
+        self.write("   <resolution width=\"%f\" height=\"%f\"/>\n" % size )
+
     def writeRefpoint(self,refpoint):
         self.write("   <refpoint lat=\"%f\" lon=\"%f\" x=\"%i\" y=\"%i\"/>\n" %
               (refpoint.latitude, refpoint.longitude, refpoint.x, refpoint.y) )
+
+    def readResolution(self):
+        if self.parser.root is None:
+            print "parser.root not found"
+            return None
+
+        keys = self.parser.root.childnodes.keys()
+        if 'resolution' not in keys:
+            print "no resolution found"
+            return None
+
+        resolution = self.parser.root.childnodes['resolution'][0]
+        w = eval(resolution.properties['width'])
+        h = eval(resolution.properties['height'])
+
+        print "readResolution: ",(w,h)
+        return (w,h)
 
     def readRefpoints(self):
         if self.parser.root is None:
@@ -226,25 +321,21 @@ class MapFile(file):
             y = eval(refpoint.properties['y'])
             refpoints.append(Refpoint(lat,lon,x,y))
 
+        print "readRefpoints ", refpoints
         return refpoints
 
 
 class Map:
-    def __init__(self,name=None,filename=None,refpoints=[]):
+    def __init__(self,name=None,filename=None,refpoints=[],resolution=(2582,1944)):
         self.refpoints=refpoints
+        self.resolution=resolution
         self.name=name
         self.filename=filename
         self.image=None
+        self.CalculateMetrics()
 
-    def Open(self):
-        print "opening map %s" % self.filename
-        self.image = Image.open(u"%s" % self.filename)
-        #self.image = Image.open(u"e:\\Data\\Tracker\\maps\\Val_de_Boi_12_23.jpg")
-        #Sprint "opened file %s" % self.filename
-
-    def Close(self):
-        self.image = None
-
+    def CalculateMetrics(self):
+        self.metrics = MapMetrics(self.refpoints,self.resolution)
 
 class DataStorage(AlarmResponder):
     instance = None
@@ -329,12 +420,14 @@ class DataStorage(AlarmResponder):
 
     def SetValue(self,key,value):
         if str(value) == value:
-            self.config[key] = "\"%s\"" % value
+            self.config[key] = "u\"%s\"" % value
         else:
             self.config[key] = str(value)
 
     def GetValue(self,key):
-        return eval(self.config[key])
+        result = eval(self.config[key])
+        #print "GetValue(%s):" % key, result
+        return result
 
 
 
@@ -357,6 +450,7 @@ class DataStorage(AlarmResponder):
 
 
     def InitTrackList(self,dir='.'):
+        print "InitTrackList(%s)" % dir
         selector = FileSelector(dir,self.GetTrackPattern())
         self.tracklist = selector.files
 
@@ -405,15 +499,28 @@ class DataStorage(AlarmResponder):
 
 
     def InitMapList(self,dir='.'):
-        print "Scanning maps in directory %s..." % dir
+        print "InitMapList(%s)" % dir
         selector = FileSelector(dir,".xml")
         for key in selector.files.keys():
             filename = selector.files[key]
             base,ext = os.path.splitext(filename)
             f = MapFile(filename,"r")
+            resolution = f.readResolution()
             refpoints = f.readRefpoints()
-            self.maps.append(Map(key,base+'.jpg',refpoints))
+            self.maps.append(Map(key,base+'.jpg',refpoints,resolution))
+
             print "Found map %s" % key
+
+
+    def FindMaps(lat,lon):
+        results = []
+        for map in maps:
+            if map.metrics != None:
+                if map.metrics.PointOnMap(lat,lon) != None:
+                    results.append(map)
+
+        return results
+
 
     def OpenMap(self,name=''):
         pass

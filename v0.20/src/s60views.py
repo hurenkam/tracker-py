@@ -119,41 +119,73 @@ class PositionWidget(Widget):
 
 class MapWidget(Widget):
     def __init__(self,size = None):
-        self.point = None
+        self.position = None
         self.storage = DataStorage.GetInstance()
         self.map = None
+        self.mapimage = None
         Widget.__init__(self,size)
 
     def SetMap(self,map):
         if self.map != None:
             self.map.Close()
         self.map = map
-        self.map.Open()
+        self.LoadMap()
+
+    def LoadMap(self):
+        self.mapimage = Image.open(u"%s" % self.map.filename)
+        if self.map.metrics != None:
+            self.map.metrics.SetSize(self.mapimage.size)
+
         self.Draw()
 
     def ClearMap(self):
-        if self.map != None:
-            self.map.Close()
-            self.map = None
+        self.mapimage = None
 
     def UpdatePosition(self,point):
         self.position = point
         self.Draw()
 
+    def ScreenArea(self):
+        w,h = self.size
+        return (2,2,w-2,h-2)
+
+    def PointOnMap(self,point):
+        if self.map == None:
+            return None
+
+        if self.mapimage == None:
+            return None
+
+        if self.map.metrics == None:
+            return None
+
+        if self.position == None:
+            return None
+
+        return self.map.metrics.Wgs2XY(self.position.latitude,self.position.longitude)
+
+    def MapArea(self):
+        p = self.PointOnMap(self.position)
+        if p == None:
+            print "not on map"
+            return self.ScreenArea()
+
+        x,y = p
+        w,h = self.size
+        w -= 4
+        h -= 4
+        return  (x-w/2,y-h/2,x+w/2,y+h/2)
+
     def Draw(self):
         Widget.Draw(self)
         s=self.image.size
         self.image.rectangle((0,0,s[0],s[1]),outline=0x000000)
-        if self.map != None:
+        if self.mapimage != None:
             width,height = self.size
-            t1x = 2
-            t1y = 2
-            t2x = width-2
-            t2y = height-2
             self.image.blit(
-                self.map.image,
-                target=(t1x, t1y, t2x, t2y),
-                source=(t1x, t1y, t2x, t2y),
+                self.mapimage,
+                target=self.ScreenArea(),
+                source=self.MapArea(),
                 scale=1)
 
 
@@ -670,7 +702,7 @@ class S60DashView(View):
                 ((160,160), (80,80)),
                 ((0,80),    (160,160)),
                 ]
-        self.zoomedgauge = eval(self.storage.config["zoomedgauge"])
+        self.zoomedgauge = self.storage.GetValue("dashview_zoom")
 
         self.distance = 0
         self.longitude = 0
@@ -685,12 +717,12 @@ class S60DashView(View):
 
     def MoveUp(self,event):
         self.zoomedgauge = (self.zoomedgauge +1) % (len(self.spots))
-        self.storage.config["zoomedgauge"]=str(self.zoomedgauge)
+        self.storage.SetValue("dashview_zoom",self.zoomedgauge)
         self.Resize()
 
     def MoveDown(self,event):
         self.zoomedgauge = (self.zoomedgauge -1) % (len(self.spots))
-        self.storage.config["zoomedgauge"]=str(self.zoomedgauge)
+        self.storage.SetValue("dashview_zoom",self.zoomedgauge)
         self.Resize()
 
 
@@ -871,7 +903,9 @@ class S60MapView(View):
         pass
 
     def UpdatePosition(self,point):
-        pass
+        print point.latitude,point.longitude
+        self.mapwidget.UpdatePosition(point)
+        self.update = True
 
     def UpdateDistance(self,distance):
         pass
@@ -959,8 +993,28 @@ class S60Application(Application, AlarmResponder):
             )
         appuifw.app.body = canvas
         appuifw.app.exit_key_handler=self.Exit
+
+        self.UpdateMenu()
+
+        self.handledkeys = {
+            EKeyLeftArrow:self.SelectMapview,
+            EKeyRightArrow:self.SelectDashview,
+            }
+
+        self.running = True
+        self.dashview = S60DashView()
+        self.mapview = S60MapView()
+        self.SelectDashview()
+
+    def UpdateMenu(self):
+        if self.storage.GetValue("app_screensaver"):
+           togglescreensaver=(u"Disable Screensaver", self.ToggleScreenSaver)
+        else:
+           togglescreensaver=(u"Enable Screensaver", self.ToggleScreenSaver)
+
+
         appuifw.app.menu = [
-                            (u'Toggle Screensaver',         self.ToggleScreenSaver),
+                            togglescreensaver,
                             (u'About',                      self.About),
                             (u'Map',
                                 (
@@ -998,15 +1052,6 @@ class S60Application(Application, AlarmResponder):
                             ),
                             (u'About',                      self.About)]
 
-        self.handledkeys = {
-            EKeyLeftArrow:self.SelectMapview,
-            EKeyRightArrow:self.SelectDashview,
-            }
-
-        self.running = True
-        self.dashview = S60DashView()
-        self.mapview = S60MapView()
-        self.SelectDashview()
 
     def SelectDashview(self,event=None):
         self.view = self.dashview
@@ -1024,16 +1069,15 @@ class S60Application(Application, AlarmResponder):
         self.proximityalarm = None
         self.provider.SetAlarm(self.timealarm)
         self.provider.SetAlarm(self.positionalarm)
-        try:
-            name = self.storage.config["waypoint"]
-            distance = eval(self.storage.config["distance"])
+
+        wpt = self.storage.GetValue("wpt_monitor")
+        if wpt != None:
+            name, distance = wpt
             waypoints = self.storage.GetWaypoints()
             for w in waypoints:
                 if w.name == name:
                     self.proximityalarm=ProximityAlarm(w,distance,self)
                     self.provider.SetAlarm(self.proximityalarm)
-        except:
-            print "no waypoint found"
 
         self.provider.StartGPS()
         self.view.Show()
@@ -1066,21 +1110,12 @@ class S60Application(Application, AlarmResponder):
                  Vibrate(500,100)
                  self.osal.Sleep(0.5)
             self.proximityalarm = None
-            try:
-                del self.storage.config["waypoint"]
-                del self.storage.config["distance"]
-                print "deleted waypoint from config"
-            except:
-                print "unable to delete waypoint from config"
-                pass
-
+            self.storage.SetValue("wpt_monitor",None)
 
         self.view.Show()
 
     def IsScreensaverActive(self):
-        if self.storage.config["screensaver"]=="on":
-            return True
-        return False
+        return self.storage.GetValue("app_screensaver")
 
     def Run(self):
         osal = Osal.GetInstance()
@@ -1139,37 +1174,38 @@ class S60Application(Application, AlarmResponder):
             self.storage.DeleteWaypoint(waypoints[id])
             appuifw.note(u"Waypoint %s deleted." % waypoints[id].name, "info")
 
+    def QueryAndStore(self,msg,type,key):
+        value = self.storage.GetValue(key)
+        result = appuifw.query(u"%s" % msg, type, value)
+        if result != None:
+            self.storage.SetValue(key,result)
+
+        return result
+
     def MonitorWaypoint(self):
         waypoints = self.storage.GetWaypoints()
         id = self.SelectWaypoint(waypoints)
         if id is not None:
             self.monitorwaypoint = waypoints[id]
-            distance = 100.0
-            distance = appuifw.query(u"Notify distance in meters:","float",distance)
-            if distance is None:
-                appuifw.note(u"Now monitoring waypoint %s." % waypoints[id], "info")
-            else:
+            distance = self.QueryAndStore(u"Notify distance in meters:","float","wpt_tolerance")
+            if distance is not None:
                 self.proximityalarm = ProximityAlarm(self.monitorwaypoint,distance,self)
                 self.provider.SetAlarm(self.proximityalarm)
                 appuifw.note(u"Monitoring waypoint %s, notify when within %8.0f meters." % (waypoints[id].name, distance), "info")
-                self.storage.config["waypoint"]=waypoints[id].name
-                self.storage.config["distance"]=str(distance)
+                self.storage.SetValue("wpt_monitor",(waypoints[id].name,distance))
                 print "stored waypoint in config"
 
 
-
-
     def StartRecording(self):
-        try:
-            prevname = self.storage.config["prevtrackname"]
-        except:
-            prevname = ""
-
-        trackname = appuifw.query(u"Trackname:","text",prevname)
+        trackname = self.QueryAndStore(u"Trackname:","text","prevtrackname")
         if trackname is not None:
-            self.storage.OpenTrack(trackname,True,25)
-            appuifw.note(u"Started recording track %s." % trackname, "info")
-            self.storage.config["prevtrackname"]=trackname
+            interval = self.QueryAndStore(u"Interval (m):","float","prevtrackinterval")
+            if interval is not None:
+                self.storage.OpenTrack(trackname,True,interval)
+                appuifw.note(u"Started recording track %s." % trackname, "info")
+                return
+
+        appuifw.note(u"Cancelled StartRecording!", "info")
 
     def StopRecording(self):
         self.storage.StopRecording()
@@ -1230,13 +1266,13 @@ class S60Application(Application, AlarmResponder):
 
 
     def GPXExport(self):
-        name = appuifw.query(u"GPX Filename:","text")
+        name = self.QueryAndStore(u"GPX Filename:","text","gpx_name")
         if name is not None:
             self.storage.GPXExport(name)
             appuifw.note(u"Exported waypoints and tracks to %s." % name, "info")
 
     def GPXImport(self):
-        files = FileSelector(self.storage.config["gpxdir"],".gpx").files
+        files = FileSelector(self.storage.GetValue("gpx_dir"),".gpx").files
         keys = files.keys()
         keys.sort()
         id = appuifw.selection_list(keys)
@@ -1272,11 +1308,10 @@ class S60Application(Application, AlarmResponder):
             pass
 
     def ToggleScreenSaver(self):
+        value = self.storage.GetValue("app_screensaver")
+        self.storage.SetValue("app_screensaver",not value)
+        self.UpdateMenu()
         print "Toggled screensaver"
-        if self.IsScreensaverActive():
-            self.storage.config["screensaver"]="off"
-        else:
-            self.storage.config["screensaver"]="on"
 
     def About(self):
         appuifw.note(u"Tracker\n(c) 2007,2008 by Mark Hurenkamp\nThis program is licensed under GPLv2.", "info")
