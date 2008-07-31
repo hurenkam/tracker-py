@@ -13,7 +13,6 @@ class Waypoint(Point):
 
 class Refpoint(Point):
     def __init__(self,lat=0,lon=0,x=0,y=0):
-        print "Creating Refpoint(%f,%f,%f,%f)" % (lat,lon,x,y)
         Point.__init__(self,0,lat,lon)
         self.x = x
         self.y = y
@@ -22,18 +21,19 @@ class Refpoint(Point):
         return u"Refpoint(%f,%f,%f,%f)" % (self.latitude, self.longitude, self.x, self.y)
 
 
-class MapMetrics:
+class Map:
+    def __init__(self,name=None,filename=None,refpoints=[],size=(2582,1944)):
     # Size defaults to 5M, this is the max resolution of an N95 camera
     # larger values are not likely since the app would run out of RAM
-
-    def __init__(self,refpoints=None,size=(2582,1944)):
         self.refpoints = refpoints
         self.size=size
+        self.name=name
+        self.filename=filename
         self.iscalibrated = False
         self.Calibrate()
 
     def Calibrate(self):
-        if len(self.refpoints) > 1:
+        if self.refpoints != None and len(self.refpoints) > 1:
             r1 = self.refpoints[0]
             r2 = self.refpoints[1]
 
@@ -41,8 +41,6 @@ class MapMetrics:
             dy = r2.y - r1.y
             dlon = r2.longitude - r1.longitude
             dlat = r2.latitude - r1.latitude
-
-            print "Calibrate deltas: ", dx,dy,dlat,dlon
 
             self.x = r1.x
             self.y = r1.y
@@ -59,7 +57,6 @@ class MapMetrics:
         if self.iscalibrated:
             lon = (x - self.x)*self.x2lon + self.lon
             lat = (y - self.y)*self.y2lat + self.lat
-            print "XY2Wgs(%f,%f): %f %f" %(x,y,lat,lon)
             return lat,lon
         else:
             print "Not calibrated"
@@ -69,7 +66,6 @@ class MapMetrics:
         if self.iscalibrated:
             x = (lon - self.lon)*self.lon2x + self.x
             y = (lat - self.lat)*self.lat2y + self.y
-            print "Wgs2XY(%f,%f): %f %f" %(lat,lon,x,y)
             return x,y
         else:
             print "Not calibrated"
@@ -99,7 +95,6 @@ class Track:
         self.data[u"name"]=u"%s" % name
         self.storage.tracklist[name] = filename
         self.storage.tracks.append(self)
-        print "Created track %s" % name
 
     def Open(self,filename):
         try:
@@ -266,11 +261,9 @@ class MapFile(file):
             self.parser=None
             self.write("<?xml version=\"1.0\" ?>\n")
             self.write("<map imagefile=\"%s\">\n" % name)
-            print "Opening gpx file %s for writing" % name
         elif mode == "r":
             self.parser = XMLParser()
             self.parser.parseXMLFile(name)
-            print "Opening gpx file %s for reading" % name
         else:
             raise "Unknown mode"
 
@@ -300,7 +293,6 @@ class MapFile(file):
         w = eval(resolution.properties['width'])
         h = eval(resolution.properties['height'])
 
-        print "readResolution: ",(w,h)
         return (w,h)
 
     def readRefpoints(self):
@@ -321,21 +313,8 @@ class MapFile(file):
             y = eval(refpoint.properties['y'])
             refpoints.append(Refpoint(lat,lon,x,y))
 
-        print "readRefpoints ", refpoints
         return refpoints
 
-
-class Map:
-    def __init__(self,name=None,filename=None,refpoints=[],resolution=(2582,1944)):
-        self.refpoints=refpoints
-        self.resolution=resolution
-        self.name=name
-        self.filename=filename
-        self.image=None
-        self.CalculateMetrics()
-
-    def CalculateMetrics(self):
-        self.metrics = MapMetrics(self.refpoints,self.resolution)
 
 class DataStorage(AlarmResponder):
     instance = None
@@ -508,8 +487,6 @@ class DataStorage(AlarmResponder):
             resolution = f.readResolution()
             refpoints = f.readRefpoints()
             self.maps.append(Map(key,base+'.jpg',refpoints,resolution))
-
-            print "Found map %s" % key
 
 
     def FindMaps(lat,lon):

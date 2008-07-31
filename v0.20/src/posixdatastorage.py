@@ -16,18 +16,18 @@ configdefaults = {
         "app_name":"u\"Tracker.py\"",
         "app_version":"u\"v0.20a\"",
         "app_screensaver":"True",
-        
+
         # Map settings
-        "map_dir":"u\"~/.tracker/maps"",
+        "map_dir":"u\"~/.tracker/maps\"",
 
         # Waypoint settings
         "wpt_dir":"u\"~/.tracker\"",
         "wpt_name":"u\"Tracker-\"",
         "wpt_tolerance":"100",
         "wpt_monitor":"None",
-        
+
         # Route settings
-        
+
         # Track settings
         "trk_dir":"u\"~/.tracker/tracks\"",
         "trk_name":"u\"Tracker-\"",
@@ -37,11 +37,11 @@ configdefaults = {
         # GPX settings
         "gpx_dir":"u\"~/.tracker/gpx\"",
         "gpx_name":"u\"Tracker-\"",
-        
+
         # View settings
         "dashview_zoom":"0",
         "mapview_zoom":"0",
-        
+
         # GPS settings
         "gps_lastposition":"None",
         "gps_distancethreshold":"25",

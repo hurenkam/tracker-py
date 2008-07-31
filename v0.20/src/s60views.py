@@ -98,7 +98,8 @@ class TextWidget(Widget):
 
 class PositionWidget(Widget):
     def __init__(self,size = None):
-        self.point = None
+        s = DataStorage.GetInstance()
+        self.point = s.GetValue("app_lastknownposition")
         Widget.__init__(self,size)
 
     def UpdatePosition(self,point):
@@ -126,7 +127,6 @@ class MapWidget(Widget):
         self.mapimage = None
         self.position = self.storage.GetValue("app_lastknownposition")
         self.UpdatePosition(self.position)
-        print "Last known position", self.position
         self.Resize(size)
 
     def SetMap(self,map):
@@ -136,8 +136,8 @@ class MapWidget(Widget):
 
     def LoadMap(self):
         self.mapimage = Image.open(u"%s" % self.map.filename)
-        if self.map.metrics != None:
-            self.map.metrics.SetSize(self.mapimage.size)
+        if self.map != None:
+            self.map.SetSize(self.mapimage.size)
         self.UpdatePosition(self.position)
 
     def ClearMap(self):
@@ -154,13 +154,10 @@ class MapWidget(Widget):
         if self.mapimage == None:
             return None
 
-        if self.map.metrics == None:
-            return None
-
         if self.position == None:
             return None
 
-        return self.map.metrics.Wgs2XY(self.position.latitude,self.position.longitude)
+        return self.map.Wgs2XY(self.position.latitude,self.position.longitude)
 
     def UpdatePosition(self,point):
         self.position = point
@@ -205,10 +202,11 @@ class MapWidget(Widget):
                     source=self.MapArea(),
                     scale=1)
 
-            if self.onmap == None:
-                c = 0x4040ff
-            else:
-                c = 0x40c040
+            #if self.onmap == None:
+            #    c = 0x4040ff
+            #else:
+            #    c = 0x00cc00
+            c=0x4040ff
 
             self.DrawCursor(self.image,(w/2,h/2),c)
 
@@ -877,7 +875,7 @@ class S60DashView(View):
 
 class S60MapView(View):
     def __init__(self):
-        DashView.instance = self
+        MapView.instance = self
         self.storage = DataStorage.GetInstance()
         self.osal = Osal.GetInstance()
 
@@ -898,7 +896,15 @@ class S60MapView(View):
             EKeyDownArrow:self.MoveDown
             }
 
+        #name = self.storage.GetValue("mapview_lastmap")
+        #for map in self.storage.maps:
+        #    if map.name == name:
+        #        self.map = map
+
+        #self.LoadMap(map)
+
     def LoadMap(self,map):
+        self.storage.SetValue("mapview_lastmap",map.name)
         self.mapwidget.SetMap(map)
         self.Draw()
 
@@ -943,39 +949,40 @@ class S60MapView(View):
         return self.image
 
     def Draw(self,rect=None):
-        self.update = False
+        if self.image !=None:
+            self.update = False
 
-        w = self.mapwidget
-        s = w.GetImage().size
-        self.image.blit(
-            image = w.GetImage(),
-            target = (5,5),
-            source = ((0,0),s),
-            scale = 0 )
+            w = self.mapwidget
+            s = w.GetImage().size
+            self.image.blit(
+                image = w.GetImage(),
+                target = (5,5),
+                source = ((0,0),s),
+                scale = 0 )
 
-        w = self.menuwidget
-        s = w.GetImage().size
-        self.image.blit(
-            image = w.GetImage(),
-            target = (5,320-s[1]),
-            source = ((0,0),s),
-            scale = 0 )
+            w = self.menuwidget
+            s = w.GetImage().size
+            self.image.blit(
+                image = w.GetImage(),
+                target = (5,320-s[1]),
+                source = ((0,0),s),
+                scale = 0 )
 
-        w = self.editwidget
-        s = w.GetImage().size
-        self.image.blit(
-            image = w.GetImage(),
-            target = (120-s[0]/2,320-s[1]),
-            source = ((0,0),s),
-            scale = 0 )
+            w = self.editwidget
+            s = w.GetImage().size
+            self.image.blit(
+                image = w.GetImage(),
+                target = (120-s[0]/2,320-s[1]),
+                source = ((0,0),s),
+                scale = 0 )
 
-        w = self.exitwidget
-        s = w.GetImage().size
-        self.image.blit(
-            image = w.GetImage(),
-            target = (235-s[0],320-s[1]),
-            source = ((0,0),s),
-            scale = 0 )
+            w = self.exitwidget
+            s = w.GetImage().size
+            self.image.blit(
+                image = w.GetImage(),
+                target = (235-s[0],320-s[1]),
+                source = ((0,0),s),
+                scale = 0 )
 
     def Blit(self,rect=None):
         if self.update:
@@ -1027,7 +1034,8 @@ class S60Application(Application, AlarmResponder):
         self.running = True
         self.dashview = S60DashView()
         self.mapview = S60MapView()
-        self.SelectDashview()
+        id = self.storage.GetValue("app_lastview")
+        self.SelectView(id)
 
     def UpdateMenu(self):
         if self.storage.GetValue("app_screensaver"):
@@ -1075,14 +1083,24 @@ class S60Application(Application, AlarmResponder):
                             ),
                             (u'About',                      self.About)]
 
+    def SelectView(self,id):
+        if id < 0 or id > 1:
+            return
 
-    def SelectDashview(self,event=None):
-        self.view = self.dashview
+        self.storage.SetValue("app_lastview",id)
+
+        if id == 0:
+            self.view = self.mapview
+        if id == 1:
+            self.view = self.dashview
+
         self.view.Resize()
 
     def SelectMapview(self,event=None):
-        self.view = self.mapview
-        self.view.Resize()
+        self.SelectView(0)
+
+    def SelectDashview(self,event=None):
+        self.SelectView(1)
 
     def Init(self):
         Application.Init(self)
@@ -1240,7 +1258,6 @@ class S60Application(Application, AlarmResponder):
         tracks = self.storage.tracklist.keys()
         id = appuifw.selection_list(tracks)
         if id is not None:
-            print "opening %s" % tracks[id]
             self.storage.OpenTrack(tracks[id])
             appuifw.note(u"Track %s opened." % tracks[id], "info")
         else:
@@ -1250,7 +1267,6 @@ class S60Application(Application, AlarmResponder):
         tracks = self.storage.tracklist.keys()
         id = appuifw.selection_list(tracks)
         if id is not None:
-            print "closing %s" % tracks[id]
             self.storage.OpenTrack(tracks[id])
             appuifw.note(u"Track %s closed." % tracks[id], "info")
         else:
@@ -1260,7 +1276,6 @@ class S60Application(Application, AlarmResponder):
         tracks = self.storage.tracklist.keys()
         id = appuifw.selection_list(tracks)
         if id is not None:
-            print "deleting %s" % tracks[id]
             self.storage.DeleteTrack(tracks[id])
             appuifw.note(u"Track %s deleted." % tracks[id], "info")
         else:
@@ -1278,7 +1293,6 @@ class S60Application(Application, AlarmResponder):
 
         id = appuifw.selection_list(maps)
         if id is not None:
-            print "opening %s" % maps[id]
             self.mapview.LoadMap(d[maps[id]])
             appuifw.note(u"Map %s opened." % maps[id], "info")
         else:
