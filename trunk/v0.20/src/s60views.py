@@ -119,31 +119,29 @@ class PositionWidget(Widget):
 
 class MapWidget(Widget):
     def __init__(self,size = None):
-        self.position = None
+        Widget.__init__(self,None)
         self.storage = DataStorage.GetInstance()
+        self.position = None
         self.map = None
         self.mapimage = None
-        Widget.__init__(self,size)
+        self.position = self.storage.GetValue("app_lastknownposition")
+        self.UpdatePosition(self.position)
+        print "Last known position", self.position
+        self.Resize(size)
 
     def SetMap(self,map):
-        if self.map != None:
-            self.map.Close()
         self.map = map
+        self.mapimage = None
         self.LoadMap()
 
     def LoadMap(self):
         self.mapimage = Image.open(u"%s" % self.map.filename)
         if self.map.metrics != None:
             self.map.metrics.SetSize(self.mapimage.size)
-
-        self.Draw()
+        self.UpdatePosition(self.position)
 
     def ClearMap(self):
         self.mapimage = None
-
-    def UpdatePosition(self,point):
-        self.position = point
-        self.Draw()
 
     def ScreenArea(self):
         w,h = self.size
@@ -164,8 +162,13 @@ class MapWidget(Widget):
 
         return self.map.metrics.Wgs2XY(self.position.latitude,self.position.longitude)
 
+    def UpdatePosition(self,point):
+        self.position = point
+        self.onmap = self.PointOnMap(point)
+        self.Draw()
+
     def MapArea(self):
-        p = self.PointOnMap(self.position)
+        p = self.onmap
         if p == None:
             print "not on map"
             return self.ScreenArea()
@@ -176,18 +179,38 @@ class MapWidget(Widget):
         h -= 4
         return  (x-w/2,y-h/2,x+w/2,y+h/2)
 
+    def DrawCursor(self,image,coords,color=0):
+        x,y = coords
+        w,h = image.size
+        if x <0 or x>=w or y <0 or y>=h:
+            return
+        image.point((x,y),color,width=3)
+        image.line (((x-10,y),(x-5,y)),color,width=3)
+        image.line (((x+10,y),(x+5,y)),color,width=3)
+        image.line (((x,y-10),(x,y-5)),color,width=3)
+        image.line (((x,y+10),(x,y+5)),color,width=3)
+
     def Draw(self):
         Widget.Draw(self)
-        s=self.image.size
-        self.image.rectangle((0,0,s[0],s[1]),outline=0x000000)
-        if self.mapimage != None:
-            width,height = self.size
-            self.image.blit(
-                self.mapimage,
-                target=self.ScreenArea(),
-                source=self.MapArea(),
-                scale=1)
+        if self.size != None:
 
+            s=self.image.size
+            w,h = s
+            self.image.rectangle((0,0,s[0],s[1]),outline=0x000000)
+            if self.mapimage != None:
+                width,height = self.size
+                self.image.blit(
+                    self.mapimage,
+                    target=self.ScreenArea(),
+                    source=self.MapArea(),
+                    scale=1)
+
+            if self.onmap == None:
+                c = 0x4040ff
+            else:
+                c = 0x40c040
+
+            self.DrawCursor(self.image,(w/2,h/2),c)
 
 class Gauge:
     def __init__(self,radius=None):
@@ -1102,6 +1125,8 @@ class S60Application(Application, AlarmResponder):
                 distance = 0
             self.view.UpdateWaypoint(alarm.avgheading,bearing,distance)
             self.view.UpdateSpeed(alarm.avgspeed)
+
+            self.storage.SetValue("app_lastknownposition",alarm.point)
 
         if alarm == self.proximityalarm:
             print "Proximity alarm!"
