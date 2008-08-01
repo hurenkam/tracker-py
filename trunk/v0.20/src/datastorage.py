@@ -34,6 +34,13 @@ class Map:
 
     def Calibrate(self):
         if self.refpoints != None and len(self.refpoints) > 1:
+
+            print "Calibrating map %s (%i x %i)" % (self.name, self.size[0],self.size[1])
+            count = 0
+            for r in self.refpoints:
+                print "refpoints[%i] lat:%f lon:%f x:%f y:%f" %(count,r.latitude,r.longitude,r.x,r.y)
+                count+=1
+
             r1 = self.refpoints[0]
             r2 = self.refpoints[1]
 
@@ -52,6 +59,22 @@ class Map:
             self.lat2y = dy/dlat
 
             self.iscalibrated = True
+
+            print "x2lon: %f" % self.x2lon
+            print "y2lat: %f" % self.y2lat
+            print "lon2x: %f" % self.lon2x
+            print "lat2y: %f" % self.lat2y
+
+            self.area = self.WgsArea()
+            lat1,lon1,lat2,lon2 = self.area
+            print "Wgs84 topleft:     %f, %f" % (lat1,lon1)
+            print "Wgs84 bottomright: %f, %f" % (lat2,lon2)
+
+    def WgsArea(self):
+        if self.iscalibrated:
+            lat1,lon1 = self.XY2Wgs(0,0)
+            lat2,lon2 = self.XY2Wgs(self.size[0],self.size[1])
+            return (lat1,lon1,lat2,lon2)
 
     def XY2Wgs(self,x,y):
         if self.iscalibrated:
@@ -73,17 +96,22 @@ class Map:
 
     def SetSize(self,size):
         self.size=size
+        self.area = self.WgsArea()
 
-    def PointOnMap(self,lat,lon):
+    def PointOnMap(self,point):
         if self.size == None:
             return None
 
-        w,h = self.size
-        x,y = self.Wgs2XY(lat,lon)
-        if x <= 0 or x > w or y <= 0 or y > h:
+        if not self.iscalibrated:
             return None
 
-        return x,y
+        lat = point.latitude
+        lon = point.longitude
+        lat1,lon1,lat2,lon2 = self.area
+        if lat > lat1 or lat < lat2 or lon < lon1 or lon > lon2:
+            return None
+
+        return self.Wgs2XY(point.latitude,point.longitude)
 
 
 class Track:
@@ -164,7 +192,7 @@ class GPXFile(file):
 
     def writeWaypoint(self,waypoint):
         self.write("<wpt lat=\"%f\" lon=\"%f\"><ele>%f</ele><name>%s</name></wpt>\n" %
-                   (waypoint.latitude, waypont.longitude, waypoint.altitude, waypoint.name) )
+                   (waypoint.latitude, waypoint.longitude, waypoint.altitude, waypoint.name) )
 
     def writeTrack(self,track):
         self.write("<trk><name>%s</name>\n" % track.data["name"])
@@ -480,21 +508,22 @@ class DataStorage(AlarmResponder):
     def InitMapList(self,dir='.'):
         print "InitMapList(%s)" % dir
         selector = FileSelector(dir,".xml")
+        self.maps = []
         for key in selector.files.keys():
             filename = selector.files[key]
             base,ext = os.path.splitext(filename)
             f = MapFile(filename,"r")
             resolution = f.readResolution()
             refpoints = f.readRefpoints()
-            self.maps.append(Map(key,base+'.jpg',refpoints,resolution))
+            m = Map(key,base+'.jpg',refpoints,resolution)
+            self.maps.append(m)
 
 
-    def FindMaps(lat,lon):
+    def FindMaps(self,point):
         results = []
-        for map in maps:
-            if map.metrics != None:
-                if map.metrics.PointOnMap(lat,lon) != None:
-                    results.append(map)
+        for map in self.maps:
+            if map.PointOnMap(point) != None:
+                results.append(map)
 
         return results
 
