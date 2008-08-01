@@ -350,10 +350,14 @@ def CalculateDistanceAndBearing(fromwgs,towgs):
     to_theta = float(to_lat_dec)  / 360.0 * 2.0 * math.pi
     to_landa = float(to_long_dec) / 360.0 * 2.0 * math.pi
 
-    distance = math.acos(
+    try:
+        distance = math.acos(
                 math.sin(from_theta) * math.sin(to_theta) +
                 math.cos(from_theta) * math.cos(to_theta) * math.cos(to_landa-from_landa)
 		    ) * earths_radius
+    except:
+        distance = 0
+        print "Exception when calculating distance in datums.py@358"
 
     bearing = math.atan2(
                 math.sin(to_landa-from_landa) * math.cos(to_theta),

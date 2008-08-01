@@ -125,6 +125,7 @@ class MapWidget(Widget):
         self.position = None
         self.map = None
         self.mapimage = None
+        self.lastarea = None
         self.position = self.storage.GetValue("app_lastknownposition")
         self.UpdatePosition(self.position)
         self.Resize(size)
@@ -139,6 +140,7 @@ class MapWidget(Widget):
         if self.map != None:
             self.map.SetSize(self.mapimage.size)
         self.UpdatePosition(self.position)
+        self.lastarea = None
 
     def ClearMap(self):
         self.mapimage = None
@@ -147,34 +149,29 @@ class MapWidget(Widget):
         w,h = self.size
         return (2,2,w-2,h-2)
 
-    def PointOnMap(self,point):
-        if self.map == None:
-            return None
-
-        if self.mapimage == None:
-            return None
-
-        if self.position == None:
-            return None
-
-        return self.map.Wgs2XY(self.position.latitude,self.position.longitude)
-
     def UpdatePosition(self,point):
         self.position = point
-        self.onmap = self.PointOnMap(point)
+        if self.map != None:
+            self.onmap = self.map.PointOnMap(point)
+        else:
+            self.onmap = None
+
         self.Draw()
 
     def MapArea(self):
         p = self.onmap
         if p == None:
             print "not on map"
+            if self.lastarea != None:
+                return self.lastarea
             return self.ScreenArea()
 
         x,y = p
         w,h = self.size
         w -= 4
         h -= 4
-        return  (x-w/2,y-h/2,x+w/2,y+h/2)
+        self.lastarea = (x-w/2,y-h/2,x+w/2,y+h/2)
+        return self.lastarea
 
     def DrawCursor(self,image,coords,color=0):
         x,y = coords
@@ -202,11 +199,10 @@ class MapWidget(Widget):
                     source=self.MapArea(),
                     scale=1)
 
-            #if self.onmap == None:
-            #    c = 0x4040ff
-            #else:
-            #    c = 0x00cc00
-            c=0x4040ff
+            if self.onmap == None:
+                c = 0
+            else:
+                c = 0x0000ff
 
             self.DrawCursor(self.image,(w/2,h/2),c)
 
@@ -881,7 +877,7 @@ class S60MapView(View):
 
         self.mapwidget = MapWidget((230,295))
         self.menuwidget = TextWidget("Menu",fgcolor=0xffffff,bgcolor=0x0000ff)
-        self.editwidget = TextWidget("Edit",fgcolor=0xffffff,bgcolor=0x0000ff)
+        self.editwidget = TextWidget("Find map",fgcolor=0xffffff,bgcolor=0x0000ff)
         self.exitwidget = TextWidget("Exit",fgcolor=0xffffff,bgcolor=0x0000ff)
 
         self.distance = 0
@@ -890,9 +886,11 @@ class S60MapView(View):
         self.time = None
         self.update = True
         self.image = None
+        self.position = self.storage.GetValue("app_lastknownposition")
 
         self.handledkeys = {
             EKeyUpArrow:self.MoveUp,
+            EKeySelect:self.FindMap,
             EKeyDownArrow:self.MoveDown
             }
 
@@ -911,6 +909,45 @@ class S60MapView(View):
     def UnloadMap(self):
         self.mapwidget.ClearMap()
         self.Draw()
+
+    def FindMap(self,event):
+        print "Locating map..."
+        if self.position != None:
+            availablemaps = self.storage.FindMaps(self.position)
+            count = len(availablemaps)
+            if self.mapwidget.map == None:
+                onmap = False
+            else:
+                onmap = (self.mapwidget.map.PointOnMap(self.position) != None)
+
+            if count > 0:
+                if count>1 and onmap:
+                    id = 0
+
+                    d = {}
+                    for m in availablemaps:
+                        d[m.name]=m
+
+                        maps = d.keys()
+                        maps.sort()
+
+                    id = appuifw.selection_list(maps)
+                    if id is not None:
+                        print "opening %s" % maps[id]
+                        self.LoadMap(d[maps[id]])
+                        appuifw.note(u"Map %s opened." % maps[id], "info")
+                    else:
+                        print "no file selected for opening"
+
+                if not onmap:
+                    self.LoadMap(availablemaps[0])
+                    appuifw.note(u"Map %s opened." % availablemaps[0].name, "info")
+
+            else:
+                appuifw.note(u"No maps found.", "info")
+                print "No map available"
+        else:
+            appuifw.note(u"No position.", "info")
 
     def MoveUp(self,event):
         pass
@@ -933,6 +970,7 @@ class S60MapView(View):
 
     def UpdatePosition(self,point):
         print point.latitude,point.longitude
+        self.position = point
         self.mapwidget.UpdatePosition(point)
         self.update = True
 
@@ -1144,7 +1182,7 @@ class S60Application(Application, AlarmResponder):
             self.view.UpdateWaypoint(alarm.avgheading,bearing,distance)
             self.view.UpdateSpeed(alarm.avgspeed)
 
-            self.storage.SetValue("app_lastknownposition",alarm.point)
+            #self.storage.SetValue("app_lastknownposition",alarm.point)
 
         if alarm == self.proximityalarm:
             print "Proximity alarm!"
@@ -1240,9 +1278,9 @@ class S60Application(Application, AlarmResponder):
 
 
     def StartRecording(self):
-        trackname = self.QueryAndStore(u"Trackname:","text","prevtrackname")
+        trackname = self.QueryAndStore(u"Trackname:","text","trk_name")
         if trackname is not None:
-            interval = self.QueryAndStore(u"Interval (m):","float","prevtrackinterval")
+            interval = self.QueryAndStore(u"Interval (m):","float","trk_interval")
             if interval is not None:
                 self.storage.OpenTrack(trackname,True,interval)
                 appuifw.note(u"Started recording track %s." % trackname, "info")
@@ -1258,6 +1296,7 @@ class S60Application(Application, AlarmResponder):
         tracks = self.storage.tracklist.keys()
         id = appuifw.selection_list(tracks)
         if id is not None:
+            print "opening %s" % tracks[id]
             self.storage.OpenTrack(tracks[id])
             appuifw.note(u"Track %s opened." % tracks[id], "info")
         else:
@@ -1267,6 +1306,7 @@ class S60Application(Application, AlarmResponder):
         tracks = self.storage.tracklist.keys()
         id = appuifw.selection_list(tracks)
         if id is not None:
+            print "closing %s" % tracks[id]
             self.storage.OpenTrack(tracks[id])
             appuifw.note(u"Track %s closed." % tracks[id], "info")
         else:
@@ -1276,6 +1316,7 @@ class S60Application(Application, AlarmResponder):
         tracks = self.storage.tracklist.keys()
         id = appuifw.selection_list(tracks)
         if id is not None:
+            print "deleting %s" % tracks[id]
             self.storage.DeleteTrack(tracks[id])
             appuifw.note(u"Track %s deleted." % tracks[id], "info")
         else:
@@ -1293,6 +1334,7 @@ class S60Application(Application, AlarmResponder):
 
         id = appuifw.selection_list(maps)
         if id is not None:
+            print "opening %s" % maps[id]
             self.mapview.LoadMap(d[maps[id]])
             appuifw.note(u"Map %s opened." % maps[id], "info")
         else:

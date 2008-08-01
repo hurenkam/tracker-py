@@ -50,6 +50,9 @@ class SimDataStorage(DataStorage):
         DataStorage.__init__(self)
         DataStorage.instance = self
         self.config = configdefaults
+        self.InitWaypointList(os.path.expanduser(self.GetValue("wpt_dir")))
+        self.InitMapList(os.path.expanduser(self.GetValue("map_dir")))
+        self.InitTrackList(os.path.expanduser(self.GetValue("trk_dir")))
 
     def OpenDbmFile(self,file,mode):
         return {}
