@@ -35,7 +35,10 @@ class Map:
     def Calibrate(self):
         if self.refpoints != None and len(self.refpoints) > 1:
 
-            print "Calibrating map %s (%i x %i)" % (self.name, self.size[0],self.size[1])
+            if self.size == None:
+                print "Calibrating map %s (? x ?)" % self.name
+            else:
+                print "Calibrating map %s (%i x %i)" % (self.name, self.size[0],self.size[1])
             count = 0
             for r in self.refpoints:
                 print "refpoints[%i] lat:%f lon:%f x:%f y:%f" %(count,r.latitude,r.longitude,r.x,r.y)
@@ -515,7 +518,10 @@ class DataStorage(AlarmResponder):
             f = MapFile(filename,"r")
             resolution = f.readResolution()
             refpoints = f.readRefpoints()
-            m = Map(key,base+'.jpg',refpoints,resolution)
+            if resolution == None:
+                m = Map(key,base+'.jpg',refpoints)
+            else:
+                m = Map(key,base+'.jpg',refpoints,resolution)
             self.maps.append(m)
 
 
