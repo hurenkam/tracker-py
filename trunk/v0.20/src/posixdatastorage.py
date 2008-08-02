@@ -17,6 +17,9 @@ configdefaults = {
         "app_version":"u\"v0.20a\"",
         "app_screensaver":"True",
 
+        "app_lastview":"1",
+        "app_lastknownposition":"Point(0,51.47307,5.48952,66)",
+
         # Map settings
         "map_dir":"u\"~/.tracker/maps\"",
 

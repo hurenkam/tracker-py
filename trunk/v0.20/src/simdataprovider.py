@@ -76,7 +76,7 @@ class SimDataProvider(Thread, DataProvider):
         lon = p.longitude + count * self.dlon
         alt = p.altitude + count * self.dlat
         return Point(0,lat,lon,alt)
-        
+
     def CalcBearingDeltaAndSteps(self,f,t,speed):
         distanceInMeters,self.heading = f.DistanceAndBearing(t)
         metersPerSecond = speed*1000/3600
@@ -85,7 +85,7 @@ class SimDataProvider(Thread, DataProvider):
         self.dlat = (t.latitude - f.latitude)/self.steps
         self.dlon = (t.longitude - f.longitude)/self.steps
         self.dalt = (t.altitude - f.altitude)/self.steps
-        
+
     def run(self):
         print "SimDataProvider GPS Started"
 
@@ -104,17 +104,19 @@ class SimDataProvider(Thread, DataProvider):
             current = Point(0,points[count][0],points[count][1],points[count][2])
             self.CalcBearingDeltaAndSteps(last,current,50)
             for i in range(0,self.steps):
-                #print i
+                print i
                 point = self.CalcPoint(last,i)
+                #tmp = eindhoven[0]
+                #point = Point(0,tmp[0],tmp[1],tmp[2])
                 d["position"]["latitude"]=point.latitude
                 d["position"]["longitude"]=point.longitude
                 d["position"]["altitude"]=point.altitude
                 d["course"]["speed"]=50/3.6
                 d["course"]["heading"]=self.heading
-            
+
                 o.Sleep(0.5)
                 p.CallBack(d)
-                
+
                 if not self.running:
                     break
 
