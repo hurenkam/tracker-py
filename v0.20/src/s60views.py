@@ -191,12 +191,25 @@ class MapWidget(Widget):
             s=self.image.size
             w,h = s
             self.image.rectangle((0,0,s[0],s[1]),outline=0x000000)
+
+            x1,y1,x2,y2 = self.ScreenArea()
+            x3,y3,x4,y4 = self.MapArea()
+            w = x2-x1
+            h = y2-y1
+
+            if x3 < 0:
+                x1 -= x3
+                x3 -= x3
+            if y3 < 0:
+                y1 -= y3
+                y3 -= y3
+
             if self.mapimage != None:
                 width,height = self.size
                 self.image.blit(
                     self.mapimage,
-                    target=self.ScreenArea(),
-                    source=self.MapArea(),
+                    target=(x1,y1,x2,y2),
+                    source=(x3,y3,x4,y4),
                     scale=1)
 
             if self.onmap == None:

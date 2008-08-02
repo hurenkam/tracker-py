@@ -54,6 +54,7 @@ class Widget:
         self.font = wx.Font(22, wx.SWISS, wx.NORMAL, wx.NORMAL)
         self.fgcolor = Color["black"]
         self.bgcolor = Color["white"]
+        self.dc = None
         self.Resize(size)
 
     def Resize(self,size=None):
@@ -75,11 +76,12 @@ class Widget:
         #return self.mask
 
     def Draw(self):
-        self.dc.Clear()
-        self.dc.SetPen(wx.Pen(self.bgcolor,1))
-        self.dc.SetBrush(wx.Brush(self.bgcolor,wx.SOLID))
-        self.dc.DrawRectangleRect((0,0,self.size[0],self.size[1]))
-        self.dc.SetPen(wx.Pen(self.fgcolor,1))
+        if self.dc != None:
+            self.dc.Clear()
+            self.dc.SetPen(wx.Pen(self.bgcolor,1))
+            self.dc.SetBrush(wx.Brush(self.bgcolor,wx.SOLID))
+            self.dc.DrawRectangleRect((0,0,self.size[0],self.size[1]))
+            self.dc.SetPen(wx.Pen(self.fgcolor,1))
 
 
     def GetSize(self):
@@ -113,14 +115,40 @@ class Widget:
         self.dc.DrawText(u"%s" % text,x,y)
         return (w,h)
 
-    def DrawRectangle(self,(x,y,w,h),linecolor,fillcolor=None):
-        #self.image.rectangle((x,y,w,h),outline=linecolor)
+    def DrawRectangle(self,(x,y,w,h),linecolor,fillcolor=None,width=1):
 
         if linecolor is not None:
-            self.dc.SetPen(wx.Pen(linecolor,1))
+            self.dc.SetPen(wx.Pen(linecolor,width))
         if fillcolor is not None:
             self.dc.SetBrush(wx.Brush(fillcolor,wx.SOLID))
         self.dc.DrawRectangleRect((0,0,self.size[0],self.size[1]))
+
+    def DrawPoint(self,x,y,linecolor=None,width=1):
+        if linecolor is not None:
+            self.dc.SetPen(wx.Pen(linecolor,width))
+        self.dc.DrawPoint(x,y)
+
+    def DrawLine(self,x1,y1,x2,y2,linecolor=None,width=1):
+        if linecolor is not None:
+            self.dc.SetPen(wx.Pen(linecolor,width))
+        self.dc.DrawLine(x1,y1,x2,y2)
+
+    def Blit(self,dc,target,source,scale):
+        x1,y1,x2,y2 = target
+        x3,y3,x4,y4 = source
+        w = x2-x1
+        h = y2-y1
+
+        if x3 < 0:
+            x1 -= x3
+            x3 -= x3
+        if y3 < 0:
+            y1 -= y3
+            y3 -= y3
+        print x1,y1,w,h,x3,y3
+
+        self.dc.Blit(x1,y1,w,h,dc,x3,y3)
+        #self.dc.Blit(0,0,w,h,dc,0,0)
 
 
 class TextWidget(Widget):
@@ -167,6 +195,97 @@ class PositionWidget(Widget):
         else:
             w,h = self.DrawText( (5,5),     u"Position")
             w,h = self.DrawText( (5,5+h+2), u"Unknown")
+
+
+class MapWidget(Widget):
+    def __init__(self,size = None):
+        Widget.__init__(self,None)
+        self.storage = DataStorage.GetInstance()
+        self.position = None
+        self.map = None
+        self.mapimage = None
+        self.lastarea = None
+        self.position = self.storage.GetValue("app_lastknownposition")
+        self.UpdatePosition(self.position)
+        self.Resize(size)
+
+    def SetMap(self,map):
+        self.map = map
+        self.mapimage = None
+        self.LoadMap()
+
+    def LoadMap(self):
+        print "loading map %s " % self.map.filename
+        image = wx.Image(u"%s" % self.map.filename,wx.BITMAP_TYPE_JPEG)
+        #image.LoadFile(u"%s" % self.map.filename)
+        bitmap = wx.BitmapFromImage(image)
+        self.mapimage = wx.MemoryDC()
+        self.mapimage.SelectObject(bitmap)
+
+        if self.map != None:
+            self.map.SetSize(self.mapimage.GetSize().Get())
+        self.UpdatePosition(self.position)
+        self.lastarea = None
+
+    def ClearMap(self):
+        self.mapimage = None
+
+    def ScreenArea(self):
+        w,h = self.size
+        return (2,2,w-2,h-2)
+
+    def UpdatePosition(self,point):
+        self.position = point
+        if self.map != None:
+            self.onmap = self.map.PointOnMap(self.position)
+        else:
+            self.onmap = None
+
+        self.Draw()
+
+    def MapArea(self):
+        p = self.onmap
+        if p == None:
+            print "not on map"
+            if self.lastarea != None:
+                return self.lastarea
+            return self.ScreenArea()
+
+        x,y = p
+        w,h = self.size
+        w -= 4
+        h -= 4
+        self.lastarea = (int(x-w/2),int(y-h/2),int(x+w/2),int(y+h/2))
+        print p,self.lastarea
+        return self.lastarea
+
+    def DrawCursor(self,coords,color=Color["black"]):
+        x,y = coords
+        w,h = self.size
+        if x <0 or x>=w or y <0 or y>=h:
+            return
+
+        self.DrawPoint(x,y,linecolor=color,width=3)
+        self.DrawLine(x-10,y,x-5,y,linecolor=color,width=3)
+        self.DrawLine(x+10,y,x+5,y,linecolor=color,width=3)
+        self.DrawLine(x,y-10,x,y-5,linecolor=color,width=3)
+        self.DrawLine(x,y+10,x,y+5,linecolor=color,width=3)
+
+    def Draw(self):
+        Widget.Draw(self)
+        if self.size != None:
+            w,h = self.size
+            self.DrawRectangle((0,0,w,h),linecolor=Color["black"],fillcolor=None)
+            if self.mapimage != None:
+                self.Blit(self.mapimage,target=self.ScreenArea(),source=self.MapArea(),scale=1)
+
+            if self.onmap == None:
+                c = Color["black"]
+            else:
+                c = Color["darkblue"]
+
+            self.DrawCursor((w/2,h/2),c)
+
 
 
 class Gauge:
@@ -819,6 +938,257 @@ class WXDashView(wx.PyControl,DashView):
             self.exitwidget.GetImage(),0,0 )
 
 
+class WXMapView(wx.PyControl,MapView):
+    def __init__(self):
+        MapView.instance = self
+        self.storage = DataStorage.GetInstance()
+        self.osal = Osal.GetInstance()
+
+        self.mapwidget = MapWidget((460,590))
+        self.menuwidget = TextWidget("Menu",fgcolor=Color["white"],bgcolor=Color["darkblue"])
+        self.editwidget = TextWidget("Find map",fgcolor=Color["white"],bgcolor=Color["darkblue"])
+        self.exitwidget = TextWidget("Exit",fgcolor=Color["white"],bgcolor=Color["darkblue"])
+
+        self.distance = 0
+        self.longitude = 0
+        self.latitude = 0
+        self.time = None
+        self.update = True
+        self.image = None
+        self.position = self.storage.GetValue("app_lastknownposition")
+
+        self.handledkeys = {
+            EKeyUpArrow:self.MoveUp,
+            EKeySelect:self.FindMap,
+            EKeyDownArrow:self.MoveDown
+            }
+
+        self.Resize()
+
+    def __init__(self,frame):
+        wx.PyControl.__init__(self,frame)
+        MapView.__init__(self)
+        self.storage = DataStorage.GetInstance()
+        self.frame = frame
+
+        self.mapwidget = MapWidget((460,590))
+        self.menuwidget = TextWidget("Menu",fgcolor=Color['white'],bgcolor=Color['darkblue'])
+        self.editwidget = TextWidget("Find map",fgcolor=Color['white'],bgcolor=Color['darkblue'])
+        self.exitwidget = TextWidget("Exit",fgcolor=Color['white'],bgcolor=Color['darkblue'])
+        #self.menuwidget.Draw()
+        self.track = None
+
+        self.distance = 0
+        self.time = None
+        self.update = True
+
+        self.Resize()
+        self.handledkeys = {
+            wx.WXK_UP:self.MoveUp,
+            wx.WXK_DOWN:self.MoveDown,
+            wx.WXK_NUMPAD8:self.MoveUp,
+            wx.WXK_NUMPAD2:self.MoveDown
+            }
+
+        wx.EVT_PAINT (self.frame, self.OnPaint)
+        wx.EVT_KEY_DOWN (self.frame, self.OnKeyDown)
+
+        wx.EVT_MENU(self.frame, ID_TRACK_START, self.OnTrackStart)
+        wx.EVT_MENU(self.frame, ID_TRACK_STOP, self.OnTrackStop)
+        wx.EVT_MENU(self.frame, ID_TRACK_OPEN, self.OnTrackOpen)
+        wx.EVT_MENU(self.frame, ID_TRACK_CLOSE, self.OnTrackClose)
+        wx.EVT_MENU(self.frame, ID_TRACK_DEL, self.OnTrackDelete)
+
+        wx.EVT_MENU(self.frame, ID_GPX_EXPORT, self.OnGPXExport)
+        wx.EVT_MENU(self.frame, ID_GPX_IMPORT, self.OnGPXImport)
+
+        self.position = self.storage.GetValue("app_lastknownposition")
+        self.FindMap()
+
+
+    def LoadMap(self,map):
+        self.storage.SetValue("mapview_lastmap",map.name)
+        self.mapwidget.SetMap(map)
+        self.Draw()
+
+    def UnloadMap(self):
+        self.mapwidget.ClearMap()
+        self.Draw()
+
+    def FindMap(self,event=None):
+        print "Locating map..."
+        if self.position != None:
+            availablemaps = self.storage.FindMaps(self.position)
+            count = len(availablemaps)
+            if self.mapwidget.map == None:
+                onmap = False
+            else:
+                onmap = (self.mapwidget.map.PointOnMap(self.position) != None)
+
+            if count > 0:
+                if count>1 and onmap:
+                    id = 0
+
+                    d = {}
+                    for m in availablemaps:
+                        d[m.name]=m
+
+                        maps = d.keys()
+                        maps.sort()
+
+                    id = appuifw.selection_list(maps)
+                    if id is not None:
+                        print "opening %s" % maps[id]
+                        self.LoadMap(d[maps[id]])
+                        print "Map %s opened." % maps[id]
+                        #appuifw.note(u"Map %s opened." % maps[id], "info")
+                    else:
+                        print "no file selected for opening"
+
+                if not onmap:
+                    self.LoadMap(availablemaps[0])
+                    #appuifw.note(u"Map %s opened." % availablemaps[0].name, "info")
+                    print "Map %s opened. " % availablemaps[0].name
+            else:
+                #appuifw.note(u"No maps found.", "info")
+                print "No map available"
+        else:
+            #appuifw.note(u"No position.", "info")
+            print "No position"
+
+    def MoveUp(self,event):
+        pass
+
+    def MoveDown(self,event):
+        pass
+
+    def Resize(self,rect=None):
+        self.panel=wx.Panel(self.frame,size=(480,640))
+        self.panel.Bind(wx.EVT_PAINT,self.OnPaint)
+        self.panel.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
+        self.bitmap = wx.EmptyBitmap(480,640)
+        self.dc = wx.MemoryDC()
+        self.dc.SelectObject(self.bitmap)
+        self.update = True
+
+
+    def UpdateSignal(self,signal):
+        pass
+
+    def UpdateTime(self,time):
+        pass
+
+    def UpdatePosition(self,point):
+        #print point.latitude,point.longitude
+        self.position = point
+        self.mapwidget.UpdatePosition(point)
+        if not self.mapwidget.onmap:
+            self.FindMap()
+        self.update = True
+
+    def UpdateDistance(self,distance):
+        pass
+
+    def UpdateWaypoint(self,heading,bearing,distance):
+        pass
+
+    def UpdateSpeed(self,speed):
+        pass
+
+    def GetImage(self):
+        return self.image
+
+    def Draw(self,rect=None):
+
+        self.update = False
+        self.dc.Clear()
+        self.dc.SetPen(wx.Pen(Color['dashbg'],1))
+        self.dc.SetBrush(wx.Brush(Color['dashbg'],wx.SOLID))
+        self.dc.DrawRectangleRect((0,0,480,640))
+        self.dc.SetPen(wx.Pen(Color['dashfg'],1))
+
+        w,h = self.mapwidget.GetSize()
+        self.dc.Blit(
+            6,6,w,h,
+            self.mapwidget.GetImage(),0,0 )
+
+        w,h = self.menuwidget.GetSize()
+        self.dc.Blit(
+            10,640-h,w,h,
+            self.menuwidget.GetImage(),0,0 )
+
+        w,h = self.editwidget.GetSize()
+        self.dc.Blit(
+            240-w/2,640-h,w,h,
+            self.editwidget.GetImage(),0,0 )
+
+        w,h = self.exitwidget.GetSize()
+        self.dc.Blit(
+            470-w,640-h,w,h,
+            self.exitwidget.GetImage(),0,0 )
+
+    def Hide(self):
+        pass
+
+    def KeyboardEvent(self,event):
+        key = event['keycode']
+        if key in self.handledkeys.keys():
+            self.handledkeys[key](event)
+
+    def DrawText(self,coords,text,size=1.0):
+        f = ('normal',int(14*size))
+        #box = self.image.measure_text(text,font=f)
+        self.image.text(coords,text,font=f)
+
+    def OnPaint(self,event):
+        dc = wx.PaintDC(self.panel)
+        w,h = self.dc.GetSize()
+        dc.Blit(0,0,w,h,self.dc,0,0)
+
+    def OnUpdate(self,event):
+        self.Draw()
+        dc = wx.ClientDC(self.panel)
+        w,h = self.dc.GetSize()
+        dc.Blit(0,0,w,h,self.dc,0,0)
+
+    def OnKeyDown(self,event):
+        print "OnKeyDown"
+        key = event.KeyCode
+        if key in self.handledkeys:
+            print "->Handlekey"
+            self.handledkeys[key](event)
+        else:
+            event.Skip()
+
+    def OnTrackStart(self,event):
+        print "Starting track"
+        self.track = DataStorage.GetInstance().OpenTrack('newtrack',True,25)
+
+    def OnTrackStop(self,event):
+        print "Stopping track"
+        DataStorage.GetInstance().StopRecording()
+
+    def OnTrackOpen(self,event):
+        print "Opening track"
+        self.track = DataStorage.GetInstance().OpenTrack('newtrack')
+
+    def OnTrackClose(self,event):
+        print "Closing track"
+        DataStorage.GetInstance().CloseTrack(self.track)
+
+    def OnTrackDelete(self,event):
+        print "Deleting track"
+        DataStorage.GetInstance().DeleteTrack('newtrack')
+
+    def OnGPXExport(self,event):
+        print "Export to GPX"
+        DataStorage.GetInstance().GPXExport('newtrack')
+
+    def OnGPXImport(self,event):
+        print "Import from GPX"
+        DataStorage.GetInstance().GPXImport('newtrack')
+
+
 class WXApplication(Application,AlarmResponder):
     def __init__(self):
         Application.__init__(self)
@@ -826,7 +1196,8 @@ class WXApplication(Application,AlarmResponder):
         self.storage = DataStorage.GetInstance()
         self.app = wx.PySimpleApp()
         self.frame = WXAppFrame()
-        self.view = WXDashView(self.frame)
+        self.view = WXMapView(self.frame)
+        #self.view = WXDashView(self.frame)
 
     def Init(self):
         Application.Init(self)
@@ -864,7 +1235,7 @@ class WXApplication(Application,AlarmResponder):
         self.view.OnUpdate(None)
 
     def Run(self):
-        self.view.Show(True)
+        self.view.Show()
         self.app.MainLoop()
 
     def Exit(self):
