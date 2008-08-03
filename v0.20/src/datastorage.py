@@ -1,166 +1,8 @@
+from datatypes import *
 from dataprovider import *
 from XmlParser import *
 import os
-
-class Waypoint(Point):
-    def __init__(self,name='',lat=0,lon=0,alt=0):
-        Point.__init__(self,lat,lon,alt)
-        self.name = name
-
-    def __repr__(self):
-        return u"Waypoint(\"%s\",%f,%f,%f)" % (self.name,self.latitude,self.longitude,self.altitude)
-
-
-class Refpoint(Point):
-    def __init__(self,lat=0,lon=0,x=0,y=0):
-        Point.__init__(self,0,lat,lon)
-        self.x = x
-        self.y = y
-
-    def __repr__(self):
-        return u"Refpoint(%f,%f,%f,%f)" % (self.latitude, self.longitude, self.x, self.y)
-
-
-class Map:
-    def __init__(self,name=None,filename=None,refpoints=[],size=(2582,1944)):
-    # Size defaults to 5M, this is the max resolution of an N95 camera
-    # larger values are not likely since the app would run out of RAM
-        self.refpoints = refpoints
-        self.size=size
-        self.name=name
-        self.filename=filename
-        self.iscalibrated = False
-        self.Calibrate()
-
-    def Calibrate(self):
-        if self.refpoints != None and len(self.refpoints) > 1:
-
-            if self.size == None:
-                print "Calibrating map %s (? x ?)" % self.name
-            else:
-                print "Calibrating map %s (%i x %i)" % (self.name, self.size[0],self.size[1])
-            count = 0
-            for r in self.refpoints:
-                print "refpoints[%i] lat:%f lon:%f x:%f y:%f" %(count,r.latitude,r.longitude,r.x,r.y)
-                count+=1
-
-            r1 = self.refpoints[0]
-            r2 = self.refpoints[1]
-
-            dx = r2.x - r1.x
-            dy = r2.y - r1.y
-            dlon = r2.longitude - r1.longitude
-            dlat = r2.latitude - r1.latitude
-
-            self.x = r1.x
-            self.y = r1.y
-            self.lat = r1.latitude
-            self.lon = r1.longitude
-            self.x2lon = dlon/dx
-            self.y2lat = dlat/dy
-            self.lon2x = dx/dlon
-            self.lat2y = dy/dlat
-
-            self.iscalibrated = True
-
-            print "x2lon: %f" % self.x2lon
-            print "y2lat: %f" % self.y2lat
-            print "lon2x: %f" % self.lon2x
-            print "lat2y: %f" % self.lat2y
-
-            self.area = self.WgsArea()
-            lat1,lon1,lat2,lon2 = self.area
-            print "Wgs84 topleft:     %f, %f" % (lat1,lon1)
-            print "Wgs84 bottomright: %f, %f" % (lat2,lon2)
-
-    def WgsArea(self):
-        if self.iscalibrated:
-            lat1,lon1 = self.XY2Wgs(0,0)
-            lat2,lon2 = self.XY2Wgs(self.size[0],self.size[1])
-            return (lat1,lon1,lat2,lon2)
-
-    def XY2Wgs(self,x,y):
-        if self.iscalibrated:
-            lon = (x - self.x)*self.x2lon + self.lon
-            lat = (y - self.y)*self.y2lat + self.lat
-            return lat,lon
-        else:
-            print "Not calibrated"
-            return None
-
-    def Wgs2XY(self,lat,lon):
-        if self.iscalibrated:
-            x = (lon - self.lon)*self.lon2x + self.x
-            y = (lat - self.lat)*self.lat2y + self.y
-            return x,y
-        else:
-            print "Not calibrated"
-            return None
-
-    def SetSize(self,size):
-        self.size=size
-        self.area = self.WgsArea()
-
-    def PointOnMap(self,point):
-        if self.size == None:
-            return None
-
-        if not self.iscalibrated:
-            return None
-
-        lat = point.latitude
-        lon = point.longitude
-        lat1,lon1,lat2,lon2 = self.area
-        if lat > lat1 or lat < lat2 or lon < lon1 or lon > lon2:
-            return None
-
-        return self.Wgs2XY(point.latitude,point.longitude)
-
-
-class Track:
-    def __init__(self,name,storage):
-        self.storage = storage
-        filename = self.storage.GetTrackFilename(name)
-        b,e = os.path.splitext(filename)
-        self.Open(b)
-        self.data[u"name"]=u"%s" % name
-        self.storage.tracklist[name] = filename
-        self.storage.tracks.append(self)
-
-    def Open(self,filename):
-        try:
-            self.data = self.storage.OpenDbmFile(filename,"w")
-            #self.Dump()
-        except:
-            self.data = self.storage.OpenDbmFile(filename,"n")
-
-    def AddPoint(self,point):
-        self.data[str(point.time)] = u"(%s,%s,%s)" % (point.latitude,point.longitude,point.altitude)
-
-    def Dump(self):
-        for key in self.data.keys():
-            print key, self.data[key]
-
-    def Close(self):
-        try:
-            self.data.close()
-        except:
-            print "unable to close track"
-
-class FileSelector:
-    def __init__(self,dir=".",ext='.jpg'):
-        self.dir = dir
-        self.ext = ext
-        self.files = {}
-
-        def iter(fileselector,dir,files):
-            for file in files:
-                b,e = os.path.splitext(file)
-                if e == fileselector.ext:
-                    fileselector.files[u'%s' % b] = os.path.join(dir,file)
-
-        os.path.walk(self.dir,iter,self)
-
+from osal import *
 
 class GPXFile(file):
     def __init__(self,name,mode):
@@ -198,7 +40,7 @@ class GPXFile(file):
                    (waypoint.latitude, waypoint.longitude, waypoint.altitude, waypoint.name) )
 
     def writeTrack(self,track):
-        self.write("<trk><name>%s</name>\n" % track.data["name"])
+        self.write("<trk><name>%s</name>\n" % track.name)
         self.write("    <trkseg>\n")
         keys = track.data.keys()
         keys.remove("name")
@@ -208,8 +50,23 @@ class GPXFile(file):
         self.write("    </trkseg>\n")
         self.write("</trk>\n")
 
+    def __writeRoutepoint__(self,point,time=None):
+        lat,lon,alt = eval(point)
+        self.write("    <rtept lat=\"%f\" lon=\"%f\"><ele>%f</ele>" % (lat,lon,alt))
+        if time != None:
+            self.write("<time>%s</time>" % time)
+        self.write("</rtept>\n")
+
     def writeRoute(self,route):
-        pass
+        self.write("<rte><name>%s</name>\n" % route.name)
+        keys = route.data.keys()
+        keys.remove("name")
+        keys.sort()
+        for key in keys:
+            self.__writeRoutepoint__(route.data[key])
+        self.write("</rte>\n")
+
+
 
     def readWaypoints(self):
         if self.parser.root is None:
@@ -241,7 +98,36 @@ class GPXFile(file):
 
 
     def readRoutes(self):
-        return None
+        if self.parser.root is None:
+            print "parser.root not found"
+            return
+
+        keys = self.parser.root.childnodes.keys()
+        if 'rte' not in keys:
+            print "no routes found"
+            return
+
+        for rte in self.parser.root.childnodes['rte']:
+            keys = rte.childnodes.keys()
+            if 'name' in keys:
+                name = rte.childnodes['name'][0].content
+            else:
+                name = ''
+            route = DataStorage.GetInstance().OpenRoute(name)
+
+            for rtept in rte.childnodes['rtept']:
+
+                lat = rtept.properties['lat']
+                lon = rtept.properties['lon']
+
+                keys = rtept.childnodes.keys()
+                if 'ele' in keys:
+                    alt = eval(rtept.childnodes['ele'][0].content)
+                    route.AddPoint(Point(lat,lon,alt))
+                else:
+                    route.AddPoint(Point(lat,lon))
+
+            route.Close()
 
     def readTracks(self):
         if self.parser.root is None:
@@ -351,13 +237,14 @@ class DataStorage(AlarmResponder):
     instance = None
 
     def __init__(self):
-        self.maps = []
-        self.tracks = []
-        self.tracklist = {}
-        self.waypoints = []
+        self.maps = {}
+        self.tracks = {}
+        self.routes = {}
+        self.waypoints = {}
         self.config = None
         self.recording = None
         self.alarm = None
+        self.osal = Osal.GetInstance()
 
     def __del__(self):
         self.CloseAll()
@@ -372,6 +259,12 @@ class DataStorage(AlarmResponder):
 
 
     def OpenDbmFile(self,file,mode):
+        pass
+
+    def GetRoutePattern(self):
+        pass
+
+    def GetRouteFilename(self,name):
         pass
 
     def GetTrackPattern(self):
@@ -389,7 +282,7 @@ class DataStorage(AlarmResponder):
             self.config.close()
             self.config = None
 
-        for track in self.tracks:
+        for track in self.tracks.values():
             track.Close()
 
 
@@ -406,7 +299,7 @@ class DataStorage(AlarmResponder):
         config = None
         while count < len(locations) and not found:
             try:
-                config = self.OpenDbmFile(locations[count],"w")
+                config = self.osal.OpenDbmFile(locations[count],"w")
                 found = True
             except:
                 count+=1
@@ -414,7 +307,7 @@ class DataStorage(AlarmResponder):
         count = 0
         while count < len(locations) and not found:
             try:
-                config = self.OpenDbmFile(locations[count],"n")
+                config = self.osal.OpenDbmFile(locations[count],"n")
                 found = True
             except:
                 count+=1
@@ -462,50 +355,87 @@ class DataStorage(AlarmResponder):
     def InitTrackList(self,dir='.'):
         print "InitTrackList(%s)" % dir
         selector = FileSelector(dir,self.GetTrackPattern())
-        self.tracklist = selector.files
+        for file in selector.files.values():
+            t = Track(file,open=False)
+            self.tracks[t.name]=t
 
-    def StartRecording(self,track,interval):
+    def RecordTrack(self,name='',interval=25):
+        if name in self.tracks.keys():
+            track = self.tracks[name]
+        else:
+            track = Track(self.GetTrackFilename(name))
+            self.tracks[name]=track
+
+        track.Open()
+
         self.recording = track
         self.alarm = PositionAlarm(None,interval,self)
         DataProvider.GetInstance().SetAlarm(self.alarm)
+        return track
 
     def StopRecording(self):
         DataProvider.GetInstance().DeleteAlarm(self.alarm)
         self.alarm = None
         self.recording = None
 
-    def OpenTrack(self,name='',record=False,interval=25):
-        track = Track(name,self)
-        if record:
-            self.StartRecording(track,interval)
-        return track
 
-    def CloseTrack(self,track):
-        track.Close()
-        self.tracks.remove(track)
-
-    def DeleteTrack(self,track):
-        if track in self.tracks:
-            if track is self.recording:
-                self.StopRecording()
-            name = track.data["name"]
-            self.CloseTrack(track)
-        elif track in self.tracklist.keys():
-            name = track
+    def CloseTrack(self,track=None,name=None):
+        if track != None:
+            track.Close()
+        elif name != None:
+            self.tracks[name].Close()
         else:
             print "Track not found"
-            return
+
+    def DeleteTrack(self,track=None,name=None):
+        if track != None:
+            if track == self.recording:
+                self.StopRecording()
+
+            if track.isopen:
+                track.Close()
+
+            name = track.name
+
+        elif name != None:
+            if self.tracks[name] == self.recording:
+                self.StopRecording()
+
+            if self.tracks[name].isopen:
+                self.tracks[name].Close()
+
+        # Track is now closed and name contains
+        # base filename
 
         print "Deleting track %s" % name
-        del self.tracklist[name]
+        del self.tracks[name]
         os.remove(self.GetTrackFilename(name))
 
     def GetTracks(self):
         return self.tracks
 
 
+    def OpenRoute(self,name=''):
+        route = Route(name,self)
+        return route
+
+    def CloseRoute(self,route):
+        route.Close()
+
+    def DeleteRoute(self,route):
+        if route in self.routes.values():
+            name = route.data["name"]
+            self.CloseTrack(route)
+        else:
+            print "Track not found"
+            return
+
+        print "Deleting route %s" % name
+        del self.routes[name]
+
+
     def GetRoutes(self):
-        return []
+        return self.routes
 
 
     def InitMapList(self,dir='.'):
@@ -546,12 +476,14 @@ class DataStorage(AlarmResponder):
 
     def GPXExport(self,name):
         file = GPXFile(self.GetGPXFilename(name),"w")
-        for waypoint in self.GetWaypoints():
+        for waypoint in self.GetWaypoints().values():
             file.writeWaypoint(waypoint)
-        for route in self.GetRoutes():
-            file.writeRoute(route)
-        for track in self.GetTracks():
-            file.writeTrack(track)
+        for route in self.GetRoutes().values():
+            if route.isopen:
+                file.writeRoute(route)
+        for track in self.GetTracks().values():
+            if track.isopen:
+                file.writeTrack(track)
         file.close()
 
 

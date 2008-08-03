@@ -11,16 +11,16 @@ def Main():
 
 if __name__ == '__main__':
   if os.name == 'e32':
+    import s60osal
     import s60datastorage
     import s60dataprovider
-    import s60osal
     import s60views
     Main()
 
   elif os.name == 'posix':
+    import posixosal
     import posixdatastorage
     import simdataprovider
-    import posixosal
     import wxviews
     try:
         import wxviews
@@ -30,14 +30,14 @@ if __name__ == '__main__':
     Main()
 
   elif os.name == 'nt':
+    import ntosal
     import simdatastorage
     import simdataprovider
-    import ntosal
-    #try:
-    #    import wxviews
-    #except:
-    #    print "import wxviews did not work, trying consoleviews"
-    #    import consoleviews
+    try:
+        import wxviews
+    except:
+        print "import wxviews did not work, trying consoleviews"
+        import consoleviews
     import wxviews
     Main()
 

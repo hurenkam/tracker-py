@@ -1,5 +1,4 @@
 from datastorage import *
-import e32dbm
 from osal import *
 
 
@@ -32,6 +31,8 @@ configdefaults = {
         "wpt_monitor":"None",
 
         # Route settings
+        "rte_dir":"u\"e:\\\\data\\\\tracker\\\\tracks\"",
+        "rte_name":"u\"Tracker-\"",
 
         # Track settings
         "trk_dir":"u\"e:\\\\data\\\\tracker\\\\tracks\"",
@@ -74,14 +75,18 @@ class S60DataStorage(DataStorage):
         self.InitMapList(self.GetValue("map_dir"))
         self.InitTrackList(self.GetValue("trk_dir"))
 
-    def OpenDbmFile(self,file,mode):
-        return e32dbm.open(file,"%sf" % mode)
-
     def GetTrackPattern(self):
         return '.e32dbm'
 
     def GetTrackFilename(self,name):
         filename = os.path.join(self.GetValue("trk_dir"),name+self.GetTrackPattern())
+        return filename
+
+    def GetRoutePattern(self):
+        return '.e32dbm'
+
+    def GetRouteFilename(self,name):
+        filename = os.path.join(self.GetValue("rte_dir"),name+self.GetRoutePattern())
         return filename
 
     def GetDefaultCategoryId(self):
@@ -136,7 +141,6 @@ class S60DataStorage(DataStorage):
             DataStorage.DeleteWaypoint(self,waypoint)
 
     def GetWaypoints(self):
-        list = []
         dict = {}
         if self.lmdb is not None:
             tsc = landmarks.CreateCategoryCriteria(0,0,u'Waypoint')
@@ -156,14 +160,10 @@ class S60DataStorage(DataStorage):
                     else:
                         dict[u"%s-lmid%i" % (w.name,lmid)] = w
 
-                keys = dict.keys()
-                keys.sort()
-                for key in keys:
-                    list.append(dict[key])
         else:
             return DataStorage.GetWaypoints(self)
 
-        return list
+        return dict
 
 
 

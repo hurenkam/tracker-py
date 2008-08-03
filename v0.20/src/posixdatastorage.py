@@ -1,6 +1,4 @@
 from datastorage import *
-import xml.etree.ElementTree as ET
-import dbm
 
 configlocations = [
     u"~/.tracker/config"
