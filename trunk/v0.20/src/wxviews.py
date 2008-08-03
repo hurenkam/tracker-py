@@ -1162,7 +1162,7 @@ class WXMapView(wx.PyControl,MapView):
 
     def OnTrackStart(self,event):
         print "Starting track"
-        self.track = DataStorage.GetInstance().OpenTrack('newtrack',True,25)
+        self.track = DataStorage.GetInstance().RecordTrack('newtrack',25)
 
     def OnTrackStop(self,event):
         print "Stopping track"
@@ -1170,15 +1170,16 @@ class WXMapView(wx.PyControl,MapView):
 
     def OnTrackOpen(self,event):
         print "Opening track"
-        self.track = DataStorage.GetInstance().OpenTrack('newtrack')
+        self.track = DataStorage.GetInstance().tracks['newtrack']
+        self.track.Open()
 
     def OnTrackClose(self,event):
         print "Closing track"
-        DataStorage.GetInstance().CloseTrack(self.track)
+        self.track.Close()
 
     def OnTrackDelete(self,event):
         print "Deleting track"
-        DataStorage.GetInstance().DeleteTrack('newtrack')
+        DataStorage.GetInstance().DeleteTrack(name='newtrack')
 
     def OnGPXExport(self,event):
         print "Export to GPX"

@@ -1232,10 +1232,13 @@ class S60Application(Application, AlarmResponder):
 
 
     def SelectWaypoint(self,waypoints):
-        items = []
-        for i in range(len(waypoints)):
-            items.append(waypoints[i].name)
-        return appuifw.selection_list(items)
+        items = waypoints.keys()
+        items.sort()
+        index = appuifw.selection_list(items)
+        if index != None:
+            return waypoints[items[index]]
+        else:
+            return None
 
     def AddWaypoint(self):
         latitude = appuifw.query(u"Waypoint Latitude:","float",self.position.latitude)
@@ -1263,10 +1266,11 @@ class S60Application(Application, AlarmResponder):
 
     def DeleteWaypoint(self):
         waypoints = self.storage.GetWaypoints()
-        id = self.SelectWaypoint(waypoints)
-        if id is not None:
-            self.storage.DeleteWaypoint(waypoints[id])
-            appuifw.note(u"Waypoint %s deleted." % waypoints[id].name, "info")
+        waypoint = self.SelectWaypoint(waypoints)
+        if waypoint is not None:
+            name = waypoint.name
+            self.storage.DeleteWaypoint(waypoint)
+            appuifw.note(u"Waypoint %s deleted." % name, "info")
 
     def QueryAndStore(self,msg,type,key):
         value = self.storage.GetValue(key)
@@ -1278,9 +1282,9 @@ class S60Application(Application, AlarmResponder):
 
     def MonitorWaypoint(self):
         waypoints = self.storage.GetWaypoints()
-        id = self.SelectWaypoint(waypoints)
-        if id is not None:
-            self.monitorwaypoint = waypoints[id]
+        waypoint = self.SelectWaypoint(waypoints)
+        if waypoint is not None:
+            self.monitorwaypoint = waypoint
             distance = self.QueryAndStore(u"Notify distance in meters:","float","wpt_tolerance")
             if distance is not None:
                 self.proximityalarm = ProximityAlarm(self.monitorwaypoint,distance,self)
@@ -1295,7 +1299,7 @@ class S60Application(Application, AlarmResponder):
         if trackname is not None:
             interval = self.QueryAndStore(u"Interval (m):","float","trk_interval")
             if interval is not None:
-                self.storage.OpenTrack(trackname,True,interval)
+                self.storage.RecordTrack(trackname,interval)
                 appuifw.note(u"Started recording track %s." % trackname, "info")
                 return
 
@@ -1306,27 +1310,30 @@ class S60Application(Application, AlarmResponder):
         appuifw.note(u"Recording stopped.")
 
     def OpenTrack(self):
-        tracks = self.storage.tracklist.keys()
+        tracks = self.storage.tracks.keys()
+        tracks.sort()
         id = appuifw.selection_list(tracks)
         if id is not None:
             print "opening %s" % tracks[id]
-            self.storage.OpenTrack(tracks[id])
+            self.storage.tracks[tracks[id]].Open()
             appuifw.note(u"Track %s opened." % tracks[id], "info")
         else:
             print "no file selected for opening"
 
     def CloseTrack(self):
-        tracks = self.storage.tracklist.keys()
+        tracks = self.storage.tracks.keys()
+        tracks.sort()
         id = appuifw.selection_list(tracks)
         if id is not None:
             print "closing %s" % tracks[id]
-            self.storage.OpenTrack(tracks[id])
+            self.storage.tracks[tracks[id]].Close()
             appuifw.note(u"Track %s closed." % tracks[id], "info")
         else:
             print "no file selected for closing"
 
     def DeleteTrack(self):
-        tracks = self.storage.tracklist.keys()
+        tracks = self.storage.tracks.keys()
+        tracks.sort()
         id = appuifw.selection_list(tracks)
         if id is not None:
             print "deleting %s" % tracks[id]

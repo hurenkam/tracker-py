@@ -1,0 +1,371 @@
+import datums
+import os
+from osal import *
+
+class AlarmResponder:
+    def AlarmTriggered(self,alarm,point,course,signal,time):
+        pass
+
+class Alarm:
+    def __init__(self,caller):
+        self.caller = caller
+        self.id = None
+        self.repeat = False
+
+    def Update(self,point,course,signal,time):
+        pass
+
+    def Condition(self):
+        pass
+
+    def Trigger(self):
+        if self.caller:
+             self.caller.AlarmTriggered(self)
+
+    def SingleShot(self):
+        return not self.repeat
+
+class ProximityAlarm(Alarm):
+    def __init__(self,point,tolerance,caller):
+        Alarm.__init__(self,caller)
+        self.point = point
+        self.tolerance = tolerance
+        self.bearing = 0
+        self.distance = 0
+
+    def Update(self,point,course,signal,time):
+        self.distance, self.bearing = point.DistanceAndBearing(self.point)
+
+    def Condition(self):
+        return self.distance < self.tolerance
+
+class DistanceAlarm(Alarm):
+    def __init__(self,point,distance,caller):
+        Alarm.__init__(self,caller)
+        self.point = point
+        self.requested = distance
+        self.current = 0
+
+    def Update(self,point,course,signal,time):
+        self.current, b = self.point.DistanceAndBearing(point)
+
+    def Condition(self):
+        return self.current > self.requested
+
+class PositionAlarm(Alarm):
+    def __init__(self,point,interval,caller):
+        Alarm.__init__(self,caller)
+        self.refpoint = point
+        self.interval = interval
+        self.repeat = True
+        self.avgheading = 0
+        self.avgspeed = 0
+        self.avgcount = 0
+
+    def Update(self,point,course,signal,time):
+        self.point = point
+        self.course = course
+        self.distance = 0
+
+        if signal.used < 3:
+            return
+
+        if self.refpoint is None:
+            self.refpoint = point
+            self.avgspeed = course.speed
+            self.avgheading = course.heading
+            self.avgcount = 0
+            return
+
+        self.avgcount += 1
+        self.avgspeed = self.avgspeed/self.avgcount * (self.avgcount-1) + course.speed/self.avgcount
+        self.avgheading = self.avgheading/self.avgcount * (self.avgcount-1) + course.heading/self.avgcount
+
+        self.distance,b = self.refpoint.DistanceAndBearing(point)
+
+    def Reset(self,point=None):
+        self.refpoint = self.point
+        self.avgcount = 0
+
+    def Condition(self):
+        if self.distance > self.interval:
+            self.Reset()
+            return True
+        return False
+
+class TimeAlarm(Alarm):
+    def __init__(self,time,interval,caller):
+        Alarm.__init__(self,caller)
+        self.reftime = time
+        self.interval = interval
+        if self.interval is None:
+            self.repeat = False
+        else:
+            self.repeat = True
+
+    def Update(self,point,course,signal,time):
+        self.time = time
+        self.signal = signal
+
+        if self.reftime is None:
+            self.reftime = time
+
+    def Reset(self):
+        self.reftime += self.interval
+
+    def Condition(self):
+        if (self.time - self.reftime) > self.interval:
+            self.Reset()
+            return True
+        return False
+
+class Point:
+    def __init__(self,time=0,lat=0,lon=0,alt=0):
+        self.time = time
+        self.latitude = lat
+        self.longitude = lon
+        self.altitude = alt
+
+    def __repr__(self):
+        return "Point(%f,%f,%f,%f)" % (self.time,self.latitude, self.longitude, self.altitude)
+
+    def DistanceAndBearing(self,point):
+        return datums.CalculateDistanceAndBearing(
+            (self.latitude,self.longitude),
+            (point.latitude,point.longitude)
+            )
+
+    def AltLatitude(self):
+        l = self.latitude
+        l1 = int(l)
+        l2 = int((l - l1) * 60)
+        l3 = (((l - l1) * 60) - l2) * 60
+        return l1, l2, l3
+
+    def AltLongitude(self):
+        l = self.longitude
+        l1 = int(l)
+        l2 = int((l - l1) * 60)
+        l3 = (((l - l1) * 60) - l2) * 60
+        return l1, l2, l3
+
+class Course:
+    def __init__(head,speed,dist):
+        self.heading = head
+        self.speed = speed
+        self.distance = dist
+
+    def __repr__(self):
+        return "Course(%f,%f,%f)" % (self.heading, self.speed, self.distance)
+
+class Signal:
+    def __init__(self,used,found):
+        self.total = 24
+        self.found = found
+        self.used = used
+
+    def __repr__(self):
+        return "Signal(%d,%d,%d)" % (self.used, self.found, self.total)
+
+class Waypoint(Point):
+    def __init__(self,name='',lat=0,lon=0,alt=0):
+        Point.__init__(self,lat,lon,alt)
+        self.name = name
+
+    def __repr__(self):
+        return u"Waypoint(\"%s\",%f,%f,%f)" % (self.name,self.latitude,self.longitude,self.altitude)
+
+
+class Refpoint(Point):
+    def __init__(self,lat=0,lon=0,x=0,y=0):
+        Point.__init__(self,0,lat,lon)
+        self.x = x
+        self.y = y
+
+    def __repr__(self):
+        return u"Refpoint(%f,%f,%f,%f)" % (self.latitude, self.longitude, self.x, self.y)
+
+
+class Map:
+    def __init__(self,name=None,filename=None,refpoints=[],size=(2582,1944)):
+    # Size defaults to 5M, this is the max resolution of an N95 camera
+    # larger values are not likely since the app would run out of RAM
+        self.refpoints = refpoints
+        self.size=size
+        self.name=name
+        self.filename=filename
+        self.iscalibrated = False
+        self.Calibrate()
+
+    def Calibrate(self):
+        if self.refpoints != None and len(self.refpoints) > 1:
+
+            if self.size == None:
+                print "Calibrating map %s (? x ?)" % self.name
+            else:
+                print "Calibrating map %s (%i x %i)" % (self.name, self.size[0],self.size[1])
+            count = 0
+            for r in self.refpoints:
+                print "refpoints[%i] lat:%f lon:%f x:%f y:%f" %(count,r.latitude,r.longitude,r.x,r.y)
+                count+=1
+
+            r1 = self.refpoints[0]
+            r2 = self.refpoints[1]
+
+            dx = r2.x - r1.x
+            dy = r2.y - r1.y
+            dlon = r2.longitude - r1.longitude
+            dlat = r2.latitude - r1.latitude
+
+            self.x = r1.x
+            self.y = r1.y
+            self.lat = r1.latitude
+            self.lon = r1.longitude
+            self.x2lon = dlon/dx
+            self.y2lat = dlat/dy
+            self.lon2x = dx/dlon
+            self.lat2y = dy/dlat
+
+            self.iscalibrated = True
+
+            print "x2lon: %f" % self.x2lon
+            print "y2lat: %f" % self.y2lat
+            print "lon2x: %f" % self.lon2x
+            print "lat2y: %f" % self.lat2y
+
+            self.area = self.WgsArea()
+            lat1,lon1,lat2,lon2 = self.area
+            print "Wgs84 topleft:     %f, %f" % (lat1,lon1)
+            print "Wgs84 bottomright: %f, %f" % (lat2,lon2)
+
+    def WgsArea(self):
+        if self.iscalibrated:
+            lat1,lon1 = self.XY2Wgs(0,0)
+            lat2,lon2 = self.XY2Wgs(self.size[0],self.size[1])
+            return (lat1,lon1,lat2,lon2)
+
+    def XY2Wgs(self,x,y):
+        if self.iscalibrated:
+            lon = (x - self.x)*self.x2lon + self.lon
+            lat = (y - self.y)*self.y2lat + self.lat
+            return lat,lon
+        else:
+            print "Not calibrated"
+            return None
+
+    def Wgs2XY(self,lat,lon):
+        if self.iscalibrated:
+            x = (lon - self.lon)*self.lon2x + self.x
+            y = (lat - self.lat)*self.lat2y + self.y
+            return x,y
+        else:
+            print "Not calibrated"
+            return None
+
+    def SetSize(self,size):
+        self.size=size
+        self.area = self.WgsArea()
+
+    def PointOnMap(self,point):
+        if self.size == None:
+            return None
+
+        if not self.iscalibrated:
+            return None
+
+        lat = point.latitude
+        lon = point.longitude
+        lat1,lon1,lat2,lon2 = self.area
+        if lat > lat1 or lat < lat2 or lon < lon1 or lon > lon2:
+            return None
+
+        return self.Wgs2XY(point.latitude,point.longitude)
+
+
+class Track:
+    def __init__(self,filename,open=True):
+        self.isopen = False
+        self.filename = filename
+        b,e = os.path.splitext(filename)
+        self.name = os.path.basename(b)
+        self.osal = Osal.GetInstance()
+        if open:
+            self.Open()
+            self.data[u"name"]=u"%s" % self.name
+
+    def Open(self):
+        if self.isopen:
+            return
+
+        try:
+            self.data = self.osal.OpenDbmFile(self.filename,"w")
+        except:
+            self.data = self.osal.OpenDbmFile(self.filename,"n")
+        self.isopen = True
+
+    def AddPoint(self,point):
+        self.data[str(point.time)] = u"(%s,%s,%s)" % (point.latitude,point.longitude,point.altitude)
+
+    def Dump(self):
+        for key in self.data.keys():
+            print key, self.data[key]
+
+    def Close(self):
+        if self.isopen:
+            self.data.close()
+        self.isopen = False
+
+
+
+class Route:
+    def __init__(self,filename,open=True):
+        self.isopen = False
+        self.filename = filename
+        b,e = os.path.splitext(filename)
+        self.name = os.path.basename(b)
+        self.osal = osal.Osal.GetInstance()
+        if open:
+            self.Open()
+            self.data[u"name"]=u"%s" % self.name
+
+    def Open(self,filename = None):
+        if self.isopen:
+            return
+
+        if filename != None:
+            self.filename = filename
+
+        try:
+            self.data = self.osal.OpenDbmFile(self.filename,"w")
+        except:
+            self.data = self.osal.OpenDbmFile(self.filename,"n")
+        self.isopen = True
+
+
+    def AddPoint(self,point):
+        self.data[str(point.time)] = u"(%s,%s,%s)" % (point.latitude,point.longitude,point.altitude)
+
+    def Dump(self):
+        for key in self.data.keys():
+            print key, self.data[key]
+
+    def Close(self):
+        if self.isopen:
+            self.data.close()
+        self.isopen = False
+
+
+
+class FileSelector:
+    def __init__(self,dir=".",ext='.jpg'):
+        self.dir = dir
+        self.ext = ext
+        self.files = {}
+
+        def iter(fileselector,dir,files):
+            for file in files:
+                b,e = os.path.splitext(file)
+                if e == fileselector.ext:
+                    fileselector.files[u'%s' % b] = os.path.join(dir,file)
+
+        os.path.walk(self.dir,iter,self)

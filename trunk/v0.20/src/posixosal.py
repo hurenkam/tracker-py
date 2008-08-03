@@ -1,5 +1,7 @@
 from osal import *
 import time
+import os
+import dbm
 
 class PosixOsal(Osal):
     def __init__(self):
@@ -19,6 +21,12 @@ class PosixOsal(Osal):
 
     def GetIsoTime(self):
         return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(ts))
+
+    def OpenDbmFile(self,file,mode):
+        print file,mode
+        file = os.path.expanduser(file)
+        return dbm.open(file,mode)
+
 
 PosixOsal()
 

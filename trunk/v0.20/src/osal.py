@@ -19,6 +19,9 @@ class Osal:
     def GetIsoTime(self):
         pass
 
+    def OpenDbmFile(self,file,mode):
+        pass
+
     GetInstance = staticmethod(GetInstance)
 
 if __name__ == '__main__':

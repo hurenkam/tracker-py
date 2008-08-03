@@ -1,6 +1,8 @@
 from osal import *
 import time
 import appuifw, e32
+import e32dbm
+import os
 
 class S60Osal(Osal):
     def __init__(self):
@@ -20,6 +22,10 @@ class S60Osal(Osal):
 
     def GetIsoTime(self):
         return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(ts))
+
+    def OpenDbmFile(self,file,mode):
+        print "Opening dbm file %s in mode %s " % (file,mode)
+        return e32dbm.open(file,"%sf" % mode)
 
 S60Osal()
 
