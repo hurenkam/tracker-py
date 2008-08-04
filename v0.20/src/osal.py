@@ -27,11 +27,11 @@ class Osal:
 
     def GetDbmExt(self):
         pass
-        
+
     GetInstance = staticmethod(GetInstance)
 
 
-    
+
 class PosixOsal(Osal):
     def __init__(self):
         global db
@@ -54,14 +54,14 @@ class PosixOsal(Osal):
         return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(ts))
 
     def OpenDbmFile(self,file,mode):
-        print file,mode
-        file = os.path.expanduser(file)
-        return db.open(file,mode)
+        b,e = os.path.splitext(os.path.expanduser(file))
+        print "Opening dbm file %s in mode %s " % (b,mode)
+        return db.open(b,mode)
 
     def GetDbmExt(self):
         return ".db"
 
-        
+
 
 class NTOsal(Osal):
     def __init__(self):
@@ -88,9 +88,9 @@ class NTOsal(Osal):
     def GetDbmExt(self):
         return ".db"
 
-        
-        
-        
+
+
+
 class S60Osal(Osal):
     def __init__(self):
         global appuifw
