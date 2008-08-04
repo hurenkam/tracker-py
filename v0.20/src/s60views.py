@@ -9,6 +9,29 @@ import math
 from osal import *
 from datastorage import *
 
+Color = {
+          "black":0x000000,
+          "white":0xffffff,
+          "darkblue":0x0000ff,
+          "darkgreen":0x00ff00,
+          "darkred":0xff0000,
+          "cyan":0x00ffff,
+
+          "north":0x8080ff,
+          "waypoint":0x40ff40,
+
+          "dashbg":0xe0e0e0,
+          "dashfg":0x000000,
+          "gaugebg":0xc0c0c0,
+          "gaugefg":0xffffff,
+
+          "batsignal":0xf04040,
+          "gsmsignal":0x404040,
+          "satsignal":0x4040f0,
+          "nosignal":0xe0e0e0
+    }
+
+
 def SetSystemApp(value):
     try:
         import envy
@@ -135,12 +158,36 @@ class MapWidget(Widget):
         self.mapimage = None
         self.LoadMap()
 
+    def DrawTrackPoint(self,point,color):
+        cur = self.map.PointOnMap(point)
+        if cur != None:
+            self.mapimage.point((cur[0],cur[1]),color,width=5)
+
+    def DrawTrack(self,points,color=Color["darkblue"]):
+        for p in points:
+            self.DrawTrackPoint(p, color)
+
+    def DrawOpenTracks(self):
+        for track in self.storage.tracks.values():
+            if track.isopen:
+                if track.isrecording:
+                    color=Color["red"]
+                else:
+                    color=Color["darkblue"]
+
+                points = track.FindPointsOnMap(self.map)
+                if points != None and len(points) > 1:
+                    self.DrawTrack(points,color)
+                else:
+                    print "No trackpoints"
+
     def LoadMap(self):
         self.mapimage = Image.open(u"%s" % self.map.filename)
         if self.map != None:
             self.map.SetSize(self.mapimage.size)
         self.UpdatePosition(self.position)
         self.lastarea = None
+        self.DrawOpenTracks()
 
     def ClearMap(self):
         self.mapimage = None
@@ -178,7 +225,7 @@ class MapWidget(Widget):
         w,h = image.size
         if x <0 or x>=w or y <0 or y>=h:
             return
-            
+
         image.point((x,y),0xffffff,width=5)
         image.line (((x-10,y),(x-5,y)),0xffffff,width=5)
         image.line (((x+10,y),(x+5,y)),0xffffff,width=5)
@@ -1324,6 +1371,7 @@ class S60Application(Application, AlarmResponder):
             print "opening %s" % tracks[id]
             self.storage.tracks[tracks[id]].Open()
             appuifw.note(u"Track %s opened." % tracks[id], "info")
+            self.mapview.mapwidget.DrawOpenTracks()
         else:
             print "no file selected for opening"
 
@@ -1335,6 +1383,7 @@ class S60Application(Application, AlarmResponder):
             print "closing %s" % tracks[id]
             self.storage.tracks[tracks[id]].Close()
             appuifw.note(u"Track %s closed." % tracks[id], "info")
+            self.mapview.mapwidget.LoadMap()
         else:
             print "no file selected for closing"
 
