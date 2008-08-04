@@ -202,13 +202,13 @@ class Map:
             print "Map %s (%i x %i)" % (self.name, self.size[0], self.size[1])
         else:
             print "Map %s (? x ?)" % self.name
-        
+
         if self.iscalibrated:
             lat1,lon1,lat2,lon2 = self.area
             print "x2lon:%f y2lat:%f lon2x:%f lat2y:%f" % (self.x2lon, self.y2lat, self.lon2x, self.lat2y)
             print "Wgs84 topleft:     %f, %f" % (lat1,lon1)
             print "Wgs84 bottomright: %f, %f" % (lat2,lon2)
-        
+
     def Calibrate(self):
         if self.refpoints != None and len(self.refpoints) > 1:
 
@@ -293,6 +293,7 @@ class Track:
         b,e = os.path.splitext(filename)
         self.name = os.path.basename(b)
         self.osal = Osal.GetInstance()
+        self.isrecording = False
         if open:
             self.Open()
             self.data["name"]="%s" % self.name
@@ -318,8 +319,8 @@ class Track:
         if self.isopen:
             self.data.close()
         self.isopen = False
-        
-    def FindPointsOnMap(self,area):
+
+    def FindPointsOnMap(self,map):
         def isinrange(v,v1,v2):
             if v1>v2:
                 if v < v1 and v > v2:
@@ -328,31 +329,35 @@ class Track:
                 if v > v1 and v < v2:
                     return True
             return False
-    
+
         if not self.isopen:
             print "track not open"
             return []
-            
+
+        if not map.iscalibrated:
+            print "map not calibrated"
+            return []
+
         keys =  self.data.keys()
         try:
             keys.remove("name")
         except:
             pass
-        
-        lat1,lon1,lat2,lon2 = area
+
+        lat1,lon1,lat2,lon2 = map.WgsArea()
         list = []
         keys.sort()
         for k in keys:
             lat,lon,alt = eval(self.data[k])
             if isinrange(lat,lat1,lat2) and isinrange(lon,lon1,lon2):
                 list.append(Point(eval(k),lat,lon,alt))
-        
+
         return list
-        
+
 
     def PrintInfo(self,area=None):
         print "Track %s" % self.name
-        
+
 
 
 class Route:
