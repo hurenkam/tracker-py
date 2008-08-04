@@ -178,6 +178,13 @@ class MapWidget(Widget):
         w,h = image.size
         if x <0 or x>=w or y <0 or y>=h:
             return
+            
+        image.point((x,y),0xffffff,width=5)
+        image.line (((x-10,y),(x-5,y)),0xffffff,width=5)
+        image.line (((x+10,y),(x+5,y)),0xffffff,width=5)
+        image.line (((x,y-10),(x,y-5)),0xffffff,width=5)
+        image.line (((x,y+10),(x,y+5)),0xffffff,width=5)
+
         image.point((x,y),color,width=3)
         image.line (((x-10,y),(x-5,y)),color,width=3)
         image.line (((x+10,y),(x+5,y)),color,width=3)
@@ -1419,5 +1426,3 @@ class S60Application(Application, AlarmResponder):
 
     def Dummy(self):
         appuifw.note(u"Not yet implemented.", "info")
-
-S60Application()

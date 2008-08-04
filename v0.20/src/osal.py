@@ -1,3 +1,6 @@
+import time
+import os
+
 class Osal:
     instance = None
 
@@ -22,7 +25,101 @@ class Osal:
     def OpenDbmFile(self,file,mode):
         pass
 
+    def GetDbmExt(self):
+        pass
+        
     GetInstance = staticmethod(GetInstance)
 
-if __name__ == '__main__':
-    pass
+
+    
+class PosixOsal(Osal):
+    def __init__(self):
+        global db
+        import dbm as db
+        Osal.instance = self
+
+    def ShowInfo(self,text):
+        print "Info: %s" % text
+
+    def ShowError(self,text):
+        print "Error: %s" % text
+
+    def Sleep(self,s):
+        time.sleep(s)
+
+    def GetTime(self):
+        return time.time()
+
+    def GetIsoTime(self):
+        return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(ts))
+
+    def OpenDbmFile(self,file,mode):
+        print file,mode
+        file = os.path.expanduser(file)
+        return db.open(file,mode)
+
+    def GetDbmExt(self):
+        return ".db"
+
+        
+
+class NTOsal(Osal):
+    def __init__(self):
+        global db
+        import dbhash as db
+        Osal.instance = self
+
+    def ShowInfo(self,text):
+        print "Info: %s" % text
+
+    def ShowError(self,text):
+        print "Error: %s" % text
+
+    def Sleep(self,s):
+        time.sleep(s)
+
+    def GetTime(self):
+        return time.time()
+
+    def OpenDbmFile(self,file,mode):
+        print "Opening dbm file %s in mode %s " % (file,mode)
+        return db.open(file,mode)
+
+    def GetDbmExt(self):
+        return ".db"
+
+        
+        
+        
+class S60Osal(Osal):
+    def __init__(self):
+        global appuifw
+        global e32
+        global db
+        import appuifw
+        import e32
+        import e32dbm as db
+        Osal.instance = self
+
+    def ShowInfo(self,text):
+        appuifw.note(u"%s" % text, "info")
+
+    def ShowError(self,text):
+        appuifw.note(u"%s" % text, "error")
+
+    def Sleep(self,s):
+        e32.ao_sleep(s)
+
+    def GetTime(self):
+        return time.time()
+
+    def GetIsoTime(self):
+        return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(ts))
+
+    def OpenDbmFile(self,file,mode):
+        b,e = os.path.splitext(file)
+        print "Opening dbm file %s in mode %s " % (b,mode)
+        return db.open(b,"%sf" % mode)
+
+    def GetDbmExt(self):
+        return ".e32dbm"
