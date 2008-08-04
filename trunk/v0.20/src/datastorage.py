@@ -1,168 +1,9 @@
 from datatypes import *
 from dataprovider import *
 from XmlParser import *
+from gpx import *
 import os
 from osal import *
-
-class GPXFile(file):
-    def __init__(self,name,mode):
-        if mode == "w":
-            file.__init__(self,name,mode)
-            self.parser=None
-            self.write("<gpx\n")
-            self.write("  version=\"1.0\"\n")
-            self.write("  creator=\"Tracker.py 0.20 - http://tracker-py.googlecode.com\"\n")
-            self.write("  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n")
-            self.write("  xmlns=\"http://www.topografix.com/GPX/1/0\"\n")
-            self.write("  xsi:schemaLocation=\"http://www.topografix.com/GPX/1/0 http:/www.topografix.com/GPX/1/0/gpx.xsd\">\n")
-            print "Opening gpx file %s for writing" % name
-        elif mode == "r":
-            self.parser = XMLParser()
-            self.parser.parseXMLFile(name)
-            print "Opening gpx file %s for reading" % name
-        else:
-            raise "Unknown mode"
-
-    def close(self):
-        if self.parser == None:
-            self.write("</gpx>")
-            file.close(self)
-
-    def __writeTrackpoint__(self,point,time=None):
-        lat,lon,alt = eval(point)
-        self.write("        <trkpt lat=\"%f\" lon=\"%f\"><ele>%f</ele>" % (lat,lon,alt))
-        if time != None:
-            self.write("<time>%s</time>" % time)
-        self.write("</trkpt>\n")
-
-    def writeWaypoint(self,waypoint):
-        self.write("<wpt lat=\"%f\" lon=\"%f\"><ele>%f</ele><name>%s</name></wpt>\n" %
-                   (waypoint.latitude, waypoint.longitude, waypoint.altitude, waypoint.name) )
-
-    def writeTrack(self,track):
-        self.write("<trk><name>%s</name>\n" % track.name)
-        self.write("    <trkseg>\n")
-        keys = track.data.keys()
-        keys.remove("name")
-        keys.sort()
-        for key in keys:
-            self.__writeTrackpoint__(track.data[key])
-        self.write("    </trkseg>\n")
-        self.write("</trk>\n")
-
-    def __writeRoutepoint__(self,point,time=None):
-        lat,lon,alt = eval(point)
-        self.write("    <rtept lat=\"%f\" lon=\"%f\"><ele>%f</ele>" % (lat,lon,alt))
-        if time != None:
-            self.write("<time>%s</time>" % time)
-        self.write("</rtept>\n")
-
-    def writeRoute(self,route):
-        self.write("<rte><name>%s</name>\n" % route.name)
-        keys = route.data.keys()
-        keys.remove("name")
-        keys.sort()
-        for key in keys:
-            self.__writeRoutepoint__(route.data[key])
-        self.write("</rte>\n")
-
-
-
-    def readWaypoints(self):
-        if self.parser.root is None:
-            print "parser.root not found"
-            return
-
-        keys = self.parser.root.childnodes.keys()
-        if 'wpt' not in keys:
-            print "no waypoints found"
-            return
-
-        for wpt in self.parser.root.childnodes['wpt']:
-            lat = eval(wpt.properties['lat'])
-            lon = eval(wpt.properties['lon'])
-            keys = wpt.childnodes.keys()
-            if 'name' in keys:
-                name = wpt.childnodes['name'][0].content
-                #print "importing waypoint %s" % name
-            else:
-                name = ''
-                print "name tag not found"
-
-            if 'ele' in keys:
-                alt = eval(wpt.childnodes['ele'][0].content)
-                w=DataStorage.GetInstance().CreateWaypoint(name,lat,lon,alt)
-            else:
-                w=DataStorage.GetInstance().CreateWaypoint(name,lat,lon)
-            DataStorage.GetInstance().SaveWaypoint(w)
-
-
-    def readRoutes(self):
-        if self.parser.root is None:
-            print "parser.root not found"
-            return
-
-        keys = self.parser.root.childnodes.keys()
-        if 'rte' not in keys:
-            print "no routes found"
-            return
-
-        for rte in self.parser.root.childnodes['rte']:
-            keys = rte.childnodes.keys()
-            if 'name' in keys:
-                name = rte.childnodes['name'][0].content
-            else:
-                name = ''
-            route = DataStorage.GetInstance().OpenRoute(name)
-
-            for rtept in rte.childnodes['rtept']:
-
-                lat = rtept.properties['lat']
-                lon = rtept.properties['lon']
-
-                keys = rtept.childnodes.keys()
-                if 'ele' in keys:
-                    alt = eval(rtept.childnodes['ele'][0].content)
-                    route.AddPoint(Point(lat,lon,alt))
-                else:
-                    route.AddPoint(Point(lat,lon))
-
-            route.Close()
-
-    def readTracks(self):
-        if self.parser.root is None:
-            print "parser.root not found"
-            return
-
-        keys = self.parser.root.childnodes.keys()
-        if 'trk' not in keys:
-            print "no tracks found"
-            return
-
-        for trk in self.parser.root.childnodes['trk']:
-            keys = trk.childnodes.keys()
-            if 'name' in keys:
-                name = trk.childnodes['name'][0].content
-            else:
-                name = ''
-            track = DataStorage.GetInstance().OpenTrack(name)
-
-            for trkseg in trk.childnodes['trkseg']:
-                for trkpt in trkseg.childnodes['trkpt']:
-
-                    lat = trkpt.properties['lat']
-                    lon = trkpt.properties['lon']
-
-                    keys = trkpt.childnodes.keys()
-                    if 'ele' in keys:
-                        alt = eval(trkpt.childnodes['ele'][0].content)
-                        track.AddPoint(Point(lat,lon,alt))
-                    else:
-                        track.AddPoint(Point(lat,lon))
-
-            track.Close()
-
-
 
 class MapFile(file):
 #<?xml version "1.0" ?>
@@ -306,11 +147,12 @@ class DataStorage(AlarmResponder):
 
         count = 0
         while count < len(locations) and not found:
-            try:
-                config = self.osal.OpenDbmFile(locations[count],"n")
-                found = True
-            except:
-                count+=1
+            config = self.osal.OpenDbmFile(locations[count],"n")
+            #try:
+            #    config = self.osal.OpenDbmFile(locations[count],"n")
+            #    found = True
+            #except:
+            #    count+=1
 
         if not found:
             raise "Unable to open config file"
@@ -398,11 +240,11 @@ class DataStorage(AlarmResponder):
             name = track.name
 
         elif name != None:
-            if self.tracks[name] == self.recording:
+            if track[name] == self.recording:
                 self.StopRecording()
 
-            if self.tracks[name].isopen:
-                self.tracks[name].Close()
+            if track[name].isopen:
+                track[name].Close()
 
         # Track is now closed and name contains
         # base filename
@@ -496,3 +338,312 @@ class DataStorage(AlarmResponder):
 
 
     GetInstance = staticmethod(GetInstance)
+
+    
+    
+    
+    
+    
+posixlocations = [
+    u"~/.tracker/config"
+    ]
+
+posixdefaults = {
+
+        # New code should use GetValue and SetValue, this will need strings to be
+        # predefined with extra quotes (because eval() will strip the outer pair.
+        # Old code should be reworked to use that as well, work in progress ;-)
+
+        # Application settings
+        "app_name":"u\"Tracker.py\"",
+        "app_version":"u\"v0.20a\"",
+        "app_screensaver":"True",
+
+        "app_lastview":"1",
+        "app_lastknownposition":"Point(0,51.47307,5.48952,66)",
+
+        # Map settings
+        "map_dir":"u\"~/.tracker/maps\"",
+
+        # Waypoint settings
+        "wpt_dir":"u\"~/.tracker\"",
+        "wpt_name":"u\"Tracker-\"",
+        "wpt_tolerance":"100",
+        "wpt_monitor":"None",
+
+        # Route settings
+
+        # Track settings
+        "trk_dir":"u\"~/.tracker/tracks\"",
+        "trk_name":"u\"Tracker-\"",
+        "trk_interval":"25",
+        "trk_recording":"None",
+
+        # GPX settings
+        "gpx_dir":"u\"~/.tracker/gpx\"",
+        "gpx_name":"u\"Tracker-\"",
+
+        # View settings
+        "dashview_zoom":"0",
+        "mapview_zoom":"0",
+
+        # GPS settings
+        "gps_lastposition":"None",
+        "gps_distancethreshold":"25",
+        "gps_updateinterval":"1000000",
+    }
+
+class PosixDataStorage(DataStorage):
+    def __init__(self):
+        global posixlocations
+        DataStorage.__init__(self)
+        DataStorage.instance = self
+        self.config = self.OpenConfig(posixlocations,posixdefaults)
+        self.InitWaypointList(os.path.expanduser(self.GetValue("wpt_dir")))
+        self.InitMapList(os.path.expanduser(self.GetValue("map_dir")))
+        self.InitTrackList(os.path.expanduser(self.GetValue("trk_dir")))
+
+    def GetTrackFilename(self,name):
+        return os.path.join(os.path.expanduser(self.GetValue("trk_dir")),name+self.osal.GetDbmExt())
+
+    def GetGPXFilename(self,name):
+        filename = os.path.join(os.path.expanduser(self.GetValue("gpx_dir")),name+'.gpx')
+        print "GetGPXFilename: %s" % filename
+        return filename
+
+        
+        
+        
+ntlocations = [
+    u"tracker.db"
+    ]
+
+ntdefaults = {
+        # New code should use GetValue and SetValue, this will need strings to be
+        # predefined with extra quotes (because eval() will strip the outer pair.
+        # Old code should be reworked to use that as well, work in progress ;-)
+
+        # Application settings
+        "app_name":"u\"Tracker.py\"",
+        "app_version":"u\"v0.20a\"",
+        "app_screensaver":"True",
+        
+        # Map settings
+        "map_dir":"u\".\"",
+
+        # Waypoint settings
+        "wpt_dir":"u\".\"",
+        "wpt_name":"u\"Tracker-\"",
+        "wpt_tolerance":"100",
+        "wpt_monitor":"None",
+        
+        # Route settings
+        
+        # Track settings
+        "trk_dir":"u\".\"",
+        "trk_name":"u\"Tracker-\"",
+        "trk_interval":"25",
+        "trk_recording":"None",
+
+        # GPX settings
+        "gpx_dir":"u\".\"",
+        "gpx_name":"u\"Tracker-\"",
+        
+        # View settings
+        "dashview_zoom":"0",
+        "mapview_zoom":"0",
+    }
+
+class NTDataStorage(DataStorage):
+    def __init__(self):
+        global ntlocations
+        DataStorage.__init__(self)
+        DataStorage.instance = self
+        self.config = self.OpenConfig(ntlocations,ntdefaults)
+        self.InitWaypointList(os.path.expanduser(self.GetValue("wpt_dir")))
+        self.InitMapList(os.path.expanduser(self.GetValue("map_dir")))
+        self.InitTrackList(os.path.expanduser(self.GetValue("trk_dir")))
+
+    def OpenDbmFile(self,file,mode):
+        print file,mode
+        file = os.path.expanduser(file)
+        return dbm.open(file,mode)
+
+    def GetTrackPattern(self):
+        return '.db'
+
+    def GetTrackFilename(self,name):
+        return os.path.join(self.GetValue("trk_dir"),name+'.db')
+
+    def GetGPXFilename(self,name):
+        filename = os.path.join(self.GetValue("gpx_dir"),name+'.gpx')
+        print "GetGPXFilename: %s" % filename
+        return filename
+
+        
+        
+        
+s60locations = [
+    u"e:\\data\\tracker\\config",
+    u"c:\\data\\tracker\\config"
+    ]
+
+s60defaults = {
+
+        # New code should use GetValue and SetValue, this will need strings to be
+        # predefined with extra quotes (because eval() will strip the outer pair.
+        # Old code should be reworked to use that as well, work in progress ;-)
+
+        # Application settings
+        "app_name":"u\"Tracker.py\"",
+        "app_version":"u\"v0.20a\"",
+        "app_screensaver":"True",
+
+        "app_lastview":"1",
+        "app_lastknownposition":"Point(0,51.47307,5.48952,66)",
+
+        # Map settings
+        "map_dir":"u\"e:\\\\data\\\\tracker\\\\maps\"",
+
+        # Waypoint settings
+        "wpt_dir":"u\"e:\\\\data\\\\tracker\"",
+        "wpt_name":"u\"Tracker-\"",
+        "wpt_tolerance":"100",
+        "wpt_monitor":"None",
+
+        # Route settings
+        "rte_dir":"u\"e:\\\\data\\\\tracker\\\\tracks\"",
+        "rte_name":"u\"Tracker-\"",
+
+        # Track settings
+        "trk_dir":"u\"e:\\\\data\\\\tracker\\\\tracks\"",
+        "trk_name":"u\"Tracker-\"",
+        "trk_interval":"25",
+        "trk_recording":"None",
+
+        # GPX settings
+        "gpx_dir":"u\"e:\\\\data\\\\tracker\\\\gpx\"",
+        "gpx_name":"u\"Tracker-\"",
+
+        # View settings
+        "dashview_zoom":"0",
+        "mapview_zoom":"0",
+        "mapview_lastmap":"u\"51g11_eindhoven\""
+    }
+
+class S60Waypoint(Waypoint):
+    def __init__(self,lm=None):
+        Waypoint.__init__(self)
+        if lm is not None:
+            self.lmid = lm.LandmarkId()
+            self.name = lm.GetLandmarkName()
+            self.latitude, self.longitude, self.altitude, d1,d2 = lm.GetPosition()
+        else:
+            self.lmid = None
+
+class S60DataStorage(DataStorage):
+    def __init__(self):
+        global s60locations
+        global s60defaults
+        global landmarks
+
+        DataStorage.__init__(self)
+        DataStorage.instance = self
+        self.config = self.OpenConfig(s60locations,s60defaults)
+        try:
+            import landmarks
+            self.lmdb = landmarks.OpenDefaultDatabase()
+        except:
+            print "unable to use landmarks module"
+            use_landmarks = False
+            self.lmdb = None
+            
+        self.InitWaypointList(self.GetValue("wpt_dir"))
+        self.InitMapList(self.GetValue("map_dir"))
+        self.InitTrackList(self.GetValue("trk_dir"))
+
+    def GetTrackFilename(self,name):
+        filename = os.path.join(self.GetValue("trk_dir"),name+self.osal.GetDbmExt())
+        return filename
+
+    def GetRouteFilename(self,name):
+        filename = os.path.join(self.GetValue("rte_dir"),name+self.osal.GetDbmExt())
+        return filename
+
+    def GetGPXFilename(self,name):
+        filename = os.path.join(self.GetValue("gpx_dir"),name+'.gpx')
+        return filename
+
+    def GetDefaultCategoryId(self):
+        if self.lmdb is not None:
+            tsc = landmarks.CreateCatNameCriteria(u'Waypoint')
+            search = self.lmdb.CreateSearch()
+            operation = search.StartCategorySearch(tsc, landmarks.ECategorySortOrderNameAscending, 0)
+            operation.Execute()
+            if search.NumOfMatches() > 0:
+                return search.MatchIterator().Next()
+            else:
+                return None
+        else:
+            pass
+
+    def CreateWaypoint(self,name='',lat=0,lon=0,alt=0):
+        wpt = S60Waypoint()
+        wpt.name = name
+        wpt.time = Osal.GetInstance().GetTime()
+        wpt.latitude = lat
+        wpt.longitude = lon
+        wpt.altitude = alt
+        print "Created waypoint %s" % name
+        return wpt
+
+    def SaveWaypoint(self,waypoint):
+        if self.lmdb is not None:
+            if waypoint.lmid is None:
+                print "adding waypoint %s to lmdb" % waypoint.name
+                landmark = landmarks.CreateLandmark()
+                landmark.SetLandmarkName(u'%s' % waypoint.name)
+                landmark.SetPosition(waypoint.latitude,waypoint.longitude,waypoint.altitude,0,0)
+                catid = self.GetDefaultCategoryId()
+                if catid is not None:
+                    landmark.AddCategory(catid)
+                waypoint.lmid = self.lmdb.AddLandmark(landmark)
+                landmark.Close()
+            else:
+                landmark = self.lmdb.ReadLandmark(waypoint.lmid)
+                landmark.SetLandmarkName(u'%s' % waypoint.name)
+                landmark.SetPosition(waypoint.latitude,waypoint.longitude,waypoint.altitude,0,0)
+                self.lmdb.UpdateLandmark(landmark)
+                landmark.Close()
+        else:
+            print "lmdb not open"
+            DataStorage.SaveWaypoint(self,waypoint)
+
+    def DeleteWaypoint(self,waypoint):
+        if self.lmdb is not None:
+            self.lmdb.RemoveLandmark(waypoint.lmid)
+        else:
+            DataStorage.DeleteWaypoint(self,waypoint)
+
+    def GetWaypoints(self):
+        dict = {}
+        if self.lmdb is not None:
+            tsc = landmarks.CreateCategoryCriteria(0,0,u'Waypoint')
+            search = self.lmdb.CreateSearch()
+            operation = search.StartLandmarkSearch(tsc, landmarks.EAscending, 0, 0)
+            operation.Execute()
+            operation.Close()
+
+            count = search.NumOfMatches()
+            if count > 0:
+                iter = search.MatchIterator();
+                waypoints = iter.GetItemIds(0,count)
+                for lmid in waypoints:
+                    w = S60Waypoint(self.lmdb.ReadLandmark(lmid))
+                    if w.name not in dict.keys():
+                        dict[w.name] = w
+                    else:
+                        dict[u"%s-lmid%i" % (w.name,lmid)] = w
+            return dict
+        else:
+            return DataStorage.GetWaypoints(self)

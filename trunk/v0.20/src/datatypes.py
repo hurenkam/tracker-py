@@ -197,17 +197,29 @@ class Map:
         self.iscalibrated = False
         self.Calibrate()
 
+    def PrintInfo(self):
+        if self.size != None:
+            print "Map %s (%i x %i)" % (self.name, self.size[0], self.size[1])
+        else:
+            print "Map %s (? x ?)" % self.name
+        
+        if self.iscalibrated:
+            lat1,lon1,lat2,lon2 = self.area
+            print "x2lon:%f y2lat:%f lon2x:%f lat2y:%f" % (self.x2lon, self.y2lat, self.lon2x, self.lat2y)
+            print "Wgs84 topleft:     %f, %f" % (lat1,lon1)
+            print "Wgs84 bottomright: %f, %f" % (lat2,lon2)
+        
     def Calibrate(self):
         if self.refpoints != None and len(self.refpoints) > 1:
 
-            if self.size == None:
-                print "Calibrating map %s (? x ?)" % self.name
-            else:
-                print "Calibrating map %s (%i x %i)" % (self.name, self.size[0],self.size[1])
-            count = 0
-            for r in self.refpoints:
-                print "refpoints[%i] lat:%f lon:%f x:%f y:%f" %(count,r.latitude,r.longitude,r.x,r.y)
-                count+=1
+            #if self.size == None:
+            #    print "Calibrating map %s (? x ?)" % self.name
+            #else:
+            #    print "Calibrating map %s (%i x %i)" % (self.name, self.size[0],self.size[1])
+            #count = 0
+            #for r in self.refpoints:
+            #    print "refpoints[%i] lat:%f lon:%f x:%f y:%f" %(count,r.latitude,r.longitude,r.x,r.y)
+            #    count+=1
 
             r1 = self.refpoints[0]
             r2 = self.refpoints[1]
@@ -227,16 +239,8 @@ class Map:
             self.lat2y = dy/dlat
 
             self.iscalibrated = True
-
-            print "x2lon: %f" % self.x2lon
-            print "y2lat: %f" % self.y2lat
-            print "lon2x: %f" % self.lon2x
-            print "lat2y: %f" % self.lat2y
-
             self.area = self.WgsArea()
-            lat1,lon1,lat2,lon2 = self.area
-            print "Wgs84 topleft:     %f, %f" % (lat1,lon1)
-            print "Wgs84 bottomright: %f, %f" % (lat2,lon2)
+            #self.PrintInfo()
 
     def WgsArea(self):
         if self.iscalibrated:
@@ -291,7 +295,7 @@ class Track:
         self.osal = Osal.GetInstance()
         if open:
             self.Open()
-            self.data[u"name"]=u"%s" % self.name
+            self.data["name"]="%s" % self.name
 
     def Open(self):
         if self.isopen:
@@ -314,7 +318,41 @@ class Track:
         if self.isopen:
             self.data.close()
         self.isopen = False
+        
+    def FindPointsOnMap(self,area):
+        def isinrange(v,v1,v2):
+            if v1>v2:
+                if v < v1 and v > v2:
+                    return True
+            else:
+                if v > v1 and v < v2:
+                    return True
+            return False
+    
+        if not self.isopen:
+            print "track not open"
+            return []
+            
+        keys =  self.data.keys()
+        try:
+            keys.remove("name")
+        except:
+            pass
+        
+        lat1,lon1,lat2,lon2 = area
+        list = []
+        keys.sort()
+        for k in keys:
+            lat,lon,alt = eval(self.data[k])
+            if isinrange(lat,lat1,lat2) and isinrange(lon,lon1,lon2):
+                list.append(Point(eval(k),lat,lon,alt))
+        
+        return list
+        
 
+    def PrintInfo(self,area=None):
+        print "Track %s" % self.name
+        
 
 
 class Route:
@@ -328,17 +366,14 @@ class Route:
             self.Open()
             self.data[u"name"]=u"%s" % self.name
 
-    def Open(self,filename = None):
+    def Open(self):
         if self.isopen:
             return
 
-        if filename != None:
-            self.filename = filename
-
         try:
-            self.data = self.osal.OpenDbmFile(self.filename,"w")
+            self.data = self.osal.OpenDbmFile(filename,"w")
         except:
-            self.data = self.osal.OpenDbmFile(self.filename,"n")
+            self.data = self.osal.OpenDbmFile(filename,"n")
         self.isopen = True
 
 
