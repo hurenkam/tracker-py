@@ -180,6 +180,7 @@ class MapWidget(Widget):
                     self.DrawTrack(points,color)
                 else:
                     print "No trackpoints"
+        self.Draw()
 
     def LoadMap(self):
         self.mapimage = Image.open(u"%s" % self.map.filename)
@@ -972,6 +973,15 @@ class S60MapView(View):
         self.storage.SetValue("mapview_lastmap",map.name)
         self.mapwidget.SetMap(map)
         self.Draw()
+        self.update = True
+
+    def OpenTrack(self):
+        self.mapwidget.DrawOpenTracks()
+        self.update = True
+
+    def CloseTrack(self):
+        self.mapwidget.LoadMap()
+        self.update = True
 
     def UnloadMap(self):
         self.mapwidget.ClearMap()
@@ -1371,7 +1381,7 @@ class S60Application(Application, AlarmResponder):
             print "opening %s" % tracks[id]
             self.storage.tracks[tracks[id]].Open()
             appuifw.note(u"Track %s opened." % tracks[id], "info")
-            self.mapview.mapwidget.DrawOpenTracks()
+            self.mapview.OpenTrack()
         else:
             print "no file selected for opening"
 
@@ -1383,7 +1393,7 @@ class S60Application(Application, AlarmResponder):
             print "closing %s" % tracks[id]
             self.storage.tracks[tracks[id]].Close()
             appuifw.note(u"Track %s closed." % tracks[id], "info")
-            self.mapview.mapwidget.LoadMap()
+            self.mapview.CloseTrack()
         else:
             print "no file selected for closing"
 
