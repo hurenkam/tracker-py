@@ -196,10 +196,11 @@ class DataStorage(AlarmResponder):
 
     def InitTrackList(self,dir='.'):
         print "InitTrackList(%s)" % dir
-        selector = FileSelector(dir,self.GetTrackPattern())
+        selector = FileSelector(dir,self.osal.GetDbmExt())
         for file in selector.files.values():
             t = Track(file,open=False)
             self.tracks[t.name]=t
+            print "Found track %s (%s)" % (t.name, file)
 
     def RecordTrack(self,name='',interval=25):
         if name in self.tracks.keys():
@@ -240,11 +241,11 @@ class DataStorage(AlarmResponder):
             name = track.name
 
         elif name != None:
-            if track[name] == self.recording:
+            if self.tracks[name] == self.recording:
                 self.StopRecording()
 
-            if track[name].isopen:
-                track[name].Close()
+            if self.tracks[name].isopen:
+                self.tracks[name].Close()
 
         # Track is now closed and name contains
         # base filename
@@ -339,11 +340,11 @@ class DataStorage(AlarmResponder):
 
     GetInstance = staticmethod(GetInstance)
 
-    
-    
-    
-    
-    
+
+
+
+
+
 posixlocations = [
     u"~/.tracker/config"
     ]
@@ -411,9 +412,9 @@ class PosixDataStorage(DataStorage):
         print "GetGPXFilename: %s" % filename
         return filename
 
-        
-        
-        
+
+
+
 ntlocations = [
     u"tracker.db"
     ]
@@ -427,7 +428,7 @@ ntdefaults = {
         "app_name":"u\"Tracker.py\"",
         "app_version":"u\"v0.20a\"",
         "app_screensaver":"True",
-        
+
         # Map settings
         "map_dir":"u\".\"",
 
@@ -436,9 +437,9 @@ ntdefaults = {
         "wpt_name":"u\"Tracker-\"",
         "wpt_tolerance":"100",
         "wpt_monitor":"None",
-        
+
         # Route settings
-        
+
         # Track settings
         "trk_dir":"u\".\"",
         "trk_name":"u\"Tracker-\"",
@@ -448,7 +449,7 @@ ntdefaults = {
         # GPX settings
         "gpx_dir":"u\".\"",
         "gpx_name":"u\"Tracker-\"",
-        
+
         # View settings
         "dashview_zoom":"0",
         "mapview_zoom":"0",
@@ -480,9 +481,9 @@ class NTDataStorage(DataStorage):
         print "GetGPXFilename: %s" % filename
         return filename
 
-        
-        
-        
+
+
+
 s60locations = [
     u"e:\\data\\tracker\\config",
     u"c:\\data\\tracker\\config"
@@ -557,7 +558,7 @@ class S60DataStorage(DataStorage):
             print "unable to use landmarks module"
             use_landmarks = False
             self.lmdb = None
-            
+
         self.InitWaypointList(self.GetValue("wpt_dir"))
         self.InitMapList(self.GetValue("map_dir"))
         self.InitTrackList(self.GetValue("trk_dir"))
