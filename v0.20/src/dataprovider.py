@@ -17,11 +17,14 @@ class DataProvider:
         DataProvider.current = (point,course,signal,time)
         #print point,course,signal,time
         for key in DataProvider.alarmlist.keys():
+          try:
             DataProvider.alarmlist[key].Update(point,course,signal,time)
             if DataProvider.alarmlist[key].Condition():
                 DataProvider.alarmlist[key].Trigger()
                 if DataProvider.alarmlist[key].SingleShot():
                     del DataProvider.alarmlist[key]
+          except:
+            pass
 
     def SetAlarm(alarm):
         alarm.id = DataProvider.idcount
@@ -46,9 +49,9 @@ class DataProvider:
     StopGPS = staticmethod(StopGPS)
 
 
-    
-    
-    
+
+
+
 class S60DataProvider(DataProvider):
 
     def __init__(self):
@@ -114,9 +117,9 @@ class S60Signal(Signal):
     def __init__(self,data):
         Signal.__init__(self,data['satellites']['used_satellites'],data['satellites']['satellites'])
 
-        
-        
-        
+
+
+
 park = [
         (42.6261231,0.76392452,0),
         (42.633805208519,0.78642003284,2287.0),
@@ -196,7 +199,7 @@ class SimDataProvider(Thread, DataProvider):
         lon = p.longitude + count * self.dlon
         alt = p.altitude + count * self.dlat
         return Point(0,lat,lon,alt)
-        
+
     def CalcBearingDeltaAndSteps(self,f,t,speed):
         distanceInMeters,self.heading = f.DistanceAndBearing(t)
         metersPerSecond = speed*1000/3600
@@ -205,7 +208,7 @@ class SimDataProvider(Thread, DataProvider):
         self.dlat = (t.latitude - f.latitude)/self.steps
         self.dlon = (t.longitude - f.longitude)/self.steps
         self.dalt = (t.altitude - f.altitude)/self.steps
-        
+
     def run(self):
         print "SimDataProvider GPS Started"
 
@@ -231,10 +234,10 @@ class SimDataProvider(Thread, DataProvider):
                 d["position"]["altitude"]=point.altitude
                 d["course"]["speed"]=50/3.6
                 d["course"]["heading"]=self.heading
-            
+
                 o.Sleep(0.5)
                 p.CallBack(d)
-                
+
                 if not self.running:
                     break
 
