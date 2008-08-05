@@ -19,7 +19,10 @@ class ConsoleApplication(Application,AlarmResponder):
         self.showtime = False
         self.showposition = False
         self.storage = DataStorage.GetInstance()
-        self.map = self.storage.maps[0]
+        if len(self.storage.maps) > 0:
+            self.map = self.storage.maps[0]
+        else:
+            self.map = None
         self.position = None
 
     def SelectMap(self,index):
@@ -41,8 +44,8 @@ class ConsoleApplication(Application,AlarmResponder):
             print "%f %f: On map %s: %i,%i" % (point.latitude, point.longitude, self.map.name, int(x), int(y))
         else:
             print "%f %f: Not on map %s" % (point.latitude, point.longitude, self.map.name)
-    
-            
+
+
     def AlarmTriggered(self,alarm):
         if alarm == self.timealarm:
             if self.showtime:
@@ -103,7 +106,7 @@ class ConsoleApplication(Application,AlarmResponder):
         elif input == 'tracks\n':
             if len (self.storage.tracks) < 1:
                 print "No tracks"
-            else:                
+            else:
                 for name in self.storage.tracks.keys():
                     self.storage.tracks[name].PrintInfo()
         elif input[:12] == "track start ":
@@ -114,11 +117,11 @@ class ConsoleApplication(Application,AlarmResponder):
             self.StopTrack()
         elif input[:10] == "mappoints ":
             self.ShowTrackPointsOnMap(input[10:-1])
-            
+
     def StartTrack(self,name):
         self.track = self.storage.RecordTrack(name)
         print "Recording track %s" % name
-        
+
     def ShowTrack(self,name,number = 10):
         t = self.storage.tracks[name]
         t.Open()
@@ -127,14 +130,14 @@ class ConsoleApplication(Application,AlarmResponder):
             keys.remove("name")
         except:
             pass
-            
+
         keys.sort()
         for k in keys:
             print "Lat: %f\tLon:\t%f Alt: %f" % eval(t.data[k])
             number -= 1
             if number < 0:
                 break
-        
+
     def ShowTrackPointsOnMap(self,name,number = 10):
         if self.map != None and self.map.iscalibrated:
             t = self.storage.tracks[name]
@@ -145,19 +148,19 @@ class ConsoleApplication(Application,AlarmResponder):
                 print "No points found"
             else:
                 print "%i points found" % l
-                
+
             for p in list:
                 print "Lat: %f\tLon:\t%f Alt: %f" % (p.latitude,p.longitude,p.altitude)
                 number -= 1
                 if number < 0:
                     break
-        
+
     def StopTrack(self):
         self.storage.StopRecording()
         self.track.Close()
         print "Stopped recording track %s" % self.track.name
         self.track = None
-        
+
     def Run(self):
         self.running = True
         while self.running:

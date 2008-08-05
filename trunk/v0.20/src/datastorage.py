@@ -416,7 +416,7 @@ class PosixDataStorage(DataStorage):
 
 
 ntlocations = [
-    u"tracker.db"
+    u"..\\\\tracker.db"
     ]
 
 ntdefaults = {
@@ -429,8 +429,11 @@ ntdefaults = {
         "app_version":"u\"v0.20a\"",
         "app_screensaver":"True",
 
+        "app_lastview":"1",
+        "app_lastknownposition":"Point(0,51.47307,5.48952,66)",
+
         # Map settings
-        "map_dir":"u\".\"",
+        "map_dir":"u\"..\\\\maps\"",
 
         # Waypoint settings
         "wpt_dir":"u\".\"",
@@ -441,13 +444,13 @@ ntdefaults = {
         # Route settings
 
         # Track settings
-        "trk_dir":"u\".\"",
+        "trk_dir":"u\"..\\\\tracks\"",
         "trk_name":"u\"Tracker-\"",
         "trk_interval":"25",
         "trk_recording":"None",
 
         # GPX settings
-        "gpx_dir":"u\".\"",
+        "gpx_dir":"u\"..\\\\gpx\"",
         "gpx_name":"u\"Tracker-\"",
 
         # View settings
