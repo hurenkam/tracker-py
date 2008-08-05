@@ -11,7 +11,7 @@ def Main():
     app.Run()
     app.Exit()
 
-    
+
 
 import os
 if __name__ == '__main__':
@@ -36,11 +36,11 @@ if __name__ == '__main__':
     from osal import NTOsal as Osal
     from datastorage import NTDataStorage as Storage
     from dataprovider import SimDataProvider as Gps
-    #try:
-    #    from wxviews import WXApplication as Application
-    #except:
-    #    from consoleviews import ConsoleApplication as Application
-    from consoleviews import ConsoleApplication as Application
+    try:
+        from wxviews import WXApplication as Application
+    except:
+        from consoleviews import ConsoleApplication as Application
+    #from consoleviews import ConsoleApplication as Application
     Main()
 
   else:
