@@ -14,11 +14,24 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0004.jpg
   * Track display
   * Im/export of tracks & waypoints in GPX format
 
-== Todo ==
+== Features Todo ==
   * Import map
   * Calibrate map
   * Scroll/Zoom map
   * Show waypoints on map
+
+== Other Todo ==
+  * Merge most of wxviews & s60views code
+  * Create single sis package
+
+== Dependencies ==
+  * PyS60 1.4.x (mandatory)
+  * Landmarks module (recommended)
+  * Envy module (recommended)
+  * Misty module (recommended)
+
+The modules need to be signed at symbian signed, with at least the
+Location capability, but possibly others as well.
 
 == Code architecture ==
 The code is now split into several files, I know, having all in one
