@@ -19,6 +19,9 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0004.jpg
   * Calibrate map
   * Scroll/Zoom map
   * Show waypoints on map
+  * Show heading mapview
+  * Show signal in mapview
+  * Gauge options in dashview
 
 == Other Todo ==
   * Merge most of wxviews & s60views code
