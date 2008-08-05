@@ -203,6 +203,8 @@ class DataStorage(AlarmResponder):
             print "Found track %s (%s)" % (t.name, file)
 
     def RecordTrack(self,name='',interval=25):
+        raise "Functionality obsolete, please remove!"
+
         if name in self.tracks.keys():
             track = self.tracks[name]
         else:
@@ -217,6 +219,7 @@ class DataStorage(AlarmResponder):
         return track
 
     def StopRecording(self):
+        raise "Functionality obsolete, please remove!"
         DataProvider.GetInstance().DeleteAlarm(self.alarm)
         self.alarm = None
         self.recording = None
