@@ -163,32 +163,32 @@ class MapWidget(Widget):
         if cur != None:
             self.mapimage.point((cur[0],cur[1]),color,width=5)
 
-    def DrawTrack(self,points,color=Color["darkblue"]):
-        for p in points:
-            self.DrawTrackPoint(p, color)
+
+    def DrawTrack(self,track,color=Color["darkblue"]):
+        points = track.FindPointsOnMap(self.map)
+        if points != None and len(points) > 1:
+            for p in points:
+                self.DrawTrackPoint(p, color)
+        else:
+            print "No points in track"
+
 
     def DrawOpenTracks(self):
         for track in self.storage.tracks.values():
             if track.isopen:
-                if track.isrecording:
-                    color=Color["red"]
-                else:
-                    color=Color["darkblue"]
-
-                points = track.FindPointsOnMap(self.map)
-                if points != None and len(points) > 1:
-                    self.DrawTrack(points,color)
-                else:
-                    print "No trackpoints"
+                self.DrawTrack(track,Color["darkblue"])
         self.Draw()
 
-    def LoadMap(self):
+
+    def LoadMap(self,track=None):
         self.mapimage = Image.open(u"%s" % self.map.filename)
         if self.map != None:
             self.map.SetSize(self.mapimage.size)
         self.UpdatePosition(self.position)
         self.lastarea = None
         self.DrawOpenTracks()
+        if track != None:
+            self.DrawTrack(track,Color["darkred"])
 
     def ClearMap(self):
         self.mapimage = None
@@ -205,6 +205,14 @@ class MapWidget(Widget):
             self.onmap = None
 
         self.Draw()
+
+    def UpdateTrack(self,track=None,point=None):
+        if track != None:
+            self.DrawTrack(track)
+        if point != None:
+            self.DrawTrackPoint(point,Color["darkred"])
+        self.Draw()
+
 
     def MapArea(self):
         p = self.onmap
@@ -973,15 +981,14 @@ class S60MapView(View):
         self.storage.SetValue("mapview_lastmap",map.name)
         self.mapwidget.SetMap(map)
         self.Draw()
-        self.update = True
 
-    def OpenTrack(self):
-        self.mapwidget.DrawOpenTracks()
-        self.update = True
+    def OpenTrack(self,track):
+        self.mapwidget.UpdateTrack(track=track)
+        self.Draw()
 
     def CloseTrack(self):
         self.mapwidget.LoadMap()
-        self.update = True
+        self.Draw()
 
     def UnloadMap(self):
         self.mapwidget.ClearMap()
@@ -1059,6 +1066,10 @@ class S60MapView(View):
 
     def UpdateSpeed(self,speed):
         pass
+
+    def UpdateTrack(self,point):
+        #self.mapwidget.DrawTrackPoint(point,Color["darkred"])
+        self.mapwidget.UpdateTrack(point=point)
 
     def GetImage(self):
         return self.image
@@ -1145,6 +1156,10 @@ class S60Application(Application, AlarmResponder):
             EKeyLeftArrow:self.SelectMapview,
             EKeyRightArrow:self.SelectDashview,
             }
+
+        self.trackalarm = None
+        self.track = None
+        self.trackname = None
 
         self.running = True
         self.dashview = S60DashView()
@@ -1270,6 +1285,11 @@ class S60Application(Application, AlarmResponder):
             self.proximityalarm = None
             self.storage.SetValue("wpt_monitor",None)
 
+        if alarm == self.trackalarm:
+            if self.track is not None:
+                self.track.AddPoint(alarm.point)
+                self.mapview.UpdateTrack(alarm.point)
+
         self.view.Show()
 
     def IsScreensaverActive(self):
@@ -1363,14 +1383,34 @@ class S60Application(Application, AlarmResponder):
         if trackname is not None:
             interval = self.QueryAndStore(u"Interval (m):","float","trk_interval")
             if interval is not None:
-                self.storage.RecordTrack(trackname,interval)
-                appuifw.note(u"Started recording track %s." % trackname, "info")
+                #self.storage.RecordTrack(trackname,interval)
+                #appuifw.note(u"Started recording track %s." % trackname, "info")
+                #return
+
+                if trackname in self.storage.tracks.keys():
+                    track = self.storage.tracks[trackname]
+                else:
+                    track = Track(self.storage.GetTrackFilename(trackname))
+                    #self.storage.tracks[trackname]=track
+
+                track.Open()
+
+                self.track = track
+                self.trackname = trackname
+                self.trackalarm = PositionAlarm(None,interval,self)
+                DataProvider.GetInstance().SetAlarm(self.trackalarm)
+
                 return
 
         appuifw.note(u"Cancelled StartRecording!", "info")
 
     def StopRecording(self):
-        self.storage.StopRecording()
+        self.storage.tracks[self.trackname]=self.track
+        DataProvider.GetInstance().DeleteAlarm(self.trackalarm)
+        self.trackalarm = None
+        self.track = None
+        self.trackname = None
+        #self.storage.StopRecording()
         appuifw.note(u"Recording stopped.")
 
     def OpenTrack(self):
@@ -1381,7 +1421,7 @@ class S60Application(Application, AlarmResponder):
             print "opening %s" % tracks[id]
             self.storage.tracks[tracks[id]].Open()
             appuifw.note(u"Track %s opened." % tracks[id], "info")
-            self.mapview.OpenTrack()
+            self.mapview.OpenTrack(self.storage.tracks[tracks[id]])
         else:
             print "no file selected for opening"
 
