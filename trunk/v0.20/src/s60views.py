@@ -16,6 +16,8 @@ Color = {
           "darkgreen":0x00ff00,
           "darkred":0xff0000,
           "cyan":0x00ffff,
+          "magenta":0xff00ff,
+          "orange":0xffff00,
 
           "north":0x8080ff,
           "waypoint":0x40ff40,
@@ -150,6 +152,10 @@ class MapWidget(Widget):
         self.mapimage = None
         self.lastarea = None
         self.position = self.storage.GetValue("app_lastknownposition")
+        self.heading = 0
+        self.bearing = 0
+        self.distance = 0
+        self.track = None
         self.UpdatePosition(self.position)
         self.Resize(size)
 
@@ -158,11 +164,13 @@ class MapWidget(Widget):
         self.mapimage = None
         self.LoadMap()
 
+    def SetRecordingTrack(self,track):
+        self.track = track
+
     def DrawTrackPoint(self,point,color):
         cur = self.map.PointOnMap(point)
         if cur != None:
             self.mapimage.point((cur[0],cur[1]),color,width=5)
-
 
     def DrawTrack(self,track,color=Color["darkblue"]):
         points = track.FindPointsOnMap(self.map)
@@ -172,23 +180,21 @@ class MapWidget(Widget):
         else:
             print "No points in track"
 
-
     def DrawOpenTracks(self):
         for track in self.storage.tracks.values():
             if track.isopen:
                 self.DrawTrack(track,Color["darkblue"])
         self.Draw()
 
-
-    def LoadMap(self,track=None):
+    def LoadMap(self):
         self.mapimage = Image.open(u"%s" % self.map.filename)
         if self.map != None:
             self.map.SetSize(self.mapimage.size)
         self.UpdatePosition(self.position)
         self.lastarea = None
         self.DrawOpenTracks()
-        if track != None:
-            self.DrawTrack(track,Color["darkred"])
+        if self.track != None:
+            self.DrawTrack(self.track,Color["darkred"])
 
     def ClearMap(self):
         self.mapimage = None
@@ -213,6 +219,11 @@ class MapWidget(Widget):
             self.DrawTrackPoint(point,Color["darkred"])
         self.Draw()
 
+    def UpdateValues(self,heading,bearing,distance):
+        self.heading = heading
+        self.bearing = bearing
+        self.distance = distance
+        self.Draw()
 
     def MapArea(self):
         p = self.onmap
@@ -229,23 +240,45 @@ class MapWidget(Widget):
         self.lastarea = (x-w/2,y-h/2,x+w/2,y+h/2)
         return self.lastarea
 
-    def DrawCursor(self,image,coords,color=0):
+    def CalculatePoint(self,heading,(x,y),length):
+        _heading = heading * 3.14159265 / 180
+        point =  ( x + length * math.sin(_heading),
+                   y - length * math.cos(_heading) )
+        return point
+
+    def DrawCursor(self,image,coords,color=0,arrow=None):
         x,y = coords
         w,h = image.size
         if x <0 or x>=w or y <0 or y>=h:
             return
 
-        image.point((x,y),0xffffff,width=5)
-        image.line (((x-10,y),(x-5,y)),0xffffff,width=5)
-        image.line (((x+10,y),(x+5,y)),0xffffff,width=5)
-        image.line (((x,y-10),(x,y-5)),0xffffff,width=5)
-        image.line (((x,y+10),(x,y+5)),0xffffff,width=5)
-
+        r = 10
+        image.point((x,y),Color["white"],width=5)
         image.point((x,y),color,width=3)
-        image.line (((x-10,y),(x-5,y)),color,width=3)
-        image.line (((x+10,y),(x+5,y)),color,width=3)
-        image.line (((x,y-10),(x,y-5)),color,width=3)
-        image.line (((x,y+10),(x,y+5)),color,width=3)
+        image.ellipse(((x-r,y-r),(x+r,y+r)),Color["white"],width=5)
+        image.ellipse(((x-r,y-r),(x+r,y+r)),color,width=3)
+
+        if arrow != None:
+            point1 = self.CalculatePoint(self.heading,   (x,y),r*4)
+            point2 = self.CalculatePoint(self.heading+30,(x,y),r*1.5)
+            point3 = self.CalculatePoint(self.heading,   (x,y),r*2)
+            point4 = self.CalculatePoint(self.heading-30,(x,y),r*1.5)
+
+            image.polygon((point1,point2,point3,point4),Color["white"],fill=arrow)
+
+        #image.line ((point1,point2),Color["white"],width=5)
+        #image.line ((point1,point3),Color["white"],width=5)
+        #image.line ((point1,point2),color,width=3)
+        #image.line ((point1,point3),color,width=3)
+
+        #image.line (((x-10,y),(x-5,y)),0xffffff,width=5)
+        #image.line (((x+10,y),(x+5,y)),0xffffff,width=5)
+        #image.line (((x,y-10),(x,y-5)),0xffffff,width=5)
+        #image.line (((x,y+10),(x,y+5)),0xffffff,width=5)
+        #image.line (((x-10,y),(x-5,y)),color,width=3)
+        #image.line (((x+10,y),(x+5,y)),color,width=3)
+        #image.line (((x,y-10),(x,y-5)),color,width=3)
+        #image.line (((x,y+10),(x,y+5)),color,width=3)
 
     def Draw(self):
         Widget.Draw(self)
@@ -273,14 +306,14 @@ class MapWidget(Widget):
                     self.mapimage,
                     target=(x1,y1,x2,y2),
                     source=(x3,y3,x4,y4),
-                    scale=1)
+                    scale=0)
 
             if self.onmap == None:
                 c = 0
             else:
                 c = 0x0000ff
 
-            self.DrawCursor(self.image,(w/2,h/2),c)
+            self.DrawCursor(self.image,(w/2,h/2),c,Color["darkblue"])
 
 class Gauge:
     def __init__(self,radius=None):
@@ -564,56 +597,6 @@ class SpeedGauge(TwoHandGauge):
 
     def Draw(self):
     	TwoHandGauge.Draw(self)
-
-class WaypointGauge(Gauge):
-
-    def __init__(self,radius=None,tag="wpt"):
-        Gauge.__init__(self,radius)
-        self.tag = tag
-        self.heading = None
-        self.bearing = None
-        self.distance = None
-
-    def _sanevalues(self):
-        if self.heading is None or str(self.heading) is 'NaN':
-            self.heading = 0
-        if self.bearing is None or str(self.bearing) is 'NaN':
-            self.bearing = 0
-        if self.distance is None or str(self.distance) is'NaN':
-            self.distance = 0
-
-        north = 0 - self.heading
-        bearing = north + self.bearing
-        return north,bearing
-
-    def DrawCompas(self, north):
-        self.DrawScale(12,60,north)
-        self.DrawDotHand(north      ,self.radius-5,0x8080ff,handwidth=7)
-        self.DrawDotHand(north +  90,self.radius-5,0x000000,handwidth=5)
-        self.DrawDotHand(north + 180,self.radius-5,0x000000,handwidth=5)
-        self.DrawDotHand(north + 270,self.radius-5,0x000000,handwidth=7)
-
-    def DrawBearing(self, bearing):
-        if (self.radius >= 10):
-            self.DrawTriangleHand(bearing,     self.radius-10, 0x00c040, 8)
-            self.DrawTriangleHand(bearing+180, self.radius-10, 0x000000, 8)
-
-    def DrawInfo(self):
-        if (self.radius >= 40):
-            self.DrawText(((self.radius,0.5*self.radius+7)),u'%s' %self.tag)
-            self.DrawText(((self.radius,1.5*self.radius   )),u'%8.0f' % self.distance)
-            self.DrawText(((self.radius,1.5*self.radius+14)),u'%05.1' % self.bearing)
-
-    def Draw(self):
-        if self.radius is None:
-            return
-
-        Gauge.Draw(self)
-        north, bearing = self._sanevalues()
-        self.DrawCompas(north)
-        self.DrawInfo()
-        self.DrawBearing(bearing)
-
 
 class ClockGauge(Gauge):
 
@@ -962,6 +945,7 @@ class S60MapView(View):
         self.time = None
         self.update = True
         self.image = None
+        self.track = None
         self.position = self.storage.GetValue("app_lastknownposition")
 
         self.handledkeys = {
@@ -976,6 +960,9 @@ class S60MapView(View):
         #        self.map = map
 
         #self.LoadMap(map)
+
+    def SetRecordingTrack(self,track):
+        self.mapwidget.SetRecordingTrack(track)
 
     def LoadMap(self,map):
         self.storage.SetValue("mapview_lastmap",map.name)
@@ -1053,7 +1040,7 @@ class S60MapView(View):
         pass
 
     def UpdatePosition(self,point):
-        print point.latitude,point.longitude
+        #print point.latitude,point.longitude
         self.position = point
         self.mapwidget.UpdatePosition(point)
         self.update = True
@@ -1062,7 +1049,8 @@ class S60MapView(View):
         pass
 
     def UpdateWaypoint(self,heading,bearing,distance):
-        pass
+        self.mapwidget.UpdateValues(heading,bearing,distance)
+        self.update = True
 
     def UpdateSpeed(self,speed):
         pass
@@ -1399,7 +1387,7 @@ class S60Application(Application, AlarmResponder):
                 self.trackname = trackname
                 self.trackalarm = PositionAlarm(None,interval,self)
                 DataProvider.GetInstance().SetAlarm(self.trackalarm)
-
+                self.mapview.SetRecordingTrack(self.track)
                 return
 
         appuifw.note(u"Cancelled StartRecording!", "info")
@@ -1410,6 +1398,7 @@ class S60Application(Application, AlarmResponder):
         self.trackalarm = None
         self.track = None
         self.trackname = None
+        self.mapview.SetRecordingTrack(None)
         #self.storage.StopRecording()
         appuifw.note(u"Recording stopped.")
 

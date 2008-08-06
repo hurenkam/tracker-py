@@ -200,7 +200,7 @@ class DataStorage(AlarmResponder):
         for file in selector.files.values():
             t = Track(file,open=False)
             self.tracks[t.name]=t
-            print "Found track %s (%s)" % (t.name, file)
+            #print "Found track %s (%s)" % (t.name, file)
 
     def RecordTrack(self,name='',interval=25):
         raise "Functionality obsolete, please remove!"
@@ -601,7 +601,7 @@ class S60DataStorage(DataStorage):
         wpt.latitude = lat
         wpt.longitude = lon
         wpt.altitude = alt
-        print "Created waypoint %s" % name
+        #print "Created waypoint %s" % name
         return wpt
 
     def SaveWaypoint(self,waypoint):
