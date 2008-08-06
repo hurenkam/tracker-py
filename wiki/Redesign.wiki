@@ -12,14 +12,14 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0012.jpg
   * Integrated with landmarks database (anything in category 'Waypoints' shows up in tracker
   * Track recording
   * Track display
+  * Show waypoints on map
+  * Show heading in mapview
   * Im/export of tracks & waypoints in GPX format
 
 == Features Todo ==
   * Import map
   * Calibrate map
   * Scroll/Zoom map
-  * Show waypoints on map
-  * Show heading mapview
   * Show signal in mapview
   * Gauge options in dashview
 
