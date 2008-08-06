@@ -246,7 +246,16 @@ class MapWidget(Widget):
                    y - length * math.cos(_heading) )
         return point
 
-    def DrawCursor(self,image,coords,color=0,arrow=None):
+    def DrawArrow(self,image,coords,color=Color["black"]):
+        r=10
+        point1 = self.CalculatePoint(self.heading,   coords,r*4)
+        point2 = self.CalculatePoint(self.heading+30,coords,r*1.5)
+        point3 = self.CalculatePoint(self.heading,   coords,r*2)
+        point4 = self.CalculatePoint(self.heading-30,coords,r*1.5)
+        image.polygon((point1,point2,point3,point4),Color["white"],fill=color)
+
+
+    def DrawCursor(self,image,coords,color=Color["black"]):
         x,y = coords
         w,h = image.size
         if x <0 or x>=w or y <0 or y>=h:
@@ -258,27 +267,25 @@ class MapWidget(Widget):
         image.ellipse(((x-r,y-r),(x+r,y+r)),Color["white"],width=5)
         image.ellipse(((x-r,y-r),(x+r,y+r)),color,width=3)
 
-        if arrow != None:
-            point1 = self.CalculatePoint(self.heading,   (x,y),r*4)
-            point2 = self.CalculatePoint(self.heading+30,(x,y),r*1.5)
-            point3 = self.CalculatePoint(self.heading,   (x,y),r*2)
-            point4 = self.CalculatePoint(self.heading-30,(x,y),r*1.5)
+    def DrawWaypoints(self):
+        def isinrange(v,v1,v2):
+            if v1>v2:
+                if v < v1 and v > v2:
+                    return True
+            else:
+                if v > v1 and v < v2:
+                    return True
+            return False
 
-            image.polygon((point1,point2,point3,point4),Color["white"],fill=arrow)
+        waypoints = self.storage.GetWaypoints()
+        for w in waypoints.values():
+            onmap = self.map.PointOnMap(w)
+            if onmap != None and self.lastarea != None:
+                x,y = onmap
+                x1,y1,x2,y2 = self.lastarea
+                if isinrange(x,x1,x2) and isinrange(y,y1,y2):
+                    self.DrawCursor(self.image,(x-x1,y-y1),Color["darkgreen"])
 
-        #image.line ((point1,point2),Color["white"],width=5)
-        #image.line ((point1,point3),Color["white"],width=5)
-        #image.line ((point1,point2),color,width=3)
-        #image.line ((point1,point3),color,width=3)
-
-        #image.line (((x-10,y),(x-5,y)),0xffffff,width=5)
-        #image.line (((x+10,y),(x+5,y)),0xffffff,width=5)
-        #image.line (((x,y-10),(x,y-5)),0xffffff,width=5)
-        #image.line (((x,y+10),(x,y+5)),0xffffff,width=5)
-        #image.line (((x-10,y),(x-5,y)),color,width=3)
-        #image.line (((x+10,y),(x+5,y)),color,width=3)
-        #image.line (((x,y-10),(x,y-5)),color,width=3)
-        #image.line (((x,y+10),(x,y+5)),color,width=3)
 
     def Draw(self):
         Widget.Draw(self)
@@ -309,11 +316,14 @@ class MapWidget(Widget):
                     scale=0)
 
             if self.onmap == None:
-                c = 0
+                c = Color["black"]
             else:
-                c = 0x0000ff
+                c = Color["darkblue"]
 
-            self.DrawCursor(self.image,(w/2,h/2),c,Color["darkblue"])
+            if self.map != None:
+                self.DrawWaypoints()
+            self.DrawCursor(self.image,(w/2,h/2),c)
+            self.DrawArrow(self.image,(w/2,h/2),c)
 
 class Gauge:
     def __init__(self,radius=None):
