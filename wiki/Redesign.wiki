@@ -1,8 +1,8 @@
 = Redesign: Tracker v0.20x =
 
 http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0001.jpg
-http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0002.jpg
-http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0012.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0013.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0014.jpg
 
 == Working features ==
   * Dashview with gauges (speed, distance, altitude, heading, signal, time)
