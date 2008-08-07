@@ -28,10 +28,10 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0014.jpg
   * Create single sis package
 
 == Dependencies ==
-  * PyS60 1.4.x (mandatory)
-  * Landmarks module (recommended)
-  * Envy module (recommended)
-  * Misty module (recommended)
+  * [http://sourceforge.net/project/showfiles.php?group_id=154155 pyS60] 1.4.x (mandatory)
+  * [https://www.iyouit.eu/portal/software.aspx Landmarks module] (recommended)
+  * [http://sourceforge.net/project/showfiles.php?group_id=132176 Envy module] (recommended)
+  * [http://cyke64.googlepages.com Misty module] (recommended)
 
 Off course [http://sourceforge.net/project/showfiles.php?group_id=154155 pyS60]
 is needed, tracker.py is written in python, so it needs an interpreter.
