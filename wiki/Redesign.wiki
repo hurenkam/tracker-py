@@ -35,6 +35,7 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0014.jpg
 
 Off course pyS60 is needed, tracker.py is written in python, so
 it needs an interpreter.
+[http://sourceforge.net/project/showfiles.php?group_id=154155 pyS60 download page]
 
 The Landmarks module is used to interface with symbians internal
 landmarks database (as used by a.o. Nokia Maps). Tracker creates
