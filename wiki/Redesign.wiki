@@ -42,12 +42,13 @@ Nokia Maps). Tracker creates a 'waypoint' category, and places all waypoints the
 Also, when you use the landmarks editor to assign this category to existing landmarks,
 they will show up in tracker.
 
-The Envy module is used to make tracker a system application, thus
-preventing it from being 'killed' by the OS on low memory conditions.
+The [http://sourceforge.net/project/showfiles.php?group_id=132176 Envy module]
+is used to make tracker a system application, thus preventing it from being 'killed'
+by the OS on low memory conditions.
 This means you can take photos without tracker.py being killed.
 
-The Misty module is used to implement vibration alarms. This is
-used for the waypoint proximity alarm.
+The [http://cyke64.googlepages.com Misty module] is used to implement vibration 
+alarms. This is used for the waypoint proximity alarm.
 
 All modules need to be signed at symbian signed, with at least the
 Location capability, but possibly others as well.
