@@ -200,30 +200,6 @@ class DataStorage(AlarmResponder):
         for file in selector.files.values():
             t = Track(file,open=False)
             self.tracks[t.name]=t
-            #print "Found track %s (%s)" % (t.name, file)
-
-    def RecordTrack(self,name='',interval=25):
-        raise "Functionality obsolete, please remove!"
-
-        if name in self.tracks.keys():
-            track = self.tracks[name]
-        else:
-            track = Track(self.GetTrackFilename(name))
-            self.tracks[name]=track
-
-        track.Open()
-
-        self.recording = track
-        self.alarm = PositionAlarm(None,interval,self)
-        DataProvider.GetInstance().SetAlarm(self.alarm)
-        return track
-
-    def StopRecording(self):
-        raise "Functionality obsolete, please remove!"
-        DataProvider.GetInstance().DeleteAlarm(self.alarm)
-        self.alarm = None
-        self.recording = None
-
 
     def CloseTrack(self,track=None,name=None):
         if track != None:
