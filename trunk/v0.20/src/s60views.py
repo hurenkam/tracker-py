@@ -9,6 +9,9 @@ import math
 from osal import *
 from datastorage import *
 
+Zoom =     [ 0.5, 0.75, 1.0, 1.5, 2.0 ]
+Scroll =   [ 100,   20,  10,   5,  1  ]
+
 Color = {
           "black":0x000000,
           "white":0xffffff,
@@ -143,6 +146,11 @@ class PositionWidget(Widget):
             w,h = self.DrawText( (5,5),     u"Position")
             w,h = self.DrawText( (5,5+h+2), u"Unknown")
 
+GPS = 0
+UP = 1
+DOWN = 2
+LEFT = 3
+RIGHT = 4
 
 class MapWidget(Widget):
     def __init__(self,size = None):
@@ -152,13 +160,71 @@ class MapWidget(Widget):
         self.map = None
         self.mapimage = None
         self.lastarea = None
+        self.lastpos = None
+        self.cursor = None
+        self.amount = 4
         self.position = self.storage.GetValue("app_lastknownposition")
         self.heading = 0
         self.bearing = 0
         self.distance = 0
         self.track = None
+        self.zoom = Zoom.index(1.0)
         self.UpdatePosition(self.position)
         self.Resize(size)
+
+    def FollowGPS(self):
+        self.cursor = None
+        self.Draw()
+
+    def Move(self,direction):
+        if self.map == None:
+            self.cursor = None
+            print "Move: No map"
+            return
+
+        if self.cursor == None:
+            if self.lastpos == None:
+                x,y = self.map.size
+                x=x/2
+                y=y/2
+            else:
+                x,y = self.lastpos
+        else:
+            x,y = self.cursor
+
+
+        amount = Scroll[self.zoom]
+        if direction == UP:
+            y -= amount
+            if y<0:
+                y=0
+        elif direction == DOWN:
+            y += amount
+            if y>self.map.size[1]:
+                y = self.map.size[1]
+        elif direction == LEFT:
+            x -= amount
+            if x<0:
+                x=0
+        elif direction == RIGHT:
+            x += amount
+            if x>self.map.size[0]:
+                x = self.map.size[0]
+        else:
+            raise "Unknown direction"
+
+        self.cursor = (x,y)
+        self.Draw()
+
+    def ZoomOut(self):
+        if self.zoom > 0:
+            self.zoom -=1
+            self.Draw()
+
+    def ZoomIn(self):
+        if self.zoom < (len(Zoom)-1):
+            self.zoom += 1
+            self.Draw()
 
     def SetMap(self,map):
         self.map = map
@@ -189,6 +255,7 @@ class MapWidget(Widget):
 
     def LoadMap(self):
         self.mapimage = Image.open(u"%s" % self.map.filename)
+        self.zoom = Zoom.index(1.0)
         if self.map != None:
             self.map.SetSize(self.mapimage.size)
         self.UpdatePosition(self.position)
@@ -200,16 +267,15 @@ class MapWidget(Widget):
     def ClearMap(self):
         self.mapimage = None
 
-    def ScreenArea(self):
-        w,h = self.size
-        return (2,2,w-2,h-2)
-
     def UpdatePosition(self,point):
         self.position = point
         if self.map != None:
             self.onmap = self.map.PointOnMap(point)
         else:
             self.onmap = None
+
+        if self.onmap !=None:
+            self.lastpos = self.onmap
 
         self.Draw()
 
@@ -226,20 +292,49 @@ class MapWidget(Widget):
         self.distance = distance
         self.Draw()
 
-    def MapArea(self):
-        p = self.onmap
-        if p == None:
-            print "not on map"
-            if self.lastarea != None:
-                return self.lastarea
-            return self.ScreenArea()
-
-        x,y = p
+    def ScreenArea(self):
         w,h = self.size
-        w -= 4
-        h -= 4
+        return (2,2,w-2,h-2)
+
+    def MapArea(self,size,zoom=1.0,pos=None):
+        w,h = size
+        w = w/zoom
+        h = h/zoom
+
+        if pos == None:
+            if self.lastpos == None:
+                mw,mh = self.map.size
+                x,y = (mw/2, mh/2)
+            else:
+                x,y = self.lastpos
+        else:
+            x,y = pos
+
         self.lastarea = (x-w/2,y-h/2,x+w/2,y+h/2)
         return self.lastarea
+
+    def SaneAreas(self,target,source,zoom=1.0):
+        x1,y1,x2,y2 = target
+        x3,y3,x4,y4 = source
+
+        mw,mh = self.map.size
+        if x3 < 0:
+            x1 -= (x3*zoom)
+            x3 = 0
+        if y3 < 0:
+            y1 -= (y3*zoom)
+            y3 = 0
+        if x4 > mw:
+            x2 -= ((x4 - mw)*zoom)
+            x4 = mw
+        if y4 > mh:
+            y2 -= ((y4 - mh)*zoom)
+            y4 = mh
+
+        target = (int(x1),int(y1),int(x2),int(y2))
+        source = (int(x3),int(y3),int(x4),int(y4))
+        return target,source
+
 
     def CalculatePoint(self,heading,(x,y),length):
         _heading = heading * 3.14159265 / 180
@@ -268,7 +363,7 @@ class MapWidget(Widget):
         image.ellipse(((x-r,y-r),(x+r,y+r)),Color["white"],width=5)
         image.ellipse(((x-r,y-r),(x+r,y+r)),color,width=3)
 
-    def DrawWaypoints(self):
+    def DrawWaypoints(self,zoom=1.0):
         def isinrange(v,v1,v2):
             if v1>v2:
                 if v < v1 and v > v2:
@@ -285,7 +380,7 @@ class MapWidget(Widget):
                 x,y = onmap
                 x1,y1,x2,y2 = self.lastarea
                 if isinrange(x,x1,x2) and isinrange(y,y1,y2):
-                    self.DrawCursor(self.image,(x-x1,y-y1),Color["darkgreen"])
+                    self.DrawCursor(self.image,((x-x1)*zoom,(y-y1)*zoom),Color["darkgreen"])
 
 
     def Draw(self):
@@ -296,33 +391,32 @@ class MapWidget(Widget):
             w,h = s
             self.image.rectangle((0,0,s[0],s[1]),outline=0x000000)
 
-            x1,y1,x2,y2 = self.ScreenArea()
-            x3,y3,x4,y4 = self.MapArea()
-            w = x2-x1
-            h = y2-y1
+            if self.map != None:
+                zoom = Zoom[self.zoom]
+                screenarea = self.ScreenArea()
+                size = (screenarea[2]-screenarea[0],screenarea[3]-screenarea[1])
+                if self.cursor == None:
+                    maparea = self.MapArea(size,zoom,self.onmap)
+                else:
+                    maparea = self.MapArea(size,zoom,self.cursor)
 
-            if x3 < 0:
-                x1 -= x3
-                x3 -= x3
-            if y3 < 0:
-                y1 -= y3
-                y3 -= y3
+                t,s = self.SaneAreas(screenarea,maparea,zoom)
 
-            if self.mapimage != None:
-                width,height = self.size
-                self.image.blit(
-                    self.mapimage,
-                    target=(x1,y1,x2,y2),
-                    source=(x3,y3,x4,y4),
-                    scale=0)
+                if self.mapimage != None:
+                    width,height = self.size
+                    self.image.blit(
+                        self.mapimage,
+                        target=t,
+                        source=s,
+                        scale=1)
 
-            if self.onmap == None:
+                self.DrawWaypoints(zoom)
+
+            if self.onmap == None or self.cursor != None:
                 c = Color["black"]
             else:
                 c = Color["darkblue"]
 
-            if self.map != None:
-                self.DrawWaypoints()
             self.DrawCursor(self.image,(w/2,h/2),c)
             self.DrawArrow(self.image,(w/2,h/2),c)
 
@@ -799,7 +893,7 @@ class S60DashView(View):
         self.image = None
         self.handledkeys = {
             EKeyUpArrow:self.MoveUp,
-            EKeyDownArrow:self.MoveDown
+            EKeyDownArrow:self.MoveDown,
             }
 
     def MoveUp(self,event):
@@ -831,7 +925,7 @@ class S60DashView(View):
         self.Draw()
 
     def UpdateSignal(self,signal):
-        bat = sysinfo.battery()
+        bat = sysinfo.battery()*7/100
         gsm = sysinfo.signal_bars()
         sat = signal.used
         self.signalgauge.UpdateValues({'bat':bat, 'gsm':gsm, 'sat':sat})
@@ -960,9 +1054,14 @@ class S60MapView(View):
         self.position = self.storage.GetValue("app_lastknownposition")
 
         self.handledkeys = {
-            EKeyUpArrow:self.MoveUp,
+            EKeyUpArrow:self.ZoomIn,
             EKeySelect:self.FindMap,
-            EKeyDownArrow:self.MoveDown
+            EKeyDownArrow:self.ZoomOut,
+            EKey2:self.MoveUp,
+            EKey4:self.MoveLeft,
+            EKey5:self.FollowGPS,
+            EKey6:self.MoveRight,
+            EKey8:self.MoveDown,
             }
 
         #name = self.storage.GetValue("mapview_lastmap")
@@ -971,6 +1070,26 @@ class S60MapView(View):
         #        self.map = map
 
         #self.LoadMap(map)
+
+    def MoveUp(self,event=None):
+        self.mapwidget.Move(UP)
+        self.Draw()
+
+    def MoveDown(self,event=None):
+        self.mapwidget.Move(DOWN)
+        self.Draw()
+
+    def MoveLeft(self,event=None):
+        self.mapwidget.Move(LEFT)
+        self.Draw()
+
+    def MoveRight(self,event=None):
+        self.mapwidget.Move(RIGHT)
+        self.Draw()
+
+    def FollowGPS(self,event=None):
+        self.mapwidget.FollowGPS()
+        self.Draw()
 
     def SetRecordingTrack(self,track):
         self.mapwidget.SetRecordingTrack(track)
@@ -1031,11 +1150,15 @@ class S60MapView(View):
         else:
             appuifw.note(u"No position.", "info")
 
-    def MoveUp(self,event):
-        pass
+    def ZoomIn(self,event):
+        self.mapwidget.ZoomIn()
+        self.update = True
+        self.Draw()
 
-    def MoveDown(self,event):
-        pass
+    def ZoomOut(self,event):
+        self.mapwidget.ZoomOut()
+        self.update = True
+        self.Draw()
 
     def Resize(self,rect=None):
         size = appuifw.app.body.size
@@ -1382,9 +1505,6 @@ class S60Application(Application, AlarmResponder):
         if trackname is not None:
             interval = self.QueryAndStore(u"Interval (m):","float","trk_interval")
             if interval is not None:
-                #self.storage.RecordTrack(trackname,interval)
-                #appuifw.note(u"Started recording track %s." % trackname, "info")
-                #return
 
                 if trackname in self.storage.tracks.keys():
                     track = self.storage.tracks[trackname]

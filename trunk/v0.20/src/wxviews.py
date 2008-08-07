@@ -218,6 +218,9 @@ class MapWidget(Widget):
         self.UpdatePosition(self.position)
         self.Resize(size)
 
+    def SetRecordingTrack(self,track):
+        self.track = track
+
     def SetMap(self,map):
         self.map = map
         self.mapimage = None
@@ -1201,14 +1204,21 @@ class WXMapView(wx.PyControl,MapView):
             event.Skip()
 
     def OnTrackStart(self,event):
-        print "Starting track"
-        if self.track == None:
-            self.track = DataStorage.GetInstance().RecordTrack('newtrack',25)
+        track = Track(self.storage.GetTrackFilename('newtrack'))
+        track.Open()
+        self.track = track
+        self.trackname = 'newtrack'
+        self.trackalarm = PositionAlarm(None,10,self)
+        DataProvider.GetInstance().SetAlarm(self.trackalarm)
+        self.mapwidget.SetRecordingTrack(self.track)
 
     def OnTrackStop(self,event):
-        print "Stopping track"
-        DataStorage.GetInstance().StopRecording()
-        #self.track = None
+        self.storage.tracks[self.trackname]=self.track
+        DataProvider.GetInstance().DeleteAlarm(self.trackalarm)
+        self.trackalarm = None
+        self.track = None
+        self.trackname = None
+        self.mapwidget.SetRecordingTrack(None)
 
     def OnTrackOpen(self,event):
         print "Opening track"
