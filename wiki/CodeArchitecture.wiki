@@ -1,4 +1,3 @@
-== Code architecture ==
 The code is now split into several files, I know, having all in one
 place makes it easy to run, but from coding perspective it's a real
 nightmare. So, now functionality has been grouped into different
