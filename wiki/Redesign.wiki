@@ -33,7 +33,23 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0014.jpg
   * Envy module (recommended)
   * Misty module (recommended)
 
-The modules need to be signed at symbian signed, with at least the
+Off course pyS60 is needed, tracker.py is written in python, so
+it needs an interpreter.
+
+The Landmarks module is used to interface with symbians internal
+landmarks database (as used by a.o. Nokia Maps). Tracker creates
+a 'waypoint' catagory, and places all waypoints there. Also, when
+you use the landmarks editor to assign this catagory to existing
+landmarks, they will show up in tracker.
+
+The Envy module is used to make tracker a system application, thus
+preventing it from being 'killed' by the OS on low memory conditions.
+This means you can take photos without tracker.py being killed.
+
+The Misty module is used to implement vibration alarms. This is
+used for the waypoint proximity alarm.
+
+All modules need to be signed at symbian signed, with at least the
 Location capability, but possibly others as well.
 
 == Code architecture ==
