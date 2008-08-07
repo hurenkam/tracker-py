@@ -38,8 +38,8 @@ it needs an interpreter.
 
 The Landmarks module is used to interface with symbians internal
 landmarks database (as used by a.o. Nokia Maps). Tracker creates
-a 'waypoint' catagory, and places all waypoints there. Also, when
-you use the landmarks editor to assign this catagory to existing
+a 'waypoint' category, and places all waypoints there. Also, when
+you use the landmarks editor to assign this category to existing
 landmarks, they will show up in tracker.
 
 The Envy module is used to make tracker a system application, thus
