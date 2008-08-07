@@ -10,7 +10,7 @@ from osal import *
 from datastorage import *
 
 Zoom =     [ 0.5, 0.75, 1.0, 1.5, 2.0 ]
-Scroll =   [ 100,   20,  10,   5,  1  ]
+Scroll =   [ 100,   20,  10,   5,   1 ]
 
 Color = {
           "black":0x000000,
@@ -171,6 +171,13 @@ class MapWidget(Widget):
         self.zoom = Zoom.index(1.0)
         self.UpdatePosition(self.position)
         self.Resize(size)
+
+    def GetPosition(self):
+        if self.cursor:
+            lat,lon = self.map.XY2Wgs(self.cursor[0],self.cursor[1])
+            return Point(0,lat,lon)
+        else:
+            return self.position
 
     def FollowGPS(self):
         self.cursor = None
@@ -1043,6 +1050,7 @@ class S60MapView(View):
         self.menuwidget = TextWidget("Menu",fgcolor=0xffffff,bgcolor=0x0000ff)
         self.editwidget = TextWidget("Find map",fgcolor=0xffffff,bgcolor=0x0000ff)
         self.exitwidget = TextWidget("Exit",fgcolor=0xffffff,bgcolor=0x0000ff)
+        self.positionwidget = PositionWidget((95,35))
 
         self.distance = 0
         self.longitude = 0
@@ -1073,6 +1081,7 @@ class S60MapView(View):
 
     def MoveUp(self,event=None):
         self.mapwidget.Move(UP)
+        self.followgps = True
         self.Draw()
 
     def MoveDown(self,event=None):
@@ -1136,6 +1145,7 @@ class S60MapView(View):
                     if id is not None:
                         print "opening %s" % maps[id]
                         self.LoadMap(d[maps[id]])
+                        self.mapwidget.FollowGPS()
                         appuifw.note(u"Map %s opened." % maps[id], "info")
                     else:
                         print "no file selected for opening"
@@ -1205,6 +1215,15 @@ class S60MapView(View):
             self.image.blit(
                 image = w.GetImage(),
                 target = (5,5),
+                source = ((0,0),s),
+                scale = 0 )
+
+            w = self.positionwidget
+            w.UpdatePosition(self.mapwidget.GetPosition())
+            s = w.GetImage().size
+            self.image.blit(
+                image = w.GetImage(),
+                target = (10,260),
                 source = ((0,0),s),
                 scale = 0 )
 
