@@ -53,4 +53,5 @@ alarms. This is used for the waypoint proximity alarm.
 All modules need to be signed at symbian signed, with at least the
 Location capability, but possibly others as well.
 
+== Design ==
 [http://code.google.com/p/tracker-py/wiki/CodeArchitecture Code Architecture]
