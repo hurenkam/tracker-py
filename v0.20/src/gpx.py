@@ -67,7 +67,7 @@ class GPXFile(file):
 
 
 
-    def readWaypoints(self):
+    def GetWaypointNodes(self):
         if self.parser.root is None:
             print "parser.root not found"
             return
@@ -77,26 +77,30 @@ class GPXFile(file):
             print "no waypoints found"
             return
 
-        for wpt in self.parser.root.childnodes['wpt']:
-            lat = eval(wpt.properties['lat'])
-            lon = eval(wpt.properties['lon'])
-            keys = wpt.childnodes.keys()
-            if 'name' in keys:
-                name = wpt.childnodes['name'][0].content
-                #print "importing waypoint %s" % name
-            else:
-                name = ''
-                print "name tag not found"
+        return self.parser.root.childnodes['wpt']
 
-            if 'ele' in keys:
-                alt = eval(wpt.childnodes['ele'][0].content)
-                w=DataStorage.GetInstance().CreateWaypoint(name,lat,lon,alt)
-            else:
-                w=DataStorage.GetInstance().CreateWaypoint(name,lat,lon)
-            DataStorage.GetInstance().SaveWaypoint(w)
+    def GetWaypoint(self,node):
+
+        lat = eval(node.properties['lat'])
+        lon = eval(node.properties['lon'])
+        keys = node.childnodes.keys()
+        if 'name' in keys:
+            name = node.childnodes['name'][0].content
+            #print "importing waypoint %s" % name
+        else:
+            name = ''
+            print "name tag not found"
+
+        if 'ele' in keys:
+            alt = eval(node.childnodes['ele'][0].content)
+            w=Waypoint(name,lat,lon,alt)
+        else:
+            w=Waypoint(name,lat,lon)
+
+        return w
 
 
-    def readRoutes(self):
+    def GetRouteNodes(self):
         if self.parser.root is None:
             print "parser.root not found"
             return
@@ -106,29 +110,30 @@ class GPXFile(file):
             print "no routes found"
             return
 
-        for rte in self.parser.root.childnodes['rte']:
-            keys = rte.childnodes.keys()
-            if 'name' in keys:
-                name = rte.childnodes['name'][0].content
+        return self.parser.root.childnodes['rte']
+
+
+    def GetRouteName(self,node):
+        keys = node.childnodes.keys()
+        if 'name' in keys:
+            return node.childnodes['name'][0].content
+
+
+    def GetRoutePoints(self,route,node):
+        for rtept in route.childnodes['rtept']:
+
+            lat = rtept.properties['lat']
+            lon = rtept.properties['lon']
+
+            keys = rtept.childnodes.keys()
+            if 'ele' in keys:
+                alt = eval(rtept.childnodes['ele'][0].content)
+                route.AddPoint(Point(lat,lon,alt))
             else:
-                name = ''
-            route = DataStorage.GetInstance().OpenRoute(name)
+                route.AddPoint(Point(lat,lon))
 
-            for rtept in rte.childnodes['rtept']:
 
-                lat = rtept.properties['lat']
-                lon = rtept.properties['lon']
-
-                keys = rtept.childnodes.keys()
-                if 'ele' in keys:
-                    alt = eval(rtept.childnodes['ele'][0].content)
-                    route.AddPoint(Point(lat,lon,alt))
-                else:
-                    route.AddPoint(Point(lat,lon))
-
-            route.Close()
-
-    def readTracks(self):
+    def GetTrackNodes(self):
         if self.parser.root is None:
             print "parser.root not found"
             return
@@ -138,25 +143,25 @@ class GPXFile(file):
             print "no tracks found"
             return
 
-        for trk in self.parser.root.childnodes['trk']:
-            keys = trk.childnodes.keys()
-            if 'name' in keys:
-                name = trk.childnodes['name'][0].content
-            else:
-                name = ''
-            track = DataStorage.GetInstance().OpenTrack(name)
+        return self.parser.root.childnodes['trk']
 
-            for trkseg in trk.childnodes['trkseg']:
-                for trkpt in trkseg.childnodes['trkpt']:
 
-                    lat = trkpt.properties['lat']
-                    lon = trkpt.properties['lon']
+    def GetTrackName(self,node):
+        keys = node.childnodes.keys()
+        if 'name' in keys:
+            return node.childnodes['name'][0].content
 
-                    keys = trkpt.childnodes.keys()
-                    if 'ele' in keys:
-                        alt = eval(trkpt.childnodes['ele'][0].content)
-                        track.AddPoint(Point(lat,lon,alt))
-                    else:
-                        track.AddPoint(Point(lat,lon))
 
-            track.Close()
+    def GetTrackPoints(self,track,node):
+        for trkseg in node.childnodes['trkseg']:
+            for trkpt in trkseg.childnodes['trkpt']:
+
+                lat = trkpt.properties['lat']
+                lon = trkpt.properties['lon']
+
+                keys = trkpt.childnodes.keys()
+                if 'ele' in keys:
+                    alt = eval(trkpt.childnodes['ele'][0].content)
+                    track.AddPoint(Point(lat,lon,alt))
+                else:
+                    track.AddPoint(Point(lat,lon))

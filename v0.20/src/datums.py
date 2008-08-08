@@ -16,19 +16,8 @@
 # Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 #
-# Parts of this software (GetWgs84FromRd) were taken from a Javascript
-# by Ed Stevenhagen, and are copied with his permission provided authors
-# are retained and the following statement included:
-#
-# 1. Transformation of rectangular TD-co-ordinates into geographical
-# co-ordinates on the Bessel ellipsoid
-# (Dutch stereographic projection) by  ir. T.G. Schut (NGT Geodesia
-# 1992-6).
-# 2. Implementation in Javascript by Stevenhagen <at> xs4all.nl
-#
-#
 # The UTM<->WGS84 calculations here are ported from javascript code
-# by Charles L. Taylor, wha has the following banner upon his webpage
+# by Charles L. Taylor, who has the following banner upon his webpage
 # ( http://home.hiwaay.net/~taylorc/toolbox/geography/geoutm.html )
 # regarding his code:
 #
@@ -39,71 +28,66 @@
 
 # Author(s):
 #
-#    Ed Stevenhagen	Stevenhagen <at> xs4all.nl
-#       Original Javascript version for RD to WGS84 calculation
-#
 #    Charles L. Taylor
 #       Original Javascript version for UTM<->WGS84 calculations
 #
 #    Nick Burch
 #       Distance and Bearing calculations (from geo_helper.py)
 #
-#    Mark Hurenkamp	Mark.Hurenkamp <at> xs4all.nl
-#	    Port to python
+#    Mark Hurenkamp    Mark.Hurenkamp <at> xs4all.nl
+#       Port javascript code to python for UTM<->WGS84 calculations
+#       Port matlab code to python for RD<->WGS84 calculations
+#
 
 import math
 
+def GetDMSFromWgs84(lat,lon):
+    latd = int(lat)
+    lond = int(lon)
+    latm = int((lat - latd) * 60)
+    lonm = int((lon - lond) * 60)
+    lats = ((lat - latd)*60 - latm) * 60
+    lons = ((lon - lond)*60 - lonm) * 60
+    return (latd,latm,lats),(lond,lonm,lons)
+
+def GetWgs84FromDMS((latd,latm,lats),(lond,lonm,lons)):
+    lat = latd + latm/60 + lats/3600
+    lon = lond + lonm/60 + lons/3600
+    return lat,lon
+
+
+# WGS84 to RD Calculation
+# taken from http://www.gpsgek.nl/informatief/wgs84-rd-script.html
+def GetRdFromWgs84(lat,lon):
+    dF = 0.36 * (lat - 52.15517440)
+    dL = 0.36 * (lon - 5.38720621)
+
+    dX = (190094.945 * dL) + (-11832.228 * dF * dL) + (-144.221 * dF**2 * dL) + (-32.391 * dL**3) + (-0.705 * dF) \
+       + (-2.340 * dF**3 * dL) + (-0.608 * dF * dL**3) + (-0.008 * dL**2) + (0.148 * dF**2 * dL**3)
+    dY = (309056.544 * dF) + (3638.893 * dL**2) + (73.077 * dF**2 ) + (-157.984 * dF * dL**2) + (59.788 * dF**3 ) \
+       + (0.433 * dL) + (-6.439 * dF**2 * dL**2) + (-0.032 * dF * dL) + (0.092 * dL**4) + (-0.054 * dF * dL**4)
+
+    X = 155000 + int(dX)
+    Y = 463000 + int(dY)
+    return X,Y
+
+
 # RD to WGS84 Calculation
-
+# taken from http://www.gpsgek.nl/informatief/wgs84-rd-script.html
 def GetWgs84FromRd(x,y):
-    x0 = 155000.0
-    y0 = 463000.0
+    dX = (x - 155000) * 1.0e-5
+    dY = (y - 463000) * 1.0e-5
 
-    f0 = 52.15610556
-    l0 = 5.387638889
+    dN = (3235.65389 * dY) + (-32.58297 * dX**2) + (-0.2475 * dY**2) + (-0.84978 * dX**2 * dY) \
+       + (-0.0655 * dY**3) + (-0.01709 * dX**2 * dY**2) + (-0.00738 * dX) + (0.0053 * dX**4) \
+       + (-0.00039 * dX**2 * dY**3) + (0.00033 * dX**4 * dY) + (-0.00012 * dX * dY)
+    dE = (5260.52916 * dX) + (105.94684 * dX * dY) + (2.45656 * dX * dY**2) + (-0.81885 * dX**3) \
+       + (0.05594 * dX * dY**3) + (-0.05607 * dX**3 * dY) + (0.01199 * dY) + (-0.00256 * dX**3 * dY**2) \
+       + (0.00128 * dX * dY**4) + (0.00022 * dY**2) + (-0.00022 * dX**2) + (0.00026 * dX**5)
 
-    a01 = 3236.0331637
-    b10 = 5261.3028966
-    a20 =  -32.5915821
-    b11 =  105.9780241
-    a02 =   -0.2472814
-    b12 =    2.4576469
-    a21 =   -0.8501341
-    b30 =   -0.8192156
-    a03 =   -0.0655238
-    b31 =   -0.0560092
-    a22 =   -0.0171137
-    b13 =    0.0560089
-    a40 =    0.0052771
-    b32 =   -0.0025614
-    a23 =   -0.0003859
-    b14 =    0.0012770
-    a41 =    0.0003314
-    b50 =    0.0002574
-    a04 =    0.0000371
-    b33 =   -0.0000973
-    a42 =    0.0000143
-    b51 =    0.0000293
-    a24 =   -0.0000090
-    b15 =    0.0000291
-
-    dx=(x-x0)*pow(10,-5);
-    dy=(y-y0)*pow(10,-5);
-
-    df = a01 * dy + a20 * (dx ** 2) + a02 * (dy ** 2) + a21 * (dx ** 2) * dy + a03 * (dy ** 3)
-    df+= a40 * (dx ** 4) + a22 * (dx ** 2) * (dy ** 2) + a04 * (dy ** 4) + a41 * (dx ** 4) * dy
-    df+= a23 * (dx ** 2) * (dy ** 3) + a42 * (dx ** 4) * (dy ** 2) + a24 * (dx ** 2) * (dy ** 4)
-    f = f0 + df/3600
-
-    dl = b10 * dx + b11 * dx * dy + b30 * (dx ** 3) + b12 * dx * (dy ** 2) + b31 * (dx ** 3) * dy
-    dl+= b13 * dx * (dy ** 3) + b50 * (dx ** 5) + b32 * (dx ** 3) * (dy ** 2) + b14 * dx * (dy ** 4)
-    dl+= b51 * (dx ** 5) * dy + b33 * (dx ** 3) * (dy ** 3) + b15 * dx * (dy ** 5)
-    l = l0 + dl/3600
-
-    fWgs= f + (-96.862 - 11.714 * (f-52)- 0.125 * (l-5)) / 100000
-    lWgs= l + (-37.902 +  0.329 * (f-52)-14.667 * (l-5)) / 100000
-
-    return (fWgs,lWgs)
+    Latitude = 52.15517 + (dN / 3600)
+    Longitude = 5.387206 + (dE / 3600)
+    return Latitude,Longitude
 
 
 sm_a = 6378137.0
@@ -324,6 +308,175 @@ def GetWgs84FromUTM(x,y,zone,southhemi):
     return GetWgs84FromMapXY (x, y, cmeridian)
 
 
+def ArcLengthOfMeridian(phi):
+    #
+    # ArcLengthOfMeridian
+    #
+    # Computes the ellipsoidal distance from the equator to a point at a
+    # given latitude.
+    #
+    # Reference: Hoffmann-Wellenhof, B., Lichtenegger, H., and Collins, J.,
+    # GPS: Theory and Practice, 3rd ed.  New York: Springer-Verlag Wien, 1994.
+    #
+    # Inputs:
+    #     phi - Latitude of the point, in radians.
+    #
+    # Globals:
+    #     sm_a - Ellipsoid model major axis.
+    #     sm_b - Ellipsoid model minor axis.
+    #
+    # Returns:
+    #     The ellipsoidal distance of the point from the equator, in meters.
+    #
+
+    # Precalculate n */
+    n = (sm_a - sm_b) / (sm_a + sm_b);
+
+    # Precalculate alpha */
+    alpha = ((sm_a + sm_b) / 2.0) \
+           * (1.0 + (math.pow (n, 2.0) / 4.0) + (math.pow (n, 4.0) / 64.0))
+
+    # Precalculate beta */
+    beta = (-3.0 * n / 2.0) + (9.0 * math.pow (n, 3.0) / 16.0) \
+         + (-3.0 * math.pow (n, 5.0) / 32.0)
+
+    # Precalculate gamma */
+    gamma = (15.0 * math.pow (n, 2.0) / 16.0) \
+          + (-15.0 * math.pow (n, 4.0) / 32.0)
+
+    # Precalculate delta */
+    delta = (-35.0 * math.pow (n, 3.0) / 48.0) \
+          + (105.0 * math.pow (n, 5.0) / 256.0)
+
+    # Precalculate epsilon */
+    epsilon = (315.0 * math.pow (n, 4.0) / 512.0)
+
+    # Now calculate the sum of the series and return */
+    result = alpha \
+        * (phi + (beta * math.sin (2.0 * phi)) \
+            + (gamma * math.sin (4.0 * phi)) \
+            + (delta * math.sin (6.0 * phi)) \
+            + (epsilon * math.sin (8.0 * phi)))
+
+    return result
+
+
+def GetXYFromWgs84(rlat,rlon,lambda0):
+    #
+    # MapLatLonToXY
+    #
+    # Converts a latitude/longitude pair to x and y coordinates in the
+    # Transverse Mercator projection.  Note that Transverse Mercator is not
+    # the same as UTM; a scale factor is required to convert between them.
+    #
+    # Reference: Hoffmann-Wellenhof, B., Lichtenegger, H., and Collins, J.,
+    # GPS: Theory and Practice, 3rd ed.  New York: Springer-Verlag Wien, 1994.
+    #
+    # Inputs:
+    #    rlat - Latitude of the point, in radians.
+    #    rlon - Longitude of the point, in radians.
+    #    lambda0 - Longitude of the central meridian to be used, in radians.
+    #
+    # Outputs:
+    #    xy - A 2-element array containing the x and y coordinates
+    #         of the computed point.
+    #
+    # Returns:
+    #    The function does not return a value.
+    #
+    #
+    #function MapLatLonToXY (rlat, rlon, lambda0, xy)
+
+        # Precalculate ep2 */
+        ep2 = (math.pow (sm_a, 2.0) - math.pow (sm_b, 2.0)) / math.pow (sm_b, 2.0)
+
+        # Precalculate nu2 */
+        nu2 = ep2 * math.pow (math.cos (rlat), 2.0)
+
+        # Precalculate N */
+        N = math.pow (sm_a, 2.0) / (sm_b * math.sqrt (1 + nu2))
+
+        # Precalculate t */
+        t = math.tan (rlat)
+        t2 = t * t
+        tmp = (t2 * t2 * t2) - math.pow (t, 6.0)
+
+        # Precalculate l */
+        l = rlon - lambda0
+
+        # Precalculate coefficients for l**n in the equations below
+        #  so a normal human being can read the expressions for easting
+        #  and northing
+        #  -- l**1 and l**2 have coefficients of 1.0 */
+        l3coef = 1.0 - t2 + nu2
+
+        l4coef = 5.0 - t2 + 9 * nu2 + 4.0 * (nu2 * nu2)
+
+        l5coef = 5.0 - 18.0 * t2 + (t2 * t2) + 14.0 * nu2 \
+            - 58.0 * t2 * nu2
+
+        l6coef = 61.0 - 58.0 * t2 + (t2 * t2) + 270.0 * nu2 \
+            - 330.0 * t2 * nu2
+
+        l7coef = 61.0 - 479.0 * t2 + 179.0 * (t2 * t2) - (t2 * t2 * t2)
+
+        l8coef = 1385.0 - 3111.0 * t2 + 543.0 * (t2 * t2) - (t2 * t2 * t2)
+
+        # Calculate easting (x) */
+        x = N * math.cos (rlat) * l \
+            + (N / 6.0 * math.pow (math.cos (rlat), 3.0) * l3coef * math.pow (l, 3.0)) \
+            + (N / 120.0 * math.pow (math.cos (rlat), 5.0) * l5coef * math.pow (l, 5.0)) \
+            + (N / 5040.0 * math.pow (math.cos (rlat), 7.0) * l7coef * math.pow (l, 7.0))
+
+        # Calculate northing (y) */
+        y = ArcLengthOfMeridian (rlat) \
+            + (t / 2.0 * N * math.pow (math.cos (rlat), 2.0) * math.pow (l, 2.0)) \
+            + (t / 24.0 * N * math.pow (math.cos (rlat), 4.0) * l4coef * math.pow (l, 4.0)) \
+            + (t / 720.0 * N * math.pow (math.cos (rlat), 6.0) * l6coef * math.pow (l, 6.0)) \
+            + (t / 40320.0 * N * math.pow (math.cos (rlat), 8.0) * l8coef * math.pow (l, 8.0))
+
+        return x,y
+
+# WGS84 to UTM Calculation
+def GetUTMFromWgs84(lat,lon,zone=0):
+    #
+    # LatLonToUTMXY
+    #
+    # Converts a latitude/longitude pair to x and y coordinates in the
+    # Universal Transverse Mercator projection.
+    #
+    # Inputs:
+    #   lat - Latitude of the point, in radians.
+    #   lon - Longitude of the point, in radians.
+    #   zone - UTM zone to be used for calculating values for x and y.
+    #          If zone is less than 1 or greater than 60, the routine
+    #          will determine the appropriate zone from the value of lon.
+    #
+    # Outputs:
+    #   xy - A 2-element array where the UTM x and y values will be stored.
+    #
+    # Returns:
+    #   The UTM zone used for calculating the values of x and y.
+    #
+    #
+    #function LatLonToUTMXY (lat, lon, zone, xy)
+
+    if zone < 1 or zone > 60:
+        zone = math.floor ((lon + 180.0) / 6) + 1
+
+    rlat = lat /180 * math.pi
+    rlon = lon /180 * math.pi
+    x,y = GetXYFromWgs84 (rlat, rlon, UTMCentralMeridian(zone))
+
+    # Adjust easting and northing for UTM system. */
+    x = x * UTMScaleFactor + 500000.0
+    y = y * UTMScaleFactor
+    if (y < 0.0):
+        y += 10000000.0
+
+    return x,y,zone
+
+
 
 def CalculateDistanceAndBearing(fromwgs,towgs):
     """Uses the spherical law of cosines to calculate the distance and bearing between two positions"""
@@ -368,10 +521,40 @@ def CalculateDistanceAndBearing(fromwgs,towgs):
 
     return distance, bearing % 360
 
+RD = [
+      (100000,100000),
+      (200000,200000),
+      (300000,300000),
+      (400000,400000),
+      (400000,100000),
+      (300000,200000),
+      (200000,300000),
+      (100000,400000),
+      (290000,290000),
+      (280000,280000),
+      (270000,270000),
+      (260000,260000),
+      (250000,250000),
+      (240000,240000),
+      (230000,230000),
+      (220000,220000),
+      (190000,190000),
+      (180000,180000),
+      (170000,170000),
+      (160000,160000),
+      (150000,150000),
+      (140000,140000),
+      (130000,130000),
+      (120000,120000),
+    ]
 
 
 if __name__ == '__main__':
-    print GetWgs84FromRd(140000,400000)
+    for rd in RD:
+        lat,lon = GetWgs84FromRd(rd[0],rd[1])
+        x, y = GetRdFromWgs84(lat,lon)
+        print "%8.1f %8.1f" % (rd[0]-x,rd[1]-y)
 
     # should be 42.6349, 0.8541
     print GetWgs84FromUTM(324055.7376140191,4722504.569118755,31,False)
+    print GetUTMFromWgs84(42.6349, 0.8541)

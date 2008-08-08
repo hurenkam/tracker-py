@@ -311,9 +311,29 @@ class DataStorage(AlarmResponder):
 
     def GPXImport(self,filename):
         file = GPXFile(filename,"r")
-        file.readWaypoints()
-        file.readRoutes()
-        file.readTracks()
+
+        wptnodes = file.GetWaypointNodes()
+        if wptnodes != None:
+            for node in wptnodes:
+                w = file.GetWaypoint(node)
+                self.CreateWaypoint(w.name,w.latitude,w.longitude,w.altitude)
+
+        rtenodes = file.GetRouteNodes()
+        if rtenodes != None:
+            for node in rtenodes:
+                name = file.GetRouteName(node)
+                route = Route(self.GetRouteFilename(name))
+                file.GetRoutePoints(route,node)
+                route.Close()
+
+        trknodes = file.GetTrackNodes()
+        if trknodes != None:
+            for node in trknodes:
+                name = file.GetTrackName(node)
+                track = Track(self.GetTrackFilename(name))
+                file.GetTrackPoints(track,node)
+                track.Close()
+
         file.close()
 
 
@@ -484,6 +504,7 @@ s60defaults = {
 
         "app_lastview":"1",
         "app_lastknownposition":"Point(0,51.47307,5.48952,66)",
+        "app_datum":"Wgs84",
 
         # Map settings
         "map_dir":"u\"e:\\\\data\\\\tracker\\\\maps\"",
