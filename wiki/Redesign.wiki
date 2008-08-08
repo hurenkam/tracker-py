@@ -15,7 +15,13 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0021.jpg
   * Show waypoints on map
   * Show heading in mapview
   * Scroll/Zoom map
-  * Im/export of tracks & waypoints in GPX format
+  * Im/export of tracks & waypoints in GPX format (needs more testing)
+  * Display position in Wgs84/DMS/UTM/RD datums
+
+== Bugs ==
+  * Distance meter stops while in mapview mode
+  * GPX imported track is not shown on map (no track points on map?)
+  * Some gauges sometimes show 'NaN' value
 
 == Features Todo ==
   * Import map
