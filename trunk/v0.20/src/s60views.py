@@ -11,6 +11,7 @@ from datastorage import *
 
 Zoom =     [ 0.5, 0.75, 1.0, 1.5, 2.0 ]
 Scroll =   [ 100,   20,  10,   5,   1 ]
+Datums =   [ "Wgs84", "DMS", "RD", "UTM" ]
 
 Color = {
           "black":0x000000,
@@ -129,22 +130,55 @@ class PositionWidget(Widget):
     def __init__(self,size = None):
         s = DataStorage.GetInstance()
         self.point = s.GetValue("app_lastknownposition")
+        self.funcs = {
+                 "Wgs84" : self.GetWgs84Texts,
+                 "RD"    : self.GetRDTexts,
+                 "UTM"   : self.GetUTMTexts,
+                 "DMS"   : self.GetDMSTexts,
+                 }
         Widget.__init__(self,size)
+
+    def UpdateDatum(self):
+        self.Draw()
 
     def UpdatePosition(self,point):
         self.point = point
         self.Draw()
+
+    def GetWgs84Texts(self,lat,lon):
+        return u"Wgs84", u"N%8.5f" % lat, u"E%8.5f" % lon
+
+    def GetDMSTexts(self,lat,lon):
+        (nd,nm,ns),(ed,em,es) = datums.GetDMSFromWgs84(lat,lon)
+        return u"Wgs84", u"N%2.0f %2.0f\'%5.2f\"" % (nd,nm,ns), u"E%2.0f %2.0f\'%5.2f\"" % (ed,em,es)
+
+    def GetUTMTexts(self,lat,lon):
+        x,y,z = datums.GetUTMFromWgs84(lat,lon)
+        #print "UTM: ", x,y,z
+        #UTM: 31U  672894m E  5705374m N
+        return u"UTM", str(int(x))+"E", str(int(y))+"N", str(int(z))+"U"
+
+    def GetRDTexts(self,lat,lon):
+        x,y = datums.GetRdFromWgs84(lat,lon)
+        return u"RD", u"%6.0f" % x, u"%6.0f" % y
+
+    def GetPositionTexts(self):
+        datum = DataStorage.GetInstance().GetValue("app_datum")
+        if datum in self.funcs.keys():
+            return self.funcs[datum](self.point.latitude,self.point.longitude)
 
     def Draw(self):
         Widget.Draw(self)
         s=self.image.size
         self.image.rectangle((0,0,s[0],s[1]),outline=0x000000)
         if self.point:
-            w,h = self.DrawText( (5,5),     u"Lat: %8.5f" % self.point.latitude)
-            w,h = self.DrawText( (5,5+h+2), u"Lon: %8.5f" % self.point.longitude)
+            texts = self.GetPositionTexts()
+            x,y = 5,5
+            for t in texts:
+                w,h = self.DrawText((x,y),t)
+                x = x+w+7
         else:
-            w,h = self.DrawText( (5,5),     u"Position")
-            w,h = self.DrawText( (5,5+h+2), u"Unknown")
+            self.DrawText( (5,5), u"Position unknown")
 
 GPS = 0
 UP = 1
@@ -252,7 +286,7 @@ class MapWidget(Widget):
             for p in points:
                 self.DrawTrackPoint(p, color)
         else:
-            print "No points in track"
+            print "No points of track on current map"
 
     def DrawOpenTracks(self):
         for track in self.storage.tracks.values():
@@ -868,7 +902,8 @@ class S60DashView(View):
         self.altitudegauge = AltitudeGauge(None)
         self.timegauge = TimeGauge(None)
 
-        self.positionwidget = PositionWidget((156,45))
+        self.positionwidget = PositionWidget((230,25))
+        #self.positionwidget = PositionWidget((156,45))
         self.menuwidget = TextWidget("Menu",fgcolor=0xffffff,bgcolor=0x0000ff)
         self.editwidget = TextWidget("Edit",fgcolor=0xffffff,bgcolor=0x0000ff)
         self.exitwidget = TextWidget("Exit",fgcolor=0xffffff,bgcolor=0x0000ff)
@@ -931,11 +966,16 @@ class S60DashView(View):
         self.update = True
         self.Draw()
 
+    def UpdateDatum(self):
+        self.positionwidget.UpdateDatum()
+        self.update = True
+
     def UpdateSignal(self,signal):
         bat = sysinfo.battery()*7/100
         gsm = sysinfo.signal_bars()
         sat = signal.used
         self.signalgauge.UpdateValues({'bat':bat, 'gsm':gsm, 'sat':sat})
+        self.update = True
 
     def UpdateTime(self,time):
         if self.time is None:
@@ -989,7 +1029,7 @@ class S60DashView(View):
         s = w.GetImage().size
         self.image.blit(
             image = w.GetImage(),
-            target = (3,250),
+            target = (5,275),
             source = ((0,0),s),
             scale = 0 )
 
@@ -1046,11 +1086,11 @@ class S60MapView(View):
         self.storage = DataStorage.GetInstance()
         self.osal = Osal.GetInstance()
 
-        self.mapwidget = MapWidget((230,295))
+        self.mapwidget = MapWidget((230,265))
         self.menuwidget = TextWidget("Menu",fgcolor=0xffffff,bgcolor=0x0000ff)
         self.editwidget = TextWidget("Find map",fgcolor=0xffffff,bgcolor=0x0000ff)
         self.exitwidget = TextWidget("Exit",fgcolor=0xffffff,bgcolor=0x0000ff)
-        self.positionwidget = PositionWidget((95,35))
+        self.positionwidget = PositionWidget((230,25))
 
         self.distance = 0
         self.longitude = 0
@@ -1177,6 +1217,10 @@ class S60MapView(View):
         self.update = True
         self.Draw()
 
+    def UpdateDatum(self):
+        self.positionwidget.UpdateDatum()
+        self.update = True
+
     def UpdateSignal(self,signal):
         pass
 
@@ -1223,7 +1267,7 @@ class S60MapView(View):
             s = w.GetImage().size
             self.image.blit(
                 image = w.GetImage(),
-                target = (10,260),
+                target = (5,275),
                 source = ((0,0),s),
                 scale = 0 )
 
@@ -1328,6 +1372,14 @@ class S60Application(Application, AlarmResponder):
                                     (u'Clear Refpoints',    self.Dummy),
                                 )
                             ),
+                            (u'Datum',
+                                (
+                                    (u'Wgs84',              self.DatumWgs84),
+                                    (u'DMS',                self.DatumDMS),
+                                    (u'UTM',                self.DatumUTM),
+                                    (u'RD',                 self.DatumRD),
+                                )
+                            ),
                             (u'Waypoints',
                                 (
                                     (u'Monitor',            self.MonitorWaypoint),
@@ -1353,6 +1405,22 @@ class S60Application(Application, AlarmResponder):
                                 )
                             ),
                             (u'About',                      self.About)]
+
+    def DatumWgs84(self):
+        self.storage.SetValue("app_datum","Wgs84")
+        self.view.UpdateDatum()
+
+    def DatumDMS(self):
+        self.storage.SetValue("app_datum","DMS")
+        self.view.UpdateDatum()
+
+    def DatumUTM(self):
+        self.storage.SetValue("app_datum","UTM")
+        self.view.UpdateDatum()
+
+    def DatumRD(self):
+        self.storage.SetValue("app_datum","RD")
+        self.view.UpdateDatum()
 
     def SelectView(self,id):
         if id < 0 or id > 1:
@@ -1556,7 +1624,7 @@ class S60Application(Application, AlarmResponder):
         tracks = self.storage.tracks.keys()
         tracks.sort()
         id = appuifw.selection_list(tracks)
-        if id is not None:
+        if id != None:
             print "opening %s" % tracks[id]
             self.storage.tracks[tracks[id]].Open()
             appuifw.note(u"Track %s opened." % tracks[id], "info")
@@ -1568,7 +1636,7 @@ class S60Application(Application, AlarmResponder):
         tracks = self.storage.tracks.keys()
         tracks.sort()
         id = appuifw.selection_list(tracks)
-        if id is not None:
+        if id != None:
             print "closing %s" % tracks[id]
             self.storage.tracks[tracks[id]].Close()
             appuifw.note(u"Track %s closed." % tracks[id], "info")
@@ -1582,7 +1650,7 @@ class S60Application(Application, AlarmResponder):
         id = appuifw.selection_list(tracks)
         if id is not None:
             print "deleting %s" % tracks[id]
-            self.storage.DeleteTrack(tracks[id])
+            self.storage.DeleteTrack(name=tracks[id])
             appuifw.note(u"Track %s deleted." % tracks[id], "info")
         else:
             print "no file selected for deletion"
