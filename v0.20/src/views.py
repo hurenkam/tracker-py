@@ -18,6 +18,9 @@ class View:
     def UpdateCourse(self,course):
         pass
 
+    def GetPosition(self):
+        pass
+
 
 class DashView(View):
     instance = None
