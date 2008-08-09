@@ -508,6 +508,7 @@ s60defaults = {
 
         # Map settings
         "map_dir":"u\"e:\\\\data\\\\tracker\\\\maps\"",
+        "map_refname":"u\"Tracker-\"",
 
         # Waypoint settings
         "wpt_dir":"u\"e:\\\\data\\\\tracker\"",

@@ -206,6 +206,16 @@ class MapWidget(Widget):
         self.UpdatePosition(self.position)
         self.Resize(size)
 
+    def GetCursor(self):
+        if self.cursor != None:
+            return self.cursor
+        if self.lastpos != None:
+            return self.lastpos
+        x,y = self.map.size
+        x=x/2
+        y=y/2
+        return (x,y)
+
     def GetPosition(self):
         if self.cursor:
             lat,lon = self.map.XY2Wgs(self.cursor[0],self.cursor[1])
@@ -1119,6 +1129,12 @@ class S60MapView(View):
 
         #self.LoadMap(map)
 
+    def GetPosition(self):
+        return self.mapwidget.GetPosition()
+
+    def GetCursor(self):
+        return self.mapwidget.GetCursor()
+
     def MoveUp(self,event=None):
         self.mapwidget.Move(UP)
         self.followgps = True
@@ -1352,6 +1368,16 @@ class S60Application(Application, AlarmResponder):
         id = self.storage.GetValue("app_lastview")
         self.SelectView(id)
 
+        self.queryfuncs = {
+                 "Wgs84" : self.QueryWgs84Position,
+                 "RD"    : self.QueryRDPosition,
+                 "UTM"   : self.QueryUTMPosition,
+                 "DMS"   : self.QueryDMSPosition,
+                 }
+        self.position = self.storage.GetValue("app_lastknownposition")
+
+
+
     def UpdateMenu(self):
         if self.storage.GetValue("app_screensaver"):
            togglescreensaver=(u"Disable Screensaver", self.ToggleScreenSaver)
@@ -1367,8 +1393,7 @@ class S60Application(Application, AlarmResponder):
                                     (u'Open',               self.OpenMap),
                                     (u'Close',              self.CloseMap),
                                     (u'Import',             self.Dummy),
-                                    (u'Add WGS84 Refpoint', self.Dummy),
-                                    (u'Add RD Refpoint',    self.Dummy),
+                                    (u'Add Refpoint',       self.AddRefpoint),
                                     (u'Clear Refpoints',    self.Dummy),
                                 )
                             ),
@@ -1399,9 +1424,9 @@ class S60Application(Application, AlarmResponder):
                             (u'Im/Export',
                                 (
                                     (u'Import GPX',         self.GPXImport),
-                                    (u'Import KML',         self.Dummy),
+                                    #(u'Import KML',         self.Dummy),
                                     (u'Export GPX',         self.GPXExport),
-                                    (u'Export KML',         self.Dummy),
+                                    #(u'Export KML',         self.Dummy),
                                 )
                             ),
                             (u'About',                      self.About)]
@@ -1533,19 +1558,74 @@ class S60Application(Application, AlarmResponder):
         else:
             return None
 
-    def AddWaypoint(self):
-        latitude = appuifw.query(u"Waypoint Latitude:","float",self.position.latitude)
+    def QueryWgs84Position(self,lat,lon):
+        latitude = appuifw.query(u"Waypoint Latitude:","float",lat)
         if latitude is None:
             appuifw.note(u"Cancelled.", "info")
-            return
+            return None
 
-        longitude = appuifw.query(u"Waypoint Longitude:","float",self.position.longitude)
+        longitude = appuifw.query(u"Waypoint Longitude:","float",lon)
         if longitude is None:
             appuifw.note(u"Cancelled.", "info")
+            return None
+
+        return latitude,longitude
+
+    def QueryDMSPosition(self,lat,lon):
+        pass
+
+    def QueryUTMPosition(self,lat,lon):
+        x,y,zone = datums.GetUTMFromWgs84(lat,lon)
+        zone = appuifw.query(u"UTM Zone:","float",zone)
+        if zone is None:
+            appuifw.note(u"Cancelled.", "info")
+            return None
+
+        x = appuifw.query(u"UTM X:","float",x)
+        if x == None:
+            appuifw.note(u"Cancelled.", "info")
+            return None
+
+        y = appuifw.query(u"UTM Y:","float",y)
+        if y == None:
+            appuifw.note(u"Cancelled.", "info")
+            return None
+
+        lat,lon = datums.GetWgs84FromUTM(x,y,zone,False)
+        return lat,lon
+
+    def QueryRDPosition(self,lat,lon):
+        x,y = datums.GetRDFromWgs84(lat,lon)
+        x = appuifw.query(u"RD X:","float",x)
+        if x == None:
+            appuifw.note(u"Cancelled.", "info")
+            return None
+
+        y = appuifw.query(u"RD Y:","float",y)
+        if y == None:
+            appuifw.note(u"Cancelled.", "info")
+            return None
+
+        lat,lon = datums.GetWgs84FromRD(x,y)
+        return lat,lon
+
+    def QueryPosition(self,lat,lon):
+        datum = self.storage.GetValue("app_datum")
+        return self.queryfuncs[datum](lat,lon)
+
+    def AddWaypoint(self):
+        position = self.view.GetPosition()
+        if position == None:
+            position = self.position
+
+        pos = self.QueryPosition(position.latitude,position.longitude)
+        if pos == None:
             return
 
+        latitude,longitude = pos
+
         try:
-            prevname = self.storage.config["prevwpname"]
+            prevname = self.storage.config["wpt_name"]
         except:
             prevname = ""
 
@@ -1555,7 +1635,30 @@ class S60Application(Application, AlarmResponder):
             return
 
         self.storage.SaveWaypoint(self.storage.CreateWaypoint(name,latitude,longitude))
-        self.storage.config["prevwpname"]=name
+        self.storage.config["wpt_name"]=name
+
+    def AddRefpoint(self):
+        cursor = self.mapview.GetCursor()
+        if cursor == None:
+            appuifw.note(u"No position selected.", "info")
+            return
+
+        position = self.position
+        pos = self.QueryPosition(position.latitude,position.longitude)
+        if pos == None:
+            return
+
+        latitude,longitude = pos
+
+        try:
+            prevname = self.storage.config["map_refname"]
+        except:
+            prevname = ""
+
+        name = appuifw.query(u"Reference name:","text",prevname)
+        if name is None:
+            appuifw.note(u"Cancelled.", "info")
+            return
 
     def DeleteWaypoint(self):
         waypoints = self.storage.GetWaypoints()
