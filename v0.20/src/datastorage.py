@@ -14,14 +14,15 @@ class MapFile(file):
 #</map>
 
     def __init__(self,name,mode):
+        b,e = os.path.splitext(name)
         if mode == "w":
-            file.__init__(self,name,mode)
+            file.__init__(self,b+'.xml',mode)
             self.parser=None
             self.write("<?xml version=\"1.0\" ?>\n")
-            self.write("<map imagefile=\"%s\">\n" % name)
+            self.write("<map imagefile=\"%s.jpg\">\n" % b)
         elif mode == "r":
             self.parser = XMLParser()
-            self.parser.parseXMLFile(name)
+            self.parser.parseXMLFile(b+'.xml')
         else:
             raise "Unknown mode"
 
@@ -31,11 +32,15 @@ class MapFile(file):
             file.close(self)
 
     def writeResolution(self,size):
-        self.write("   <resolution width=\"%f\" height=\"%f\"/>\n" % size )
+        self.write("   <resolution width=\"%s\" height=\"%s\"/>\n" % (str(size[0]),str(size[1])) )
 
     def writeRefpoint(self,refpoint):
-        self.write("   <refpoint name=\"%s\" lat=\"%f\" lon=\"%f\" x=\"%i\" y=\"%i\"/>\n" %
-              (refpoint.name, refpoint.latitude, refpoint.longitude, refpoint.x, refpoint.y) )
+        if refpoint.name != None and refpoint.name != "":
+            self.write("   <refpoint name=\"%s\" lat=\"%f\" lon=\"%f\" x=\"%i\" y=\"%i\"/>\n" %
+                  (refpoint.name, refpoint.latitude, refpoint.longitude, refpoint.x, refpoint.y) )
+        else:
+            self.write("   <refpoint lat=\"%f\" lon=\"%f\" x=\"%i\" y=\"%i\"/>\n" %
+                  (refpoint.latitude, refpoint.longitude, refpoint.x, refpoint.y) )
 
     def readResolution(self):
         if self.parser.root is None:
