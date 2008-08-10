@@ -228,6 +228,13 @@ class MapWidget(Widget):
             self.map.ClearRefpoints()
             self.Draw()
 
+    def SaveCalibrationData(self):
+        file = MapFile(self.map.filename,"w")
+        file.writeResolution(self.map.size)
+        for r in self.map.refpoints:
+            file.writeRefpoint(r)
+        file.close()
+
     def GetPosition(self):
         if self.cursor:
             pos = self.map.XY2Wgs(self.cursor[0],self.cursor[1])
@@ -1152,6 +1159,9 @@ class S60MapView(View):
     def AddRefpoint(self,name,lat,lon):
         self.mapwidget.AddRefpoint(name,lat,lon)
 
+    def SaveCalibrationData(self):
+        self.mapwidget.SaveCalibrationData()
+
     def MoveUp(self,event=None):
         self.mapwidget.Move(UP)
         self.followgps = True
@@ -1411,6 +1421,7 @@ class S60Application(Application, AlarmResponder):
                                     (u'Close',              self.CloseMap),
                                     (u'Import',             self.Dummy),
                                     (u'Add Refpoint',       self.AddRefpoint),
+                                    (u'Save',               self.SaveCalibrationData),
                                     (u'Clear Refpoints',    self.ClearRefpoints),
                                 )
                             ),
@@ -1675,6 +1686,9 @@ class S60Application(Application, AlarmResponder):
             return
 
         self.mapview.AddRefpoint(name,latitude,longitude)
+
+    def SaveCalibrationData(self):
+        self.mapview.SaveCalibrationData()
 
     def DeleteWaypoint(self):
         waypoints = self.storage.GetWaypoints()
