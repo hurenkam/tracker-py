@@ -34,8 +34,8 @@ class MapFile(file):
         self.write("   <resolution width=\"%f\" height=\"%f\"/>\n" % size )
 
     def writeRefpoint(self,refpoint):
-        self.write("   <refpoint lat=\"%f\" lon=\"%f\" x=\"%i\" y=\"%i\"/>\n" %
-              (refpoint.latitude, refpoint.longitude, refpoint.x, refpoint.y) )
+        self.write("   <refpoint name=\"%s\" lat=\"%f\" lon=\"%f\" x=\"%i\" y=\"%i\"/>\n" %
+              (refpoint.name, refpoint.latitude, refpoint.longitude, refpoint.x, refpoint.y) )
 
     def readResolution(self):
         if self.parser.root is None:
@@ -65,11 +65,15 @@ class MapFile(file):
 
         refpoints = []
         for refpoint in self.parser.root.childnodes['refpoint']:
+            if "name" in refpoint.properties:
+                name = eval(refpoint.properties['name'])
+            else:
+                name = ""
             lat = eval(refpoint.properties['lat'])
             lon = eval(refpoint.properties['lon'])
             x = eval(refpoint.properties['x'])
             y = eval(refpoint.properties['y'])
-            refpoints.append(Refpoint(lat,lon,x,y))
+            refpoints.append(Refpoint(name,lat,lon,x,y))
 
         return refpoints
 

@@ -216,12 +216,25 @@ class MapWidget(Widget):
         y=y/2
         return (x,y)
 
+    def AddRefpoint(self,name,lat,lon):
+        x,y = self.GetCursor()
+        r = Refpoint(name,lat,lon,x,y)
+        self.map.AddRefpoint(r)
+        if self.map.iscalibrated:
+            self.Draw()
+
+    def ClearRefpoints(self):
+        if self.map != None:
+            self.map.ClearRefpoints()
+            self.Draw()
+
     def GetPosition(self):
         if self.cursor:
-            lat,lon = self.map.XY2Wgs(self.cursor[0],self.cursor[1])
-            return Point(0,lat,lon)
-        else:
-            return self.position
+            pos = self.map.XY2Wgs(self.cursor[0],self.cursor[1])
+            if pos != None:
+                lat,lon = pos
+                return Point(0,lat,lon)
+        return self.position
 
     def FollowGPS(self):
         self.cursor = None
@@ -1132,8 +1145,12 @@ class S60MapView(View):
     def GetPosition(self):
         return self.mapwidget.GetPosition()
 
-    def GetCursor(self):
-        return self.mapwidget.GetCursor()
+    def ClearRefpoints(self):
+        self.mapwidget.ClearRefpoints()
+        self.Draw()
+
+    def AddRefpoint(self,name,lat,lon):
+        self.mapwidget.AddRefpoint(name,lat,lon)
 
     def MoveUp(self,event=None):
         self.mapwidget.Move(UP)
@@ -1394,7 +1411,7 @@ class S60Application(Application, AlarmResponder):
                                     (u'Close',              self.CloseMap),
                                     (u'Import',             self.Dummy),
                                     (u'Add Refpoint',       self.AddRefpoint),
-                                    (u'Clear Refpoints',    self.Dummy),
+                                    (u'Clear Refpoints',    self.ClearRefpoints),
                                 )
                             ),
                             (u'Datum',
@@ -1637,14 +1654,11 @@ class S60Application(Application, AlarmResponder):
         self.storage.SaveWaypoint(self.storage.CreateWaypoint(name,latitude,longitude))
         self.storage.config["wpt_name"]=name
 
-    def AddRefpoint(self):
-        cursor = self.mapview.GetCursor()
-        if cursor == None:
-            appuifw.note(u"No position selected.", "info")
-            return
+    def ClearRefpoints(self):
+        self.mapview.ClearRefpoints()
 
-        position = self.position
-        pos = self.QueryPosition(position.latitude,position.longitude)
+    def AddRefpoint(self):
+        pos = self.QueryPosition(self.position.latitude,self.position.longitude)
         if pos == None:
             return
 
@@ -1659,6 +1673,8 @@ class S60Application(Application, AlarmResponder):
         if name is None:
             appuifw.note(u"Cancelled.", "info")
             return
+
+        self.mapview.AddRefpoint(name,latitude,longitude)
 
     def DeleteWaypoint(self):
         waypoints = self.storage.GetWaypoints()

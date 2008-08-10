@@ -177,13 +177,14 @@ class Waypoint(Point):
 
 
 class Refpoint(Point):
-    def __init__(self,lat=0,lon=0,x=0,y=0):
+    def __init__(self,name=None,lat=0,lon=0,x=0,y=0):
         Point.__init__(self,0,lat,lon)
+        self.name = name
         self.x = x
         self.y = y
 
     def __repr__(self):
-        return u"Refpoint(%f,%f,%f,%f)" % (self.latitude, self.longitude, self.x, self.y)
+        return u"Refpoint(%s,%f,%f,%f,%f)" % (self.name, self.latitude, self.longitude, self.x, self.y)
 
 
 class Map:
@@ -209,6 +210,14 @@ class Map:
             print "Wgs84 topleft:     %f, %f" % (lat1,lon1)
             print "Wgs84 bottomright: %f, %f" % (lat2,lon2)
 
+    def AddRefpoint(self,ref):
+        self.refpoints.append(ref)
+        self.Calibrate()
+
+    def ClearRefpoints(self):
+        self.refpoints = []
+        self.iscalibrated = False
+
     def Calibrate(self):
         if self.refpoints != None and len(self.refpoints) > 1:
 
@@ -233,10 +242,15 @@ class Map:
             self.y = r1.y
             self.lat = r1.latitude
             self.lon = r1.longitude
-            self.x2lon = dlon/dx
-            self.y2lat = dlat/dy
-            self.lon2x = dx/dlon
-            self.lat2y = dy/dlat
+            try:
+                self.x2lon = dlon/dx
+                self.y2lat = dlat/dy
+                self.lon2x = dx/dlon
+                self.lat2y = dy/dlat
+            except:
+                print "Calibration failed for map ",self.name
+                print "Refpoints: ",self.refpoints
+                return
 
             self.iscalibrated = True
             self.area = self.WgsArea()
