@@ -20,3 +20,5 @@ it is easy to install on any phone that has pys60 installed.
 If something is holding you back from using this software, please let me
 know what it is. I can add it to this wishlist, and who knows maybe it will
 end up on the development chart as well.
+(contact me at mark.hurenkamp <at> xs4all.nl or post on the general discussion
+list)
