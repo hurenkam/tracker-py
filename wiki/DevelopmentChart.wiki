@@ -1,7 +1,10 @@
 == ReDesign (v0.20.x) ==
+  * Stable S60 version
 
 == Short term (v0.21.x) ==
+  * Stable OSX/Linux/XP versions
 
 == Long term (v0.30.x) ==
+  * Port to pocket pc
 
 == WishList ==
