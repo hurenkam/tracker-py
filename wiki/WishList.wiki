@@ -1,3 +1,8 @@
+== Import calibrated maps from OziExplorer ==
+OziExplorer provides similar functionality as Tracker.py on PC and
+PocketPC platforms. It would be nice if maps calibrated with OziExplorer
+can be imported for use with Tracker.py
+
 == Dynamic menus ==
 Currently the menu layout is very static, only the 'screensaver' option
 is dynamic. A lot more menu items can be made dynamic however, the option
@@ -11,15 +16,24 @@ good to extract the 10-20 percent, and use a single codebase for the rest
 of these modules.
 
 == Create SIS package ==
-The development has been mostly focussed on getting functionality to work,
+The development has been mostly focused on getting functionality to work,
 for the simple reason that this is what I care about most.
 It would be nice to have the code wrapped in a single SIS package, so that
 it is easy to install on any phone that has pys60 installed.
 
 == Use Accelerometer to scroll the map ==
-Since scrolling the map can be a pain, especially if zoomed in, on a large
-map. Using the accelerometer would be very handy in this case, simply tilt
+Scrolling the map can be a pain, especially if zoomed in on a large map.
+Using the accelerometer would be very handy in this case, simply tilt
 your phone in the direction you want to scroll.
+
+== Exchange of Landmarks ==
+A message format could be defined to send/receive Landmarks over SMS/E-Mail/Bluetooth/Other?
+When a landmark comes in the user can for instance choose to Display on Map or Save to
+Landmarks. Similarly it would be nice if a Landmark, Current Position, or Selected Position
+on the map can be send to others. Perhaps an automatic action could also be defined upon
+reception of a Landmark. Feature could also be extended to routes/tracks (although
+tracks could contain large amounts of data)
+Suggested message formats: NMEA, GPX
 
 == Others? Please let me know! ==
 If something is holding you back from using this software, please let me
