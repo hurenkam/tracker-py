@@ -35,9 +35,22 @@ reception of a Landmark. Feature could also be extended to routes/tracks (althou
 tracks could contain large amounts of data)
 Suggested message formats: NMEA, GPX
 
+== Port to Pocket PC ==
+Currently Tracker.py is focussed on symbian S60, and has some support
+for other (osx/linux/windows) platforms.
+A fully functional port to Pocket PC would be nice, since a lot of them
+are also equipped with either a bluetooth or internal GPS.
+
+== Stable wxPython version ==
+Currently Tracker.py is focussed on symbian S60, and has some support
+for other (osx/linux/windows) platforms. On osx/linux/windows it uses
+the wxpython widget library, but currently the port to this platform
+is incomplete and unstable. A stable version on wxpython would help
+development efforts enormously.
+
 == Others? Please let me know! ==
 If something is holding you back from using this software, please let me
 know what it is. I can add it to this wishlist, and who knows maybe it will
-end up on the development chart as well.
+end up on the RoadMap as well.
 (contact me at mark.hurenkamp <at> xs4all.nl or post on the general discussion
 list)

@@ -1,11 +1,19 @@
+For a more detailed description of the features, please
+see the WishList
+
 == ReDesign (v0.20.x) ==
   * Stable S60 version
+  * Create SIS package
 
 == Short term (v0.21.x) ==
-  * Stable OSX/Linux/XP versions
-  * Import calibrated maps from OziExplorer/Other?
+  * Import calibrated maps from OziExplorer/Others?
+  * Exchange of Landmarks
+  * Dynamic menus
+  * Integrate s60views and wxviews
+  * Use Accelerometer to scroll the map
 
 == Long term (v0.30.x) ==
-  * Port to pocket pc
+  * Stable wxPython version?
+  * Port to pocket pc?
 
 == WishList ==
