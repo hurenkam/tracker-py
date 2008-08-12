@@ -38,7 +38,6 @@ Color = {
           "nosignal":0xe0e0e0
     }
 
-
 def SetSystemApp(value):
     try:
         import envy
@@ -152,11 +151,13 @@ class PositionWidget(Widget):
         (nd,nm,ns),(ed,em,es) = datums.GetDMSFromWgs84(lat,lon)
         return u"Wgs84", u"N%2.0f %2.0f\'%5.2f\"" % (nd,nm,ns), u"E%2.0f %2.0f\'%5.2f\"" % (ed,em,es)
 
-    def GetUTMTexts(self,lat,lon):
-        x,y,z = datums.GetUTMFromWgs84(lat,lon)
+    def GetUTMTexts(self,lat,lon,ellips="International"):
+        #x,y,z = datums.GetUTMFromWgs84(lat,lon)
+        z,x,y = datums.latlon_to_utm(ellips,lat,lon)
+
         #print "UTM: ", x,y,z
         #UTM: 31U  672894m E  5705374m N
-        return u"UTM", str(int(x))+"E", str(int(y))+"N", str(int(z))+"U"
+        return u"UTM", z, str(int(x))+"E", str(int(y))+"N",
 
     def GetRDTexts(self,lat,lon):
         x,y = datums.GetRdFromWgs84(lat,lon)
@@ -1602,9 +1603,11 @@ class S60Application(Application, AlarmResponder):
     def QueryDMSPosition(self,lat,lon):
         pass
 
-    def QueryUTMPosition(self,lat,lon):
-        x,y,zone = datums.GetUTMFromWgs84(lat,lon)
-        zone = appuifw.query(u"UTM Zone:","float",zone)
+    def QueryUTMPosition(self,lat,lon,ellips="International"):
+        #x,y,zone = datums.GetUTMFromWgs84(lat,lon)
+        zone,x,y = datums.latlon_to_utm(ellips,lat,lon)
+
+        zone = appuifw.query(u"UTM Zone:","text",zone)
         if zone is None:
             appuifw.note(u"Cancelled.", "info")
             return None
@@ -1619,7 +1622,8 @@ class S60Application(Application, AlarmResponder):
             appuifw.note(u"Cancelled.", "info")
             return None
 
-        lat,lon = datums.GetWgs84FromUTM(x,y,zone,False)
+        #lat,lon = datums.GetWgs84FromUTM(x,y,zone,False)
+        lat,lon = datums.utm_to_latlon(ellips,zone,x,y)
         return lat,lon
 
     def QueryRDPosition(self,lat,lon):

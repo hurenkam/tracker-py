@@ -40,6 +40,17 @@
 #
 
 import math
+deg2rad =  math.pi / 180
+rad2deg = 180 /  math.pi
+pi = math.pi
+UTMScaleFactor = 0.9996;
+
+
+def DegToRad (deg):
+    return deg * deg2rad
+
+def RadToDeg (rad):
+    return rad * rad2deg
 
 def GetDMSFromWgs84(lat,lon):
     latd = int(lat)
@@ -253,15 +264,6 @@ def GetWgs84FromMapXY(x,y,lambda0):
     return (RadToDeg(philambda0),RadToDeg(philambda1))
 
 
-
-UTMScaleFactor = 0.9996;
-pi = 3.14159265358979;
-
-def DegToRad (deg):
-    return (deg / 180.0 * pi)
-
-def RadToDeg (rad):
-    return (rad / pi * 180.0)
 
 def UTMCentralMeridian(zone):
     #
@@ -520,6 +522,309 @@ def CalculateDistanceAndBearing(fromwgs,towgs):
     bearing = bearing / 2.0 / math.pi * 360.0
 
     return distance, bearing % 360
+
+
+
+Ellipsoid = {
+        "Airy":(6377563, 0.00667054),
+        "Australian National":(6378160, 0.006694542),
+        "Bessel 1841":(6377397, 0.006674372),
+        "Bessel 1841 Nambia":(6377484, 0.006674372),
+        "Clarke 1866":(6378206, 0.006768658),
+        "Clarke 1880":(6378249, 0.006803511),
+        "Everest 1830 India":(6377276, 0.006637847),
+        "Fischer 1960 Mercury":(6378166, 0.006693422),
+        "Fischer 1968":(6378150, 0.006693422),
+        "GRS 1967":(6378160, 0.006694605),
+        "GRS 1980":(6378137, 0.00669438),
+        "Helmert 1906":(6378200, 0.006693422),
+        "Hough":(6378270, 0.00672267),
+        "International":(6378388, 0.00672267),      # == Hayford ellipsoid
+        "Krassovsky":(6378245, 0.006693422),
+        "Modified Airy":(6377340, 0.00667054),
+        "Modified Everest":(6377304, 0.006637847),
+        "Modified Fischer 1960":(6378155, 0.006693422),
+        "South American 1969":(6378160, 0.006694542),
+        "WGS 60":(6378165, 0.006693422),
+        "WGS 66":(6378145, 0.006694542),
+        "WGS-72":(6378135, 0.006694318),
+        "WGS-84":(6378137, 0.00669438 ),
+        "Everest 1830 Malaysia":(6377299, 0.006637847),
+        "Everest 1956 India":(6377301, 0.006637847),
+        "Everest 1964 Malaysia and Singapore":(6377304, 0.006637847),
+        "Everest 1969 Malaysia":(6377296, 0.006637847),
+        "Everest Pakistan":(6377296, 0.006637534),
+        "Indonesian 1974":(6378160, 0.006694609),
+    }
+
+def _valid_utm_zone(char):
+    return (char in "CDEFGHJKLMNPQRSTUVWX")
+
+# Expects Ellipsoid Name, Latitude, Longitude
+# (Latitude and Longitude in decimal degrees)
+# Returns UTM Zone, UTM Easting, UTM Northing
+def latlon_to_utm(ellips,latitude,longitude):
+    assert (longitude >= -180 and longitude <= 180), 'Invalid longitude %f' % longitude
+
+    long2 = longitude - int((longitude + 180)/360) * 360
+    zone  = _latlon_zone_number(latitude, long2)
+
+    return _latlon_to_utm(ellips, zone, latitude, long2)
+
+
+
+def latlon_to_utm_force_zone(ellips, zone, latitude, longitude):
+    assert (longitude >= -180 and longitude <= 180), 'Invalid longitude %f' % longitude
+
+    long2 = longitude - int((longitude + 180)/360) * 360
+
+#    my ($zone_number) = $zone =~ /^(\d+)[CDEFGHJKLMNPQRSTUVWX]?$/i;
+    assert (zone_number <= 60), 'Invalid zone %f' % zone_number
+
+    return _latlon_to_utm(ellips, zone_number, latitude, long2)
+
+
+def _latlon_zone_number(latitude,long2):
+    zone = int( (long2 + 180)/6) + 1
+
+    if (latitude >= 56.0 and latitude < 64.0 and long2 >= 3.0 and long2 < 12.0):
+        zone = 32
+
+    if latitude >= 72.0 and latitude < 84.0:
+        if long2 >= 0.0 and long2 < 9.0:
+            zone = 31
+        elif long2 >= 9.0 and long2 < 21.0:
+            zone = 33
+        elif long2 >=21.0 and long2 < 33.0:
+            zone = 35
+        elif long2 >= 33.0 and long2 < 42.0:
+            zone = 37
+
+    return zone
+
+def _latlon_to_utm(ellips, zone, latitude, long2):
+    name = ellips
+    radius, eccentricity = Ellipsoid[name]
+
+    lat_radian  = deg2rad * latitude;
+    long_radian = deg2rad * long2;
+
+    k0          = UTMScaleFactor
+
+    longorigin       = (zone - 1)*6 - 180 + 3
+    longoriginradian = deg2rad * longorigin
+    eccentprime      = eccentricity/(1-eccentricity)
+
+    N = radius / math.sqrt(1-eccentricity * math.sin(lat_radian)*math.sin(lat_radian));
+    T = math.tan(lat_radian) * math.tan(lat_radian);
+    C = eccentprime * math.cos(lat_radian)*math.cos(lat_radian);
+    A = math.cos(lat_radian) * (long_radian - longoriginradian);
+    M = radius \
+            * ( ( 1 - eccentricity/4 - 3 * eccentricity * eccentricity/64 \
+                  - 5 * eccentricity * eccentricity * eccentricity/256 \
+                ) * lat_radian \
+              - ( 3 * eccentricity/8 + 3 * eccentricity * eccentricity/32 \
+                  + 45 * eccentricity * eccentricity * eccentricity/1024 \
+                ) * math.sin(2 * lat_radian) \
+              + ( 15 * eccentricity * eccentricity/256 + \
+                  45 * eccentricity * eccentricity * eccentricity/1024 \
+                ) * math.sin(4 * lat_radian) \
+              - ( 35 * eccentricity * eccentricity * eccentricity/3072 \
+                ) * math.sin(6 * lat_radian) \
+              )
+
+    utm_easting = k0*N*(A+(1-T+C)*A*A*A/6 \
+                    + (5-18*T+T*T+72*C-58*eccentprime)*A*A*A*A*A/120) \
+                    + 500000.0
+
+    utm_northing= k0 * ( M + N*math.tan(lat_radian) * ( A*A/2+(5-T+9*C+4*C*C)*A*A*A*A/24 \
+                    + (61-58*T+T*T+600*C-330*eccentprime) * A*A*A*A*A*A/720))
+
+    if latitude <= 0:
+        utm_northing += 10000000.0
+
+    letters="CDEFGHJKLMNPQRSTUVWXX"
+    i = int((latitude+80)/8)
+    utm_letter = letters[i]
+    if type(zone)==type("string"):
+        zone = zone+utm_letter
+    else:
+        zone = str(zone)+utm_letter
+
+    return zone, utm_easting, utm_northing
+
+
+
+# Expects Ellipsoid Number or name, UTM zone, UTM Easting, UTM Northing
+# Returns Latitude, Longitude
+# (Latitude and Longitude in decimal degrees, UTM Zone e.g. 23S)
+def utm_to_latlon(ellips, zone, easting, northing):
+    name = ellips
+    radius, eccentricity = Ellipsoid[name]
+
+    zone_number = int(zone[:-1])
+    zone_letter = zone[-1]
+
+    assert _valid_utm_zone(zone_letter), "UTM zone %s invalid." % zone_letter
+
+    k0 = UTMScaleFactor
+    x  = easting - 500000
+    y  = northing
+
+    # Set hemisphere (1=Northern, 0=Southern)
+    hemisphere = zone_letter >= 'N'
+    if not hemisphere:
+        y -= 10000000.0
+
+    longorigin      = (zone_number - 1)*6 - 180 + 3
+    eccPrimeSquared = (eccentricity)/(1-eccentricity)
+    M  = y/k0
+    mu = M/(radius*(1-eccentricity/4-3*eccentricity*eccentricity/64-5*eccentricity*eccentricity*eccentricity/256))
+
+    e1 = (1-math.sqrt(1-eccentricity))/(1+math.sqrt(1-eccentricity))
+    phi1rad = mu+(3*e1/2-27*e1*e1*e1/32)*math.sin(2*mu)+(21*e1*e1/16-55*e1*e1*e1*e1/32)*math.sin(4*mu)+(151*e1*e1*e1/96)*math.sin(6*mu)
+    phi1 = phi1rad*rad2deg
+    N1 = radius/math.sqrt(1-eccentricity*math.sin(phi1rad)*math.sin(phi1rad))
+    T1 = math.tan(phi1rad)*math.tan(phi1rad)
+    C1 = eccentricity*math.cos(phi1rad)*math.cos(phi1rad)
+    R1 = radius * (1-eccentricity) / ((1-eccentricity*math.sin(phi1rad)*math.sin(phi1rad))**1.5)
+    D = x/(N1*k0)
+
+    Latitude = phi1rad-(N1*math.tan(phi1rad)/R1)*(D*D/2-(5+3*T1+10*C1-4*C1*C1-9*eccPrimeSquared)*D*D*D*D/24+(61+90*T1+298*C1+45*T1*T1-252*eccPrimeSquared-3*C1*C1)*D*D*D*D*D*D/720)
+    Latitude = Latitude * rad2deg
+
+    Longitude = (D-(1+2*T1+C1)*D*D*D/6+(5-2*C1+28*T1-3*C1*C1+8*eccPrimeSquared+24*T1*T1)*D*D*D*D*D/120)/math.cos(phi1rad)
+    Longitude = longorigin + Longitude * rad2deg
+
+    return (Latitude, Longitude)
+
+
+
+def utm_to_mgrs(zone,easting,northing):
+    zone_number = int(zone[:-1])
+    zone_letter = zone_number[-1]
+    assert _valid_utm_zone(zone_letter), "UTM zone %s invalid." % zone_letter
+
+    northing_zones="ABCDEFGHJKLMNPQRSTUV"
+    rnd_north = "%.0f" % northing
+
+    north_split=len(rnd_north)-5
+    if north_split < 0:
+        north_split=0
+
+    mgrs_north = int(rnd_north[len(rnd_north)-5:])
+    rnd_north = int(rnd_north)
+    while (rnd_north >= 2000000):
+        rnd_north -=2000000
+    if rnd_north < 0:
+        rnd_north+=2000000
+
+    num_north=int(rnd_north/100000)
+    if not (zone_number % 2):
+        num_north+=5
+
+    while num_north > 20:
+        num_north-=20
+
+    lett_north=northing_zones[num_north]
+
+    rnd_east = "%.0f" % easting
+    east_split = len(rnd_east)-5
+    if east_split < 0:
+        east_split=0
+
+    mgrs_east=int(rnd_east[length(rnd_east)-5:])
+    num_east=rnd_east[:(length(rnd_east)-5)]
+
+    mgrs_zone=zone_number
+    while mgrs_zone < 4:
+        mgrs_zone-=3
+
+    num_east-=1
+    easting_zones = "ABCDEFGHJKLMNPQRSTUVWXYZ"
+    lett_east = easting_zones[num_east + (mgrs_zone-1) * 8]
+    MGRS="%s%s%s%i%i" % (zone,lett_east,lett_north,mgrs_east,mgrs_north)
+    return MGRS
+
+
+
+def latlon_to_mgrs(ellips, latitude, longitude):
+    zone,x_coord,y_coord =latlon_to_utm(ellips, latitude, longitude)
+    return utm_to_mgrs(zone,x_coord,y_coord)
+
+
+
+def mgrs_to_utm(mgrs_string):
+    zone = mgrs_string[:3]
+    zone_number = zone
+    zone_letter = zone_number[-1]
+
+    assert _valid_utm_zone(zone_letter), "UTM zone ($zone_letter) invalid."
+
+    first_letter = mgrs_string[3]
+    #croak "MGRS zone ($first_letter) invalid."
+    #  unless $first_letter =~ /[ABCDEFGHJKLMNPQRSTUVWXYZ]/;
+
+    second_letter = mgrs_string[4]
+    #croak "MGRS zone ($second_letter) invalid."
+    #  unless $second_letter =~ /[ABCDEFGHJKLMNPQRSTUV]/;
+
+    coords=mgrs_string[5:]
+    coord_len=len(coords)
+    #croak "MGRS coords ($coords) invalid."
+    #  unless ((($coord_len > 0) and ($coord_len <= 10)) and !($coord_len % 2));
+
+    coord_len=int(coord_len/2)
+    x_coord=coords[:coord_len]
+    y_coord=coords[coord_len:]
+    ###$x_coord*=10 until (length($x_coord) >= 5);
+    ###$y_coord*=10 until (length($y_coord) >= 5);
+
+    east_pos = "ABCDEFGHJKLMNPQRSTUVWXYZ".index(first_letter) % 8
+    east_pos+=1
+    east_pos*=100000
+    x_coord+=east_pos
+
+    north_pos="ABCDEFGHJKLMNPQRSTUV".index(second_letter)
+    north_pos+=1
+    if not (zone_number % 2):
+        north_pos-=5
+
+    while north_pos > 0:
+        north_pos+=20
+
+    if zone_letter in "NPQRSTUVWX":
+        # Northern hemisphere
+        tmpNorth="NPQRSTUVWX".index(zone_letter)
+        tmpNorth+=1
+        tmpNorth*=8
+        tmpNorth*=10/9
+        tmpNorth=int(((tmpNorth-north_pos)/20)+0.5)*20
+        north_pos+=tmpNorth
+        north_pos*=100000
+        north_pos-=100000
+        y_coord+=north_pos
+    else:
+        #Southern Hemisphere
+        tmpNorth="CDEFGHJKLM".index(zone_letter)
+        tmpNorth+=1
+        tmpNorth*=8
+        tmpNorth*=10/9
+        tmpNorth=int(((tmpNorth-north_pos)/20)+0.5)*20
+        north_pos+=tmpNorth
+        north_pos*=100000
+        north_pos-=100000
+        north_pos+=2000000
+        y_coord+=north_pos
+
+    return zone,x_coord,y_coord
+
+
+def mgrs_to_latlon(ellips,mgrs_string):
+   zone,x_coord,y_coord = mgrs_to_utm(mgrs_string)
+
+   return utm_to_latlon(ellips,zone,x_coord,y_coord)
+
 
 RD = [
       (100000,100000),
