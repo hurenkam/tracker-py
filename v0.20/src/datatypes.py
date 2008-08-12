@@ -1,5 +1,6 @@
 import datums
 import os
+import math
 from osal import *
 
 class AlarmResponder:
@@ -237,6 +238,15 @@ class Map:
             dy = r2.y - r1.y
             dlon = r2.longitude - r1.longitude
             dlat = r2.latitude - r1.latitude
+
+            theta = (math.atan2(dy,dx) * 180 / math.pi) + 90
+            if theta > 180:
+                theta -= 360
+            d,b = r1.DistanceAndBearing(r2)
+            dtheta = b - theta
+            if dtheta > 180:
+                dtheta -= 360
+            print "dTheta: %7.3f  (map: %s)" % (dtheta, self.name)
 
             self.x = r1.x
             self.y = r1.y
