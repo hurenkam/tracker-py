@@ -3,6 +3,12 @@ OziExplorer provides similar functionality as Tracker.py on PC and
 PocketPC platforms. It would be nice if maps calibrated with OziExplorer
 can be imported for use with Tracker.py
 
+== Multiple resolutions ==
+Current redesign implementation for S60 is aimed at N95 in portrait
+mode, meaning it depends on a 240x320 pixel resolution. When used on
+other S60 phones, this resolution may not be available, or prefereable,
+so support for different resolutions is desired.
+
 == Dynamic menus ==
 Currently the menu layout is very static, only the 'screensaver' option
 is dynamic. A lot more menu items can be made dynamic however, the option
