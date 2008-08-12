@@ -1,6 +1,5 @@
-
 [http://code.google.com/p/tracker-py/wiki/About About] |
-WishList | RoadMap | CodeArchitecture
+ReDesign | WishList | RoadMap | CodeArchitecture
 
 For a more detailed description of the features, please
 see the WishList
