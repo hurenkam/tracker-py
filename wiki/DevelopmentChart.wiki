@@ -3,6 +3,7 @@
 
 == Short term (v0.21.x) ==
   * Stable OSX/Linux/XP versions
+  * Import calibrated maps from OziExplorer/Other?
 
 == Long term (v0.30.x) ==
   * Port to pocket pc
