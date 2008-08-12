@@ -15,5 +15,3 @@ see the WishList
 == Long term (v0.30.x) ==
   * Stable wxPython version?
   * Port to pocket pc?
-
-== WishList ==
