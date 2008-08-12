@@ -1,3 +1,6 @@
+[http://code.google.com/p/tracker-py/wiki/About About] |
+ReDesign | WishList | RoadMap | CodeArchitecture
+
 = Tracker v0.20x =
 
 http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0014.jpg
