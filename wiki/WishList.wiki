@@ -1,6 +1,5 @@
-
 [http://code.google.com/p/tracker-py/wiki/About About] |
-WishList | RoadMap | CodeArchitecture
+ReDesign | WishList | RoadMap | CodeArchitecture
 
 == Import calibrated maps from OziExplorer ==
 OziExplorer provides similar functionality as Tracker.py on PC and
