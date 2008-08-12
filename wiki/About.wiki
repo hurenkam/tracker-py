@@ -1,3 +1,6 @@
+[http://code.google.com/p/tracker-py/wiki/About About] |
+WishList | RoadMap | CodeArchitecture
+
 I started to work on Tracker.py, because I enjoy hiking, and like to use my N95
 to see my location on a digitized map.
 Although I usually leave well prepared for a trip (with respect to necessities),
