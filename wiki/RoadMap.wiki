@@ -5,11 +5,11 @@ For a more detailed description of the features, please
 see the WishList
 
 == ReDesign (v0.20.x) ==
+  * Load OziExplorer/GPSDash calibrated maps
   * Stable S60 version
   * Create SIS package
 
 == Short term (v0.21.x) ==
-  * Import calibrated maps from OziExplorer/Others?
   * Exchange of Landmarks
   * Dynamic menus
   * Integrate s60views and wxviews

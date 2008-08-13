@@ -21,6 +21,7 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0021.jpg
   * Im/export of tracks & waypoints in GPX format (needs more testing)
   * Display position in Wgs84/DMS/UTM/RD datums
   * Map calibration
+  * Load OziExplorer/GPSDash calibrated maps (JPEG/WGS84 as provided by GoogleOzi)
   * Save map calibration data
 
 == Bugs ==
