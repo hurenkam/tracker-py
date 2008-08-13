@@ -7,8 +7,7 @@ and PocketPC platforms (actually, if they had been available on s60 I would
 probably not have started to work on tracker.py).
 It would be nice if maps calibrated with OziExplorer can be imported for
 use with Tracker.py
-  * Basic support already available in v0.20 already (limited to jpg/wgs84 maps
-    as provided by GoogleOzi
+  * Basic support already available in v0.20 already (limited to jpg/wgs84 maps as provided by GoogleOzi
 
 === Multiple resolutions ===
 Current redesign implementation for S60 is aimed at N95 in portrait
