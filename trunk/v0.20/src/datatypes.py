@@ -231,8 +231,21 @@ class Map:
             #    print "refpoints[%i] lat:%f lon:%f x:%f y:%f" %(count,r.latitude,r.longitude,r.x,r.y)
             #    count+=1
 
-            r1 = self.refpoints[0]
-            r2 = self.refpoints[1]
+            r = self.refpoints
+            found = False
+            for i in range(0,len(r)):
+                for j in range(0,len(r)):
+                    if r[i].x != r[j].x and r[i].y != r[j].y \
+                        and r[i].latitude != r[j].latitude and r[i].longitude != r[j].longitude:
+
+                            r1 = r[i]
+                            r2 = r[j]
+                            found = True
+                            break
+
+            if not found:
+                print "Refpoints available, but either dx or dy is 0"
+                return
 
             dx = r2.x - r1.x
             dy = r2.y - r1.y
@@ -265,6 +278,8 @@ class Map:
             self.iscalibrated = True
             self.area = self.WgsArea()
             #self.PrintInfo()
+        else:
+            print "Calibration failed, not enough refpoints"
 
     def WgsArea(self):
         if self.iscalibrated:
