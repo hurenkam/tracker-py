@@ -10,7 +10,7 @@ see the WishList
   * Create SIS package
 
 == Short term (v0.21.x) ==
-  * Exchange of Landmarks
+  * Send/Receive Waypoints/Routes/Tracks via SMS/Bluetooth
   * Dynamic menus
   * Integrate s60views and wxviews
   * Use Accelerometer to scroll the map

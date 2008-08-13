@@ -7,7 +7,7 @@ and PocketPC platforms (actually, if they had been available on s60 I would
 probably not have started to work on tracker.py).
 It would be nice if maps calibrated with OziExplorer can be imported for
 use with Tracker.py
-  * Basic support already available in v0.20 (limited to jpg/wgs84 maps as provided by GoogleOzi
+  * Basic support available in v0.20 (limited to jpg/wgs84 maps as provided by GoogleOzi)
 
 === Multiple resolutions ===
 Current redesign implementation for S60 is aimed at N95 in portrait
@@ -64,6 +64,27 @@ development efforts enormously.
 Currently Tracker.py is only available in English. It would be nice if all
 UI messages and texts were localized so that other languages can be easily
 added.
+
+=== Auto-save on Low-power ===
+During a recent cycling trip, I found that I lost the entire track which
+I was recording, simply because the battery ran out. Now tracker already
+monitors the battery status, it would be a good idea to do an autosave when
+the battery charge drops below a treshold of say 5% or 10%.
+
+=== Low-power Tracking ===
+When the GPS, mapview & gauges are active (even with dimmed display) the
+N95 consumes a lot of power. I estimate that for an average hike day in the
+mountains, I need 2 full batteries, to be able to track the entire route,
+and take some photo's along the way.
+For trips longer than a day or 2, this is undoable, since after day 2 I'll
+be running out of power...
+Now I could buy some more batteries, but perhaps it is also possible to
+implement a sort of 'interval' tracking mode, having tracker only wake up
+once every 10 minutes or so, wait for a fix, store the trackpoint, and go
+to sleep again for 10 minutes. When hiking (especially in the mountains),
+10 minutes is not a long time, and the track will still be pretty accurate.
+I'm not sure how much power would be saved this way, but surely it must make
+a significant difference.
 
 === Others? Please let me know! ===
 If something is holding you back from using this software, please let me
