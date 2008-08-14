@@ -25,7 +25,6 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0021.jpg
   * Save map calibration data
 
 == Bugs ==
-  * Distance meter stops while in mapview mode
   * GPX imported track is not shown on map (no track points on map?)
   * Some gauges sometimes show 'NaN' value
   * OSX/wxpython implementation needs a proper locking mechanism
