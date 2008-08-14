@@ -1393,6 +1393,7 @@ class S60Application(Application, AlarmResponder):
         self.running = True
         self.dashview = S60DashView()
         self.mapview = S60MapView()
+        self.views = [ self.mapview, self.dashview ]
         id = self.storage.GetValue("app_lastview")
         self.SelectView(id)
 
@@ -1481,11 +1482,7 @@ class S60Application(Application, AlarmResponder):
             return
 
         self.storage.SetValue("app_lastview",id)
-
-        if id == 0:
-            self.view = self.mapview
-        if id == 1:
-            self.view = self.dashview
+        self.view = self.views[id]
 
         self.view.Resize()
 
@@ -1518,24 +1515,26 @@ class S60Application(Application, AlarmResponder):
 
 
     def AlarmTriggered(self,alarm):
-
         if alarm == self.timealarm:
-            self.view.UpdateSignal(alarm.signal)
-            self.view.UpdateTime(alarm.time)
+            for view in self.views:
+                view.UpdateSignal(alarm.signal)
+                view.UpdateTime(alarm.time)
 
         if alarm == self.positionalarm:
             self.position = alarm.point
 
-            self.view.UpdatePosition(alarm.point)
-            self.view.UpdateDistance(alarm.distance)
-            if self.proximityalarm is not None:
+            if self.proximityalarm != None:
                 bearing = self.proximityalarm.bearing
                 distance = self.proximityalarm.distance
             else:
                 bearing = 0
                 distance = 0
-            self.view.UpdateWaypoint(alarm.avgheading,bearing,distance)
-            self.view.UpdateSpeed(alarm.avgspeed)
+
+            for view in self.views:
+                view.UpdatePosition(alarm.point)
+                view.UpdateDistance(alarm.distance)
+                view.UpdateWaypoint(alarm.avgheading,bearing,distance)
+                view.UpdateSpeed(alarm.avgspeed)
 
             #self.storage.SetValue("app_lastknownposition",alarm.point)
 
