@@ -19,7 +19,7 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0021.jpg
   * Show heading in mapview
   * Scroll/Zoom map
   * Im/export of tracks & waypoints in GPX format (needs more testing)
-  * Display position in Wgs84/DMS/UTM/RD datums
+  * Display position in Wgs84/DMS/UTM (with 23 ellipsoids)/RD datums
   * Map calibration
   * Load OziExplorer/GPSDash calibrated maps (JPEG/WGS84 as provided by GoogleOzi)
   * Save map calibration data
@@ -28,13 +28,13 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0021.jpg
   * GPX imported track is not shown on map (no track points on map?)
   * Some gauges sometimes show 'NaN' value
   * OSX/wxpython implementation needs a proper locking mechanism
-  * UTM datum calculations not clear, need to differentiate between WGS84, ETRS89 and ED50 based UTM datums
 
 == Todo ==
   * Implement DMS dialog for position input
   * Import map
   * Show signal in mapview
   * Gauge options in dashview
+  * UTM datum uses fixed International Ellipsoid, need to implement others
 
 == Dependencies ==
   * [http://sourceforge.net/project/showfiles.php?group_id=154155 pyS60] 1.4.x (mandatory)
