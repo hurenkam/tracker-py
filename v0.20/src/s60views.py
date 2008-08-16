@@ -6,6 +6,7 @@ import e32
 import appuifw
 import time
 import math
+import datums
 from osal import *
 from datastorage import *
 
@@ -151,8 +152,9 @@ class PositionWidget(Widget):
         (nd,nm,ns),(ed,em,es) = datums.GetDMSFromWgs84(lat,lon)
         return u"Wgs84", u"N%2.0f %2.0f\'%5.2f\"" % (nd,nm,ns), u"E%2.0f %2.0f\'%5.2f\"" % (ed,em,es)
 
-    def GetUTMTexts(self,lat,lon,ellips="International"):
+    def GetUTMTexts(self,lat,lon):
         #x,y,z = datums.GetUTMFromWgs84(lat,lon)
+        ellips = DataStorage.GetInstance().GetValue("app_ellips")
         z,x,y = datums.latlon_to_utm(ellips,lat,lon)
 
         #print "UTM: ", x,y,z
@@ -1461,6 +1463,33 @@ class S60Application(Application, AlarmResponder):
                             ),
                             (u'About',                      self.About)]
 
+    def QueryAndStore(self,msg,type,key):
+        value = self.storage.GetValue(key)
+        result = appuifw.query(u"%s" % msg, type, value)
+        if result != None:
+            self.storage.SetValue(key,result)
+
+        return result
+
+    def QueryListAndStore(self,list,key):
+        list.sort()
+        value = self.storage.GetValue(key)
+        l = []
+        for i in list:
+            l.append(u"%s" % i)
+        l.sort()
+
+        try:
+            index = l.index(value)
+            result = appuifw.selection_list(l,index)
+        except:
+            result = appuifw.selection_list(l)
+
+        if result != None:
+            self.storage.SetValue(key,l[result])
+
+        return l[result]
+
     def DatumWgs84(self):
         self.storage.SetValue("app_datum","Wgs84")
         self.view.UpdateDatum()
@@ -1471,6 +1500,8 @@ class S60Application(Application, AlarmResponder):
 
     def DatumUTM(self):
         self.storage.SetValue("app_datum","UTM")
+        ellips = self.QueryListAndStore(datums.Ellipsoid.keys(),"app_ellips")
+        appuifw.note(u"Selected UTM with ellips %s" % ellips, "info")
         self.view.UpdateDatum()
 
     def DatumRD(self):
@@ -1602,10 +1633,10 @@ class S60Application(Application, AlarmResponder):
     def QueryDMSPosition(self,lat,lon):
         pass
 
-    def QueryUTMPosition(self,lat,lon,ellips="International"):
+    def QueryUTMPosition(self,lat,lon):
         #x,y,zone = datums.GetUTMFromWgs84(lat,lon)
+        ellips = self.storage.GetValue("app_ellips")
         zone,x,y = datums.latlon_to_utm(ellips,lat,lon)
-
         zone = appuifw.query(u"UTM Zone:","text",zone)
         if zone is None:
             appuifw.note(u"Cancelled.", "info")
