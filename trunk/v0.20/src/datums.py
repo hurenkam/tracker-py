@@ -604,7 +604,11 @@ def _latlon_zone_number(latitude,long2):
 
 def _latlon_to_utm(ellips, zone, latitude, long2):
     name = ellips
-    radius, eccentricity = Ellipsoid[name]
+    try:
+        radius, eccentricity = Ellipsoid[name]
+    except:
+        print "Failed to get ellipsoid %s, using International instead" % ellips
+        radius, eccentricity = Ellipsoid["International"]
 
     lat_radian  = deg2rad * latitude;
     long_radian = deg2rad * long2;

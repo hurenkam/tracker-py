@@ -387,12 +387,12 @@ class DataStorage(AlarmResponder):
 
         count = 0
         while count < len(locations) and not found:
-            config = self.osal.OpenDbmFile(locations[count],"n")
-            #try:
-            #    config = self.osal.OpenDbmFile(locations[count],"n")
-            #    found = True
-            #except:
-            #    count+=1
+            #config = self.osal.OpenDbmFile(locations[count],"n")
+            try:
+                config = self.osal.OpenDbmFile(locations[count],"n")
+                found = True
+            except:
+                count+=1
 
         if not found:
             raise "Unable to open config file"
@@ -769,7 +769,8 @@ s60defaults = {
 
         "app_lastview":"1",
         "app_lastknownposition":"Point(0,51.47307,5.48952,66)",
-        "app_datum":"Wgs84",
+        "app_datum":"\"Wgs84\"",
+        "app_ellips":"\"International\"",
 
         # Map settings
         "map_dir":"u\"e:\\\\data\\\\tracker\\\\maps\"",
