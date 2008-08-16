@@ -30,11 +30,11 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0021.jpg
   * OSX/wxpython implementation needs a proper locking mechanism
 
 == Todo ==
+  * Import map from jpeg
+  * Make waypoints persistent when not using landmarks module
   * Implement DMS dialog for position input
-  * Import map
   * Show signal in mapview
   * Gauge options in dashview
-  * UTM datum uses fixed International Ellipsoid, need to implement others
 
 == Dependencies ==
   * [http://sourceforge.net/project/showfiles.php?group_id=154155 pyS60] 1.4.x (mandatory)
