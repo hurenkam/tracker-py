@@ -421,13 +421,13 @@ class DataStorage(AlarmResponder):
         print "InitWaypointList(%s)" % dir
 
     def CreateWaypoint(self,name='',lat=0,lon=0,alt=0):
-        self.waypoints.append(Waypoint(name,lat,lon,alt))
+        self.waypoints[name] = Waypoint(name,lat,lon,alt)
 
     def SaveWaypoint(self,waypoint):
-        self.waypoints.append(waypoint)
+        self.waypoints[waypoint.name] = waypoint
 
     def DeleteWaypoint(self,waypoint):
-        self.waypoints.remove(waypoint)
+        del self.waypoints[waypoint.name]
 
     def GetWaypoints(self):
         return self.waypoints

@@ -1749,8 +1749,8 @@ class S60Application(Application, AlarmResponder):
             if distance is not None:
                 self.proximityalarm = ProximityAlarm(self.monitorwaypoint,distance,self)
                 self.provider.SetAlarm(self.proximityalarm)
-                appuifw.note(u"Monitoring waypoint %s, notify when within %8.0f meters." % (waypoints[id].name, distance), "info")
-                self.storage.SetValue("wpt_monitor",(waypoints[id].name,distance))
+                appuifw.note(u"Monitoring waypoint %s, notify when within %8.0f meters." % (waypoint.name, distance), "info")
+                self.storage.SetValue("wpt_monitor",(waypoint.name,distance))
                 print "stored waypoint in config"
 
 
