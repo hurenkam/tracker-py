@@ -503,7 +503,8 @@ class DataStorage(AlarmResponder):
     def InitMapList(self,dir='.'):
         print "InitMapList(%s)" % dir
         selector = FileSelector(dir,".xml")
-        self.maps = []
+        #self.maps = []
+        self.maps = {}
         for key in selector.files.keys():
             filename = selector.files[key]
             base,ext = os.path.splitext(filename)
@@ -514,7 +515,8 @@ class DataStorage(AlarmResponder):
                 m = Map(key,base+'.jpg',refpoints)
             else:
                 m = Map(key,base+'.jpg',refpoints,resolution)
-            self.maps.append(m)
+            #self.maps.append(m)
+            self.maps[m.name]=m
 
         selector = FileSelector(dir,".mcx")
         for key in selector.files.keys():
@@ -527,7 +529,8 @@ class DataStorage(AlarmResponder):
                 m = Map(key,base+'.jpg',refpoints)
             else:
                 m = Map(key,base+'.jpg',refpoints,resolution)
-            self.maps.append(m)
+            #self.maps.append(m)
+            self.maps[m.name]=m
 
         selector = FileSelector(dir,".map")
         for key in selector.files.keys():
@@ -540,16 +543,26 @@ class DataStorage(AlarmResponder):
                 m = Map(key,base+'.jpg',refpoints)
             else:
                 m = Map(key,base+'.jpg',refpoints,resolution)
-            self.maps.append(m)
+            #self.maps.append(m)
+            self.maps[m.name]=m
+
+        selector = FileSelector(dir,".jpg")
+        for key in selector.files.keys():
+            if key not in self.maps.keys():
+                filename = selector.files[key]
+                base,ext = os.path.splitext(filename)
+                m = Map(key,base+'.jpg',[])
+                self.maps[m.name]=m
+
+
 
     def FindMaps(self,point):
         results = []
-        for map in self.maps:
+        for map in self.maps.values():
             if map.PointOnMap(point) != None:
                 results.append(map)
 
         return results
-
 
     def OpenMap(self,name=''):
         pass
