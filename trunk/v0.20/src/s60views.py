@@ -1825,9 +1825,10 @@ class S60Application(Application, AlarmResponder):
 
 
     def OpenMap(self):
-        d = {}
-        for m in self.storage.maps:
-            d[m.name]=m
+        #d = {}
+        #for m in self.storage.maps:
+        #    d[m.name]=m
+        d = self.storage.maps
 
         maps = d.keys()
         maps.sort()
