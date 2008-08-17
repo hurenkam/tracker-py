@@ -5,7 +5,7 @@ ReDesign | WishList | RoadMap | CodeArchitecture
 
 http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0014.jpg
 http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0017.jpg
-http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0021.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
 
 == Working features ==
   * Dashview with gauges (speed, distance, altitude, heading, signal, time)
