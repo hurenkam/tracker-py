@@ -22,6 +22,7 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0021.jpg
   * Display position in Wgs84/DMS/UTM (with 23 ellipsoids)/RD datums
   * Map calibration
   * Load OziExplorer/GPSDash calibrated maps (JPEG/WGS84 as provided by GoogleOzi)
+  * Load uncalibrated jpg images (and save calibration data once two refpoints are set)
   * Save map calibration data
 
 == Bugs ==
@@ -30,8 +31,8 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0021.jpg
   * OSX/wxpython implementation needs a proper locking mechanism
 
 == Todo ==
-  * Import map from jpeg
   * Make waypoints persistent when not using landmarks module
+  * Calibrate map from waypoints
   * Implement DMS dialog for position input
   * Show signal in mapview
   * Gauge options in dashview
