@@ -25,17 +25,20 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0021.jpg
   * Load uncalibrated jpg images (and save calibration data once two refpoints are set)
   * Save map calibration data
 
-== Bugs ==
-  * GPX imported track is not shown on map (no track points on map?)
-  * Some gauges sometimes show 'NaN' value
-  * OSX/wxpython implementation needs a proper locking mechanism
-
-== Todo ==
+== Showstoppers, to be fixed for v0.20 ==
+  * Fix GPX import
   * Make waypoints persistent when not using landmarks module
+
+== Other todo ==
   * Calibrate map from waypoints
-  * Implement DMS dialog for position input
   * Show signal in mapview
   * Gauge options in dashview
+
+== Known Bugs ==
+  * GPX imported track is not shown on map (no track points on map?)
+  * Implement DMS dialog for position input
+  * Some gauges sometimes show 'NaN' value
+  * OSX/wxpython implementation needs a proper locking mechanism
 
 == Dependencies ==
   * [http://sourceforge.net/project/showfiles.php?group_id=154155 pyS60] 1.4.x (mandatory)
