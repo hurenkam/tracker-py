@@ -41,8 +41,11 @@ class GPXFile(file):
     def writeTrack(self,track):
         self.write("<trk><name>%s</name>\n" % track.name)
         self.write("    <trkseg>\n")
+
         keys = track.data.keys()
-        keys.remove("name")
+        if "name" in keys:
+            keys.remove("name")
+
         keys.sort()
         for key in keys:
             self.__writeTrackpoint__(track.data[key])
