@@ -916,8 +916,11 @@ class WXDashView(wx.PyControl,DashView):
         DataStorage.GetInstance().StopRecording()
 
     def OnTrackOpen(self,event):
-        print "Opening track"
-        self.track = DataStorage.GetInstance().OpenTrack('newtrack')
+        trackname = "newtrack"
+        self.storage.tracks[trackname].Open()
+        self.mapwidget.UpdateTrack(track=self.storage.tracks[trackname])
+        self.Draw()
+
 
     def OnTrackClose(self,event):
         print "Closing track"
