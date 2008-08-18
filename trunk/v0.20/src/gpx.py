@@ -156,6 +156,8 @@ class GPXFile(file):
 
 
     def GetTrackPoints(self,track,node):
+        osal = Osal.GetInstance()
+        reftime = osal.GetTime()
         for trkseg in node.childnodes['trkseg']:
             for trkpt in trkseg.childnodes['trkpt']:
 
@@ -166,7 +168,8 @@ class GPXFile(file):
                 if 'time' in keys:
                     time = trkpt.childnodes['time'][0].content
                 else:
-                    time = osal.GetIsoTime()
+                    time = osal.GetIsoTime(reftime)
+                    reftime += 1
 
                 if 'ele' in keys:
                     alt = eval(trkpt.childnodes['ele'][0].content)

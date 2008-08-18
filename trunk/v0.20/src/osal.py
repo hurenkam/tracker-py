@@ -19,7 +19,7 @@ class Osal:
     def GetTime(self):
         pass
 
-    def GetIsoTime(self):
+    def GetIsoTime(self,ts):
         pass
 
     def OpenDbmFile(self,file,mode):
@@ -50,7 +50,7 @@ class PosixOsal(Osal):
     def GetTime(self):
         return time.time()
 
-    def GetIsoTime(self):
+    def GetIsoTime(self,ts):
         return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(ts))
 
     def OpenDbmFile(self,file,mode):
@@ -113,7 +113,7 @@ class S60Osal(Osal):
     def GetTime(self):
         return time.time()
 
-    def GetIsoTime(self):
+    def GetIsoTime(self,ts):
         return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(ts))
 
     def OpenDbmFile(self,file,mode):
