@@ -707,7 +707,9 @@ ntdefaults = {
         "app_screensaver":"True",
 
         "app_lastview":"1",
-        "app_lastknownposition":"Point(0,51.47307,5.48952,66)",
+        # Home "app_lastknownposition":"Point(0,51.47307,5.48952,66)",
+        # Restanca
+        "app_lastknownposition":"Point(0,42.634850850544,0.854074035776,2040.0)",
 
         # Map settings
         "map_dir":"u\"..\\\\maps\"",

@@ -121,9 +121,9 @@ class S60Signal(Signal):
 
 
 park = [
-        (42.6261231,0.76392452,0),
-        (42.633805208519,0.78642003284,2287.0),
-        (42.634850850544,0.854074035776,2040.0),
+#        (42.6261231,0.76392452,0),                # Hospital de vielha
+#        (42.633805208519,0.78642003284,2287.0),   # Break
+        (42.634850850544,0.854074035776,2040.0),   # Restanca
         (42.625120973386,0.856597071495,2325.5),
         (42.623193890757,0.855657376686,2488.0),
         (42.619555559424,0.855854435155,2657.5),
@@ -214,7 +214,8 @@ class SimDataProvider(Thread, DataProvider):
 
         o = Osal.GetInstance()
         p = DataProvider.GetInstance()
-        points = eindhoven
+        #points = eindhoven
+        points = park
         d = data
         count = 0
         current = Point(0,points[count][0],points[count][1],points[count][2])
