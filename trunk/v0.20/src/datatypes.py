@@ -170,7 +170,7 @@ class Signal:
 
 class Waypoint(Point):
     def __init__(self,name='',lat=0,lon=0,alt=0):
-        Point.__init__(self,lat,lon,alt)
+        Point.__init__(self,0,lat,lon,alt)
         self.name = name
 
     def __repr__(self):
