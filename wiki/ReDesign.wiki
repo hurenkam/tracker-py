@@ -37,7 +37,6 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
   * Create config dialog for map/track/waypoint dirs
 
 == Known Bugs ==
-  * GPX imported track is not shown on map (no track points on map?)
   * Some gauges sometimes show 'NaN' value
   * OSX/wxpython implementation needs a proper locking mechanism
 
