@@ -71,7 +71,7 @@ class GPXFile(file):
 
 
     def GetWaypointNodes(self):
-        if self.parser.root is None:
+        if self.parser.root == None:
             print "parser.root not found"
             return
 
@@ -104,7 +104,7 @@ class GPXFile(file):
 
 
     def GetRouteNodes(self):
-        if self.parser.root is None:
+        if self.parser.root == None:
             print "parser.root not found"
             return
 
@@ -163,8 +163,13 @@ class GPXFile(file):
                 lon = trkpt.properties['lon']
 
                 keys = trkpt.childnodes.keys()
+                if 'time' in keys:
+                    time = trkpt.childnodes['time'][0].content
+                else:
+                    time = osal.GetIsoTime()
+
                 if 'ele' in keys:
                     alt = eval(trkpt.childnodes['ele'][0].content)
-                    track.AddPoint(Point(lat,lon,alt))
+                    track.AddPoint(Point(time,lat,lon,alt))
                 else:
-                    track.AddPoint(Point(lat,lon))
+                    track.AddPoint(Point(time,lat,lon))
