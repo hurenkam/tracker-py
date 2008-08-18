@@ -389,7 +389,7 @@ class Track:
         for k in keys:
             lat,lon,alt = eval(self.data[k])
             if isinrange(lat,lat1,lat2) and isinrange(lon,lon1,lon2):
-                list.append(Point(eval(k),lat,lon,alt))
+                list.append(Point(k,lat,lon,alt))
 
         return list
 
