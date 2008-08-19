@@ -48,7 +48,7 @@ class GPXFile(file):
 
         keys.sort()
         for key in keys:
-            self.__writeTrackpoint__(track.data[key])
+            self.__writeTrackpoint__(track.data[key],key)
         self.write("    </trkseg>\n")
         self.write("</trk>\n")
 

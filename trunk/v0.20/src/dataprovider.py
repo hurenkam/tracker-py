@@ -1,4 +1,5 @@
 import datums
+from osal import Osal
 from datatypes import *
 
 class DataProvider:
@@ -96,7 +97,8 @@ class S60DataProvider(DataProvider):
 
 class S60Point(Point):
     def __init__(self,data):
-        self.time = data['satellites']['time']
+        osal = Osal.GetInstance()
+        self.time = osal.GetIsoTime(data['satellites']['time'])
         self.latitude = data['position']['latitude']
         self.longitude = data['position']['longitude']
         self.altitude = data['position']['altitude']
@@ -275,7 +277,8 @@ class SimDataProvider(Thread, DataProvider):
 
 class SimPoint(Point):
     def __init__(self,data):
-        self.time = Osal.GetInstance().GetTime()
+        osal = Osal.GetInstance()
+        self.time = osal.GetIsoTime(osal.GetTime())
         self.latitude = data['position']['latitude']
         self.longitude = data['position']['longitude']
         self.altitude = data['position']['altitude']
