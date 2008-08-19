@@ -321,7 +321,7 @@ class DataStorage(AlarmResponder):
         self.maps = {}
         self.tracks = {}
         self.routes = {}
-        self.waypoints = {}
+        self.waypoints = None
         self.config = None
         self.recording = None
         self.alarm = None
@@ -340,6 +340,9 @@ class DataStorage(AlarmResponder):
 
 
     def OpenDbmFile(self,file,mode):
+        pass
+
+    def GetWaypointsFilename(self):
         pass
 
     def GetRoutePattern(self):
@@ -365,6 +368,9 @@ class DataStorage(AlarmResponder):
 
         for track in self.tracks.values():
             track.Close()
+
+        if self.waypoints != None:
+            self.waypoints.close()
 
 
 
@@ -419,6 +425,10 @@ class DataStorage(AlarmResponder):
 
     def InitWaypointList(self,dir='.'):
         print "InitWaypointList(%s)" % dir
+        try:
+            self.waypoints = self.osal.OpenDbmFile(self.GetWaypointsFilename(),"w")
+        except:
+            self.waypoints = self.osal.OpenDbmFile(self.GetWaypointsFilename(),"n")
 
     def CreateWaypoint(self,name='',lat=0,lon=0,alt=0):
         self.waypoints[name] = Waypoint(name,lat,lon,alt)
@@ -681,6 +691,9 @@ class PosixDataStorage(DataStorage):
         self.InitMapList(os.path.expanduser(self.GetValue("map_dir")))
         self.InitTrackList(os.path.expanduser(self.GetValue("trk_dir")))
 
+    def GetWaypointsFilename(self):
+        return os.path.join(os.path.expanduser(self.GetValue("wpt_dir")),"waypoints"+self.osal.GetDbmExt())
+
     def GetTrackFilename(self,name):
         return os.path.join(os.path.expanduser(self.GetValue("trk_dir")),name+self.osal.GetDbmExt())
 
@@ -754,6 +767,9 @@ class NTDataStorage(DataStorage):
 
     def GetTrackPattern(self):
         return '.db'
+
+    def GetWaypointsFilename(self):
+        return os.path.join(os.path.expanduser(self.GetValue("wpt_dir")),"waypoints"+self.osal.GetDbmExt())
 
     def GetTrackFilename(self,name):
         return os.path.join(self.GetValue("trk_dir"),name+'.db')
@@ -847,6 +863,9 @@ class S60DataStorage(DataStorage):
         self.InitWaypointList(self.GetValue("wpt_dir"))
         self.InitMapList(self.GetValue("map_dir"))
         self.InitTrackList(self.GetValue("trk_dir"))
+
+    def GetWaypointsFilename(self):
+        return os.path.join(self.GetValue("wpt_dir"),"waypoints"+self.osal.GetDbmExt())
 
     def GetTrackFilename(self,name):
         filename = os.path.join(self.GetValue("trk_dir"),name+self.osal.GetDbmExt())
