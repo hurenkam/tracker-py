@@ -28,7 +28,6 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
 
 == Showstoppers, to be fixed for v0.20 ==
   * Implement DMS dialog for position input
-  * Make waypoints persistent when not using landmarks module
 
 == Other todo ==
   * Calibrate map from waypoints
