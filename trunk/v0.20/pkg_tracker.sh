@@ -1,0 +1,1 @@
+~/bin/ensymble.py py2sis --vendor=Mark Hurenkamp --appname=Tracker --version=0.20.2 --extrasdir=root --lang=EN --caps=PowerMgmt+ReadDeviceData+WriteDeviceData+TrustedUI+ProtServ+SwEvent+NetworkServices+LocalServices+ReadUserData+WriteUserData+Location+SurroundingsDD+UserEnvironment --verbose tracker
