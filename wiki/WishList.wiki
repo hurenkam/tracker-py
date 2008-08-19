@@ -86,6 +86,14 @@ to sleep again for 10 minutes. When hiking (especially in the mountains),
 I'm not sure how much power would be saved this way, but surely it must make
 a significant difference.
 
+=== Calibrate GPS to adjust for known deviations ===
+Some GPS devices can report positions with an average error that you may
+like to compensate for, e.g. my N95 by default reports altitude about 55
+meters higher than most maps.
+It would be handy if an offset can be configured so that the reported data
+on the device is more accurate. (suggest: false northing, false easting,
+false altitude).
+
 === Others? Please let me know! ===
 If something is holding you back from using this software, please let me
 know what it is. I can add it to this wishlist, and who knows maybe it will
