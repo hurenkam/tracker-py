@@ -1,1 +1,12 @@
-~/bin/ensymble.py py2sis --vendor=Mark Hurenkamp --appname=Tracker --version=0.20.2 --extrasdir=root --lang=EN --caps=PowerMgmt+ReadDeviceData+WriteDeviceData+TrustedUI+ProtServ+SwEvent+NetworkServices+LocalServices+ReadUserData+WriteUserData+Location+SurroundingsDD+UserEnvironment --verbose tracker
+rm -rf pkg
+mkdir pkg
+mkdir pkg/root
+mkdir pkg/root/data
+mkdir pkg/root/data/tracker
+mkdir pkg/root/data/tracker/gpx
+mkdir pkg/root/data/tracker/maps
+mkdir pkg/root/data/tracker/tracks
+cp src/*.py pkg
+~/bin/ensymble.py py2sis --vendor=Mark Hurenkamp --appname=Tracker --version=0.20 --lang=EN --verbose \
+--caps=PowerMgmt+ReadDeviceData+WriteDeviceData+TrustedUI+ProtServ+SwEvent+NetworkServices+LocalServices+ReadUserData+WriteUserData+Location+SurroundingsDD+UserEnvironment \
+pkg
