@@ -27,15 +27,21 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
   * pkg_tracker.sh script created to package tracker.py into a sis file
 
 == Showstoppers, to be fixed for v0.20.2 ==
-  * Remove unnecessary print statements
+  * Nothing :-) Release is available!
 
-== Other todo ==
+== Todo ==
+  * Documentation: Installation & User guide
+  * Get debug/error logging system in place
+  * Test input dialogs for invalid data handling
   * Calibrate map from waypoints
   * Show signal in mapview
   * Gauge options in dashview
   * Create config dialog for map/track/waypoint dirs
 
 == Known Bugs ==
+  * Sis file does not create data directories (at least not as I would expect)
+  * Sis file does not work on both C: and E: (on my phone it works on C: only)
+  * Waypoints in mapview not removed from map after delete (workaround: zoom in/out)
   * Some gauges sometimes show 'NaN' value
   * OSX/wxpython implementation needs a proper locking mechanism
 
