@@ -69,7 +69,7 @@ class MapFile(file):
 
         keys = self.parser.root.childnodes.keys()
         if 'refpoint' not in keys:
-            print "no waypoints found"
+            print "no refpoints found"
             return
 
         refpoints = []
@@ -424,7 +424,7 @@ class DataStorage(AlarmResponder):
 
 
     def InitWaypointList(self,dir='.'):
-        print "InitWaypointList(%s)" % dir
+        #print "InitWaypointList(%s)" % dir
         try:
             self.waypoints = self.osal.OpenDbmFile(self.GetWaypointsFilename(),"w")
         except:
@@ -445,7 +445,7 @@ class DataStorage(AlarmResponder):
 
 
     def InitTrackList(self,dir='.'):
-        print "InitTrackList(%s)" % dir
+        #print "InitTrackList(%s)" % dir
         selector = FileSelector(dir,self.osal.GetDbmExt())
         for file in selector.files.values():
             t = Track(file,open=False)
@@ -479,7 +479,7 @@ class DataStorage(AlarmResponder):
         # Track is now closed and name contains
         # base filename
 
-        print "Deleting track %s" % name
+        #print "Deleting track %s" % name
         del self.tracks[name]
         os.remove(self.GetTrackFilename(name))
 
@@ -499,7 +499,7 @@ class DataStorage(AlarmResponder):
             name = route.data["name"]
             self.CloseTrack(route)
         else:
-            print "Track not found"
+            print "Route not found"
             return
 
         print "Deleting route %s" % name
@@ -511,7 +511,7 @@ class DataStorage(AlarmResponder):
 
 
     def InitMapList(self,dir='.'):
-        print "InitMapList(%s)" % dir
+        #print "InitMapList(%s)" % dir
         selector = FileSelector(dir,".xml")
         #self.maps = []
         self.maps = {}
@@ -699,7 +699,7 @@ class PosixDataStorage(DataStorage):
 
     def GetGPXFilename(self,name):
         filename = os.path.join(os.path.expanduser(self.GetValue("gpx_dir")),name+'.gpx')
-        print "GetGPXFilename: %s" % filename
+        #print "GetGPXFilename: %s" % filename
         return filename
 
 
@@ -905,7 +905,7 @@ class S60DataStorage(DataStorage):
     def SaveWaypoint(self,waypoint):
         if self.lmdb is not None:
             if waypoint.lmid is None:
-                print "adding waypoint %s to lmdb" % waypoint.name
+                #print "adding waypoint %s to lmdb" % waypoint.name
                 landmark = landmarks.CreateLandmark()
                 landmark.SetLandmarkName(u'%s' % waypoint.name)
                 landmark.SetPosition(waypoint.latitude,waypoint.longitude,waypoint.altitude,0,0)

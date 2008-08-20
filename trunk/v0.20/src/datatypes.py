@@ -259,7 +259,7 @@ class Map:
             dtheta = b - theta
             if dtheta > 180:
                 dtheta -= 360
-            print "dTheta: %7.3f  (map: %s)" % (dtheta, self.name)
+            #print "dTheta: %7.3f  (map: %s)" % (dtheta, self.name)
 
             self.x = r1.x
             self.y = r1.y
@@ -278,8 +278,8 @@ class Map:
             self.iscalibrated = True
             self.area = self.WgsArea()
             #self.PrintInfo()
-        else:
-            print "Calibration failed, not enough refpoints"
+        #else:
+        #    print "Calibration failed, not enough refpoints"
 
     def WgsArea(self):
         if self.iscalibrated:
@@ -293,7 +293,7 @@ class Map:
             lat = (y - self.y)*self.y2lat + self.lat
             return lat,lon
         else:
-            print "Not calibrated"
+            #print "Not calibrated"
             return None
 
     def Wgs2XY(self,lat,lon):
@@ -302,7 +302,7 @@ class Map:
             y = (lat - self.lat)*self.lat2y + self.y
             return x,y
         else:
-            print "Not calibrated"
+            #print "Not calibrated"
             return None
 
     def SetSize(self,size):
