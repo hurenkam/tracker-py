@@ -19,12 +19,6 @@ A lot of code in s60views.py and wxviews.py is identical, probably about
 good to extract the 10-20 percent, and use a single codebase for the rest
 of these modules.
 
-=== Create SIS package ===
-The development has been mostly focused on getting functionality to work,
-for the simple reason that this is what I care about most.
-It would be nice to have the code wrapped in a single SIS package, so that
-it is easy to install on any phone that has pys60 installed.
-
 === Use Accelerometer to scroll the map ===
 Scrolling the map can be a pain, especially if zoomed in on a large map.
 Using the accelerometer would be very handy in this case, simply tilt
