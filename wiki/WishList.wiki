@@ -1,14 +1,6 @@
 [http://code.google.com/p/tracker-py/wiki/About About] |
 ReDesign | WishList | RoadMap | CodeArchitecture
 
-=== Import calibrated maps from OziExplorer/GPSDash ===
-OziExplorer and GPSDash provide similar functionality as Tracker.py on PC
-and PocketPC platforms (actually, if they had been available on s60 I would
-probably not have started to work on tracker.py).
-It would be nice if maps calibrated with OziExplorer can be imported for
-use with Tracker.py
-  * Basic support available in v0.20 (limited to jpg/wgs84 maps as provided by GoogleOzi)
-
 === Multiple resolutions ===
 Current redesign implementation for S60 is aimed at N95 in portrait
 mode, meaning it depends on a 240x320 pixel resolution. When used on
