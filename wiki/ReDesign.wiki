@@ -19,7 +19,7 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
   * Show heading in mapview
   * Scroll/Zoom map
   * Im/export of tracks & waypoints in GPX format (needs more testing)
-  * Display position in Wgs84/DMS/UTM (with 23 ellipsoids)/RD datums
+  * Display position in Wgs84 (in 3 formats)/UTM (with 23 ellipsoids)/RD datums
   * Map calibration
   * Load OziExplorer/GPSDash calibrated maps (JPEG/WGS84 as provided by GoogleOzi)
   * Load uncalibrated jpg images (and save calibration data once two refpoints are set)
@@ -27,7 +27,7 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
   * pkg_tracker.sh script created to package tracker.py into a sis file
 
 == Showstoppers, to be fixed for v0.20.2 ==
-  * Implement DMS dialog for position input
+  * Remove unnecessary print statements
 
 == Other todo ==
   * Calibrate map from waypoints
