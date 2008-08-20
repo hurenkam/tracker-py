@@ -1536,10 +1536,9 @@ class S60Application(Application, AlarmResponder):
         if wpt != None:
             name, distance = wpt
             waypoints = self.storage.GetWaypoints()
-            for w in waypoints:
-                if w.name == name:
-                    self.proximityalarm=ProximityAlarm(w,distance,self)
-                    self.provider.SetAlarm(self.proximityalarm)
+            if name in waypoints.keys():
+                self.proximityalarm=ProximityAlarm(waypoints[name],distance,self)
+                self.provider.SetAlarm(self.proximityalarm)
 
         self.provider.StartGPS()
         self.view.Show()
@@ -1605,6 +1604,7 @@ class S60Application(Application, AlarmResponder):
         self.storage.CloseAll()
         SetSystemApp(0)
         Application.Exit(self)
+        appuifw.app.set_exit()
 
 
 
