@@ -94,6 +94,12 @@ It would be nice if tracker can create categories, and show a dialog where
 can be selected which categories/landmarks should be shown.
 One might want to use a new category per map, or per area.
 
+=== Direction-up map display ===
+Map-display is done in North-up display, which is natural if you are used
+to reading paper maps.
+However, for many people it feels more natural to have a direction-up
+display, thus rotating the map whenever you change direction.
+
 === Others? Please let me know! ===
 If something is holding you back from using this software, please let me
 know what it is. I can add it to this wishlist, and who knows maybe it will
