@@ -3,6 +3,10 @@ ReDesign | WishList | RoadMap | CodeArchitecture
 
 = Tracker v0.20x =
 
+News: 
+
+August 21st 2008: Version 0.20.2 (alpha) has been released!
+
 http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0014.jpg
 http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0017.jpg
 http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
