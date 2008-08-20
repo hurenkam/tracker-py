@@ -1212,7 +1212,7 @@ class S60MapView(View):
         self.Draw()
 
     def FindMap(self,event):
-        print "Locating map..."
+        #print "Locating map..."
         if self.position != None:
             availablemaps = self.storage.FindMaps(self.position)
             count = len(availablemaps)
@@ -1234,7 +1234,7 @@ class S60MapView(View):
 
                     id = appuifw.selection_list(maps)
                     if id is not None:
-                        print "opening %s" % maps[id]
+                        #print "opening %s" % maps[id]
                         self.LoadMap(d[maps[id]])
                         self.mapwidget.FollowGPS()
                         appuifw.note(u"Map %s opened." % maps[id], "info")
@@ -1580,7 +1580,7 @@ class S60Application(Application, AlarmResponder):
             #self.storage.SetValue("app_lastknownposition",alarm.point)
 
         if alarm == self.proximityalarm:
-            print "Proximity alarm!"
+            #print "Proximity alarm!"
             appuifw.note(u"Waypoint reached!", "info")
             for i in range(0,5):
                  Vibrate(500,100)
@@ -1615,7 +1615,7 @@ class S60Application(Application, AlarmResponder):
         self.storage.CloseAll()
         SetSystemApp(0)
         Application.Exit(self)
-        #appuifw.app.set_exit()
+        appuifw.app.set_exit()
 
 
 
@@ -1642,7 +1642,6 @@ class S60Application(Application, AlarmResponder):
         return latitude,longitude
 
     def QueryDMSPosition(self,lat,lon):
-        print lat,lon
         (nd,nm,ns),(ed,em,es) = datums.GetDMSFromWgs84(lat,lon)
         dmslat = appuifw.query(u"Latitude (dd/mm/ss.ss):","text",(u"%i/%i/%f" % (nd,nm,ns)).strip("0"))
         if dmslat is None:
@@ -1659,7 +1658,6 @@ class S60Application(Application, AlarmResponder):
         ed = int(ed); em = int(em); es = float(es)
 
         lat,lon = datums.GetWgs84FromDMS((nd,nm,ns),(ed,em,es))
-        print lat,lon
         return lat,lon
 
     def QueryDMPosition(self,lat,lon):
@@ -1798,7 +1796,7 @@ class S60Application(Application, AlarmResponder):
                 self.provider.SetAlarm(self.proximityalarm)
                 appuifw.note(u"Monitoring waypoint %s, notify when within %8.0f meters." % (waypoint.name, distance), "info")
                 self.storage.SetValue("wpt_monitor",(waypoint.name,distance))
-                print "stored waypoint in config"
+                #print "stored waypoint in config"
 
 
     def StartRecording(self):
@@ -1839,35 +1837,35 @@ class S60Application(Application, AlarmResponder):
         tracks.sort()
         id = appuifw.selection_list(tracks)
         if id != None:
-            print "opening %s" % tracks[id]
+            #print "opening %s" % tracks[id]
             self.storage.tracks[tracks[id]].Open()
             appuifw.note(u"Track %s opened." % tracks[id], "info")
             self.mapview.OpenTrack(self.storage.tracks[tracks[id]])
-        else:
-            print "no file selected for opening"
+        #else:
+        #    print "no file selected for opening"
 
     def CloseTrack(self):
         tracks = self.storage.tracks.keys()
         tracks.sort()
         id = appuifw.selection_list(tracks)
         if id != None:
-            print "closing %s" % tracks[id]
+            #print "closing %s" % tracks[id]
             self.storage.tracks[tracks[id]].Close()
             appuifw.note(u"Track %s closed." % tracks[id], "info")
             self.mapview.CloseTrack()
-        else:
-            print "no file selected for closing"
+        #else:
+        #    print "no file selected for closing"
 
     def DeleteTrack(self):
         tracks = self.storage.tracks.keys()
         tracks.sort()
         id = appuifw.selection_list(tracks)
         if id is not None:
-            print "deleting %s" % tracks[id]
+            #print "deleting %s" % tracks[id]
             self.storage.DeleteTrack(name=tracks[id])
             appuifw.note(u"Track %s deleted." % tracks[id], "info")
-        else:
-            print "no file selected for deletion"
+        #else:
+        #    print "no file selected for deletion"
 
 
 
@@ -1882,11 +1880,11 @@ class S60Application(Application, AlarmResponder):
 
         id = appuifw.selection_list(maps)
         if id is not None:
-            print "opening %s" % maps[id]
+            #print "opening %s" % maps[id]
             self.mapview.LoadMap(d[maps[id]])
             appuifw.note(u"Map %s opened." % maps[id], "info")
-        else:
-            print "no file selected for opening"
+        #else:
+        #    print "no file selected for opening"
 
     def CloseMap(self):
         self.mapview.UnloadMap()
@@ -1906,11 +1904,11 @@ class S60Application(Application, AlarmResponder):
         keys.sort()
         id = appuifw.selection_list(keys)
         if id is not None:
-            print "importing %s" % files[keys[id]]
+            #print "importing %s" % files[keys[id]]
             self.storage.GPXImport(files[keys[id]])
             appuifw.note(u"GPX file %s imported." % files[keys[id]], "info")
-        else:
-            print "no file selected for opening"
+        #else:
+        #    print "no file selected for opening"
 
 
 
@@ -1940,7 +1938,7 @@ class S60Application(Application, AlarmResponder):
         value = self.storage.GetValue("app_screensaver")
         self.storage.SetValue("app_screensaver",not value)
         self.UpdateMenu()
-        print "Toggled screensaver"
+        #print "Toggled screensaver"
 
     def About(self):
         appuifw.note(u"Tracker\n(c) 2007,2008 by Mark Hurenkamp\nThis program is licensed under GPLv2.", "info")

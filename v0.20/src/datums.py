@@ -525,7 +525,7 @@ def CalculateDistanceAndBearing(fromwgs,towgs):
 		    ) * earths_radius
     except:
         distance = 0
-        print "Exception when calculating distance in datums.py@358"
+        print "Exception while calculating distance in datums.py@358"
 
     bearing = math.atan2(
                 math.sin(to_landa-from_landa) * math.cos(to_theta),
