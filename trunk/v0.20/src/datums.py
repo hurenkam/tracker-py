@@ -62,8 +62,21 @@ def GetDMSFromWgs84(lat,lon):
     return (latd,latm,lats),(lond,lonm,lons)
 
 def GetWgs84FromDMS((latd,latm,lats),(lond,lonm,lons)):
-    lat = latd + latm/60 + lats/3600
-    lon = lond + lonm/60 + lons/3600
+    lat = latd + latm/60.0 + lats/3600.0
+    lon = lond + lonm/60.0 + lons/3600.0
+    return lat,lon
+
+
+def GetDMFromWgs84(lat,lon):
+    latd = int(lat)
+    lond = int(lon)
+    latm = (lat - latd) * 60.0
+    lonm = (lon - lond) * 60.0
+    return (latd,latm),(lond,lonm)
+
+def GetWgs84FromDM((latd,latm),(lond,lonm)):
+    lat = latd + latm/60.0
+    lon = lond + lonm/60.0
     return lat,lon
 
 
