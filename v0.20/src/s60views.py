@@ -12,7 +12,7 @@ from datastorage import *
 
 Zoom =     [ 0.5, 0.75, 1.0, 1.5, 2.0 ]
 Scroll =   [ 100,   20,  10,   5,   1 ]
-Datums =   [ "Wgs84", "DMS", "RD", "UTM" ]
+Datums =   [ "Wgs84", "DMS", "RD", "UTM", "DM" ]
 
 Color = {
           "black":0x000000,
@@ -135,6 +135,7 @@ class PositionWidget(Widget):
                  "RD"    : self.GetRDTexts,
                  "UTM"   : self.GetUTMTexts,
                  "DMS"   : self.GetDMSTexts,
+                 "DM"    : self.GetDMTexts,
                  }
         Widget.__init__(self,size)
 
@@ -151,6 +152,10 @@ class PositionWidget(Widget):
     def GetDMSTexts(self,lat,lon):
         (nd,nm,ns),(ed,em,es) = datums.GetDMSFromWgs84(lat,lon)
         return u"Wgs84", u"N%2.0f %2.0f\'%5.2f\"" % (nd,nm,ns), u"E%2.0f %2.0f\'%5.2f\"" % (ed,em,es)
+
+    def GetDMTexts(self,lat,lon):
+        (nd,nm),(ed,em) = datums.GetDMFromWgs84(lat,lon)
+        return u"Wgs84", u"N%2.0f %7.4f\'" % (nd,nm), u"E%2.0f %7.4f\'" % (ed,em)
 
     def GetUTMTexts(self,lat,lon):
         #x,y,z = datums.GetUTMFromWgs84(lat,lon)
@@ -1404,6 +1409,7 @@ class S60Application(Application, AlarmResponder):
                  "RD"    : self.QueryRDPosition,
                  "UTM"   : self.QueryUTMPosition,
                  "DMS"   : self.QueryDMSPosition,
+                 "DM"    : self.QueryDMPosition,
                  }
         self.position = self.storage.GetValue("app_lastknownposition")
 
@@ -1431,10 +1437,11 @@ class S60Application(Application, AlarmResponder):
                             ),
                             (u'Datum',
                                 (
-                                    (u'Wgs84',              self.DatumWgs84),
-                                    (u'DMS',                self.DatumDMS),
-                                    (u'UTM',                self.DatumUTM),
-                                    (u'RD',                 self.DatumRD),
+                                    (u'Wgs84 (dd.dddddd)',      self.DatumWgs84),
+                                    (u'Wgs84 (dd mm\'ss.ss\")', self.DatumDMS),
+                                    (u'Wgs84 (dd mm.mmmm\')',   self.DatumDM),
+                                    (u'UTM',                    self.DatumUTM),
+                                    (u'RD',                     self.DatumRD),
                                 )
                             ),
                             (u'Waypoints',
@@ -1496,6 +1503,10 @@ class S60Application(Application, AlarmResponder):
 
     def DatumDMS(self):
         self.storage.SetValue("app_datum","DMS")
+        self.view.UpdateDatum()
+
+    def DatumDM(self):
+        self.storage.SetValue("app_datum","DM")
         self.view.UpdateDatum()
 
     def DatumUTM(self):
@@ -1604,7 +1615,7 @@ class S60Application(Application, AlarmResponder):
         self.storage.CloseAll()
         SetSystemApp(0)
         Application.Exit(self)
-        appuifw.app.set_exit()
+        #appuifw.app.set_exit()
 
 
 
@@ -1631,7 +1642,43 @@ class S60Application(Application, AlarmResponder):
         return latitude,longitude
 
     def QueryDMSPosition(self,lat,lon):
-        pass
+        print lat,lon
+        (nd,nm,ns),(ed,em,es) = datums.GetDMSFromWgs84(lat,lon)
+        dmslat = appuifw.query(u"Latitude (dd/mm/ss.ss):","text",(u"%i/%i/%f" % (nd,nm,ns)).strip("0"))
+        if dmslat is None:
+            appuifw.note(u"Cancelled.", "info")
+            return None
+        nd,nm,ns = dmslat.split("/")
+        nd = int(nd); nm = int(nm); ns = float(ns)
+
+        dmslon = appuifw.query(u"Longitude (dd/mm/ss.ss):","text",(u"%i/%i/%f" % (ed,em,es)).strip("0"))
+        if dmslon is None:
+            appuifw.note(u"Cancelled.", "info")
+            return None
+        ed,em,es = dmslon.split("/")
+        ed = int(ed); em = int(em); es = float(es)
+
+        lat,lon = datums.GetWgs84FromDMS((nd,nm,ns),(ed,em,es))
+        print lat,lon
+        return lat,lon
+
+    def QueryDMPosition(self,lat,lon):
+        (nd,nm),(ed,em) = datums.GetDMFromWgs84(lat,lon)
+        dmlat = appuifw.query(u"Latitude (dd/mm.mmmm):","text",(u"%i/%f" % (nd,nm)).strip("0"))
+        if dmlat is None:
+            appuifw.note(u"Cancelled.", "info")
+            return None
+        nd,nm = dmlat.split("/")
+        nd = int(nd); nm = float(nm)
+
+        dmlon = appuifw.query(u"Longitude (dd/mm.mmmm):","text",(u"%i/%f" % (ed,em)).strip("0"))
+        if dmlon is None:
+            appuifw.note(u"Cancelled.", "info")
+            return None
+        ed,em = dmlon.split("/")
+        ed = int(ed); em = float(em)
+
+        return datums.GetWgs84FromDM((nd,nm),(ed,em))
 
     def QueryUTMPosition(self,lat,lon):
         #x,y,zone = datums.GetUTMFromWgs84(lat,lon)
