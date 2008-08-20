@@ -94,6 +94,14 @@ It would be handy if an offset can be configured so that the reported data
 on the device is more accurate. (suggest: false northing, false easting,
 false altitude).
 
+=== Advanced use of Landmarks and Categories ===
+Right now, tracker always shows all landmarks in the waypoint category,
+thus depending on an other editor to be used for moving waypoints in/out
+of this category.
+It would be nice if tracker can create categories, and show a dialog where
+can be selected which categories/landmarks should be shown.
+One might want to use a new category per map, or per area.
+
 === Others? Please let me know! ===
 If something is holding you back from using this software, please let me
 know what it is. I can add it to this wishlist, and who knows maybe it will
