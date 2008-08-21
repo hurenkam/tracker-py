@@ -4,7 +4,7 @@
 WishList | RoadMap | CodeArchitecture
 
 == Current stable version: Tracker v0.14k ==
-=== [http://code.google.com/p/tracker-py/wiki/UserGuideV0_20 User guide for v0.20] ===
+=== [http://code.google.com/p/tracker-py/wiki/UserGuideV0_14 User guide for v0.14] ===
 
 Unless there is high demand for an update of this branch,
 I am considering this the last release in the 0.14 range.
