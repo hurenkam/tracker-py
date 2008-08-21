@@ -1,0 +1,23 @@
+[http://code.google.com/p/tracker-py/wiki/About About] |
+ReDesign | WishList | RoadMap | CodeArchitecture
+
+== Current stable version: Tracker v0.14k ==
+
+Unless there is high demand for an update of this branch,
+I am considering this the last release in the 0.14 range.
+For anyone still using this release, please give 0.20.2 a
+try, and let me know what's keeping you from switching.
+
+Available features:
+  * Show current position on digitized map
+  * Import map from any .jpg and calibrate on your device
+  * Add/show waypoints
+  * Record/show tracks
+  * Set proximity alarm for waypoint, and show heading/distance
+  * Tracks & Waypoints saved in GPX format
+[http://code.google.com/p/tracker-py/wiki/UserGuideV0.14 User guide for v0.14]
+
+http://tracker-py.googlecode.com/svn/trunk/v0.14k/screenshots/dash_full_v13.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.14k/screenshots/campina5_track1.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.14k/screenshots/campina5_track1_zoom.jpg
+
