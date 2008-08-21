@@ -17,6 +17,10 @@ The first option in the main menu is a toggle to switch screensaver on/off.
 On the bottom (below the submenus) you find an 'about' option which shows the copyright
 info. In between you'll find the Map, Datum, Waypoints, Tracks and Im/Export submenus.
 
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0030.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0031.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0032.jpg
+
 ==== Map submenu ====
 
 In this submenu you can 'open' a different map, add reference points 'add refpoint' to
@@ -25,6 +29,13 @@ automatically when the 2nd point is added). Also, you can 'save' or clear the ca
 data 'clear all refpoints'.
 
 Put your maps (Ozi, GPSDash, Tracker_v0.14, or plain jpeg) in e:\data\tracker\maps
+
+==== Map submenu ====
+
+The datums submenu allows you to choose from several grid/ellipsoid settings.
+Most common are Wgs84 in dd.ddddd, dd mm'ss.ss and dd mm.mmmm formats, and UTM
+(with 23 different ellipsoids to choose from).
+The dutch RD grid is also included.
 
 ==== Waypoints submenu ====
 
@@ -36,12 +47,20 @@ landmarks in/out of the waypoints category. Any landmark in the waypoints catago
 will show up in Tracker. These waypoints will also be exported if you choose an export
 function.
 
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0034.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0035.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0036.jpg
+
 ==== Tracks submenu ====
 
 Here you can 'record' a new track, 'open' an existing track or 'delete' a track.
 Open tracks will be shown on the map, and exported if you choose an export function.
 
 == Mapview ==
+
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0027.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0017.jpg
 
 When in mapview, the keypad is used for browsing the map, keys 2,4,6 and 8 are used as
 scrollkeys, when pressed, the Mapview will go into scrollmode, and show a black position
@@ -58,6 +77,10 @@ position is not on the map, then tracker will autoload the first available map f
 current position.
 
 == Dashview ==
+
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0029.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0039.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0038.jpg
 
 In this view you'll see 6 gauges, one of which is double width & height. You can select
 a different 'zoomed' gauge, by selecting up/down.
