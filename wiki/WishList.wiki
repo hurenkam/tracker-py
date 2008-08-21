@@ -4,7 +4,8 @@
 WishList | RoadMap | CodeArchitecture
 
 === Multiple resolutions ===
-Current redesign implementation for S60 is aimed at N95 in portrait
+Current [http://code.google.com/p/tracker-py/wiki/TrackerV0_20 v0.20]
+implementation for S60 is aimed at N95 in portrait
 mode, meaning it depends on a 240x320 pixel resolution. When used on
 other S60 phones, this resolution may not be available, or prefereable,
 so support for different resolutions is desired.
