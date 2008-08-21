@@ -36,6 +36,7 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
   * Get debug/error logging system in place
   * Test input dialogs for invalid data handling
   * Calibrate map from waypoints
+  * Implement routes
   * Show signal in mapview
   * Gauge options in dashview
   * Create config dialog for map/track/waypoint dirs
