@@ -1,6 +1,6 @@
 [http://code.google.com/p/tracker-py/wiki/About About] |
-[http://code.google.com/p/tracker-py/wiki/TrackerV0.14 v0.14] |
-[http://code.google.com/p/tracker-py/wiki/TrackerV0.20 v0.20] |
+[http://code.google.com/p/tracker-py/wiki/TrackerV0_14 v0.14] |
+[http://code.google.com/p/tracker-py/wiki/TrackerV0_20 v0.20] |
 WishList | RoadMap | CodeArchitecture
 
 == Current stable version: Tracker v0.14k ==
