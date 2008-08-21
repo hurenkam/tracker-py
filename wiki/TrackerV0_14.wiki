@@ -17,7 +17,7 @@ Available features:
   * Record/show tracks
   * Set proximity alarm for waypoint, and show heading/distance
   * Tracks & Waypoints saved in GPX format
-[http://code.google.com/p/tracker-py/wiki/UserGuideV0.14 User guide for v0.14]
+[http://code.google.com/p/tracker-py/wiki/UserGuideV0_14 User guide for v0.14]
 
 http://tracker-py.googlecode.com/svn/trunk/v0.14k/screenshots/dash_full_v13.jpg
 http://tracker-py.googlecode.com/svn/trunk/v0.14k/screenshots/campina5_track1.jpg
