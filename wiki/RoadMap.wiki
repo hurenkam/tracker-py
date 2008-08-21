@@ -5,17 +5,21 @@ For a more detailed description of the features, please
 see the WishList
 
 == ReDesign (v0.20.x) ==
-  * Load OziExplorer/GPSDash calibrated maps
-  * Stable S60 version
-  * Create SIS package
+Current alpha release v0.20.2
+New version 0.20.3 will be focussed on bugfixing
 
 == Short term (v0.21.x) ==
-  * Send/Receive Waypoints/Routes/Tracks via SMS/Bluetooth
+  * Multiple resolutions
   * Dynamic menus
+  * Auto-save on Low-power
+  * Calibrate GPS to adjust for known deviations
+  * Advanced use of Landmarks and Categories
+  * Exchange of Landmarks via SMS/Bluetooth
   * Integrate s60views and wxviews
   * Use Accelerometer to scroll the map
 
 == Long term (v0.30.x) ==
+  * Direction up map display?
   * Stable wxPython version?
   * Port to pocket pc?
   * Localization?
