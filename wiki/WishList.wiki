@@ -1,5 +1,7 @@
 [http://code.google.com/p/tracker-py/wiki/About About] |
-ReDesign | WishList | RoadMap | CodeArchitecture
+[http://code.google.com/p/tracker-py/wiki/TrackerV0.14] |
+[http://code.google.com/p/tracker-py/wiki/TrackerV0.20] |
+WishList | RoadMap | CodeArchitecture
 
 === Multiple resolutions ===
 Current redesign implementation for S60 is aimed at N95 in portrait

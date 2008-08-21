@@ -1,3 +1,8 @@
+[http://code.google.com/p/tracker-py/wiki/About About] |
+[http://code.google.com/p/tracker-py/wiki/TrackerV0.14] |
+[http://code.google.com/p/tracker-py/wiki/TrackerV0.20] |
+WishList | RoadMap | CodeArchitecture
+
 Several views are presented in the application, each is assigned to a tab, and thus can
 be navigated to/from by pressing left/right navigation keys. There are 3 views, Mapview,
 Dashview, and Infoview.
