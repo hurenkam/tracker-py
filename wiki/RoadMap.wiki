@@ -8,6 +8,7 @@ see the WishList
 
 == ReDesign (v0.20.x) ==
 Current alpha release v0.20.2
+
 New version 0.20.3 will be focussed on bugfixing
 
 == Short term (v0.21.x) ==
