@@ -1,0 +1,67 @@
+[http://code.google.com/p/tracker-py/wiki/About About] |
+[http://code.google.com/p/tracker-py/wiki/TrackerV0_14 v0.14] |
+[http://code.google.com/p/tracker-py/wiki/TrackerV0_20 v0.20] |
+WishList | RoadMap | CodeArchitecture
+
+Tracker has two main views, uses the left softkey for a menu, the righ softkey as exit,
+and the D-Pad center key (ok/select) as a context dependent softkey.
+
+== Menus ==
+
+Currently the menus are not view dependent, which means that the following applies to all
+views.
+
+==== Main menu ====
+
+The first option in the main menu is a toggle to switch screensaver on/off.
+On the bottom (below the submenus) you find an 'about' option which shows the copyright
+info. In between you'll find the Map, Datum, Waypoints, Tracks and Im/Export submenus.
+
+==== Map submenu ====
+
+In this submenu you can 'open' a different map, add reference points 'add refpoint' to
+enable calibration (calibration requires at least 2 reference points, and is started
+automatically when the 2nd point is added). Also, you can 'save' or clear the calibration
+data 'clear all refpoints'.
+
+Put your maps (Ozi, GPSDash, Tracker_v0.14, or plain jpeg) in e:\data\tracker\maps
+
+==== Waypoints submenu ====
+
+Here you can 'monitor', 'add' and 'delete' waypoints. If you choose 'monitor' then
+the direction and distance to that waypoint are shown in the waypoint gauge. Also
+you are presented an option to set a proximity alarm.
+If you installed the landmarks module, then you can use any landmarks editor to move
+landmarks in/out of the waypoints category. Any landmark in the waypoints catagory
+will show up in Tracker. These waypoints will also be exported if you choose an export
+function.
+
+==== Tracks submenu ====
+
+Here you can 'record' a new track, 'open' an existing track or 'delete' a track.
+Open tracks will be shown on the map, and exported if you choose an export function.
+
+== Mapview ==
+
+When in mapview, the keypad is used for browsing the map, keys 2,4,6 and 8 are used as
+scrollkeys, when pressed, the Mapview will go into scrollmode, and show a black position
+cursor. In case the map is calibrated, you'll see the position at the cursor displayed
+in the position box.
+The Up/Down button zooms in/out, if zoomed in the scrolling will be in small steps, if
+zoomed out, scrolling will take big steps.
+By pressing the 5 button, you return to 'follow gps' mode, the cursor will turn blue, and
+the position will be updated again with each new position event.
+
+Pressing the ok/select button, then if a map is loaded and current position is on the
+map, you will be presented a list of maps available for the current position. If current
+position is not on the map, then tracker will autoload the first available map for the
+current position.
+
+== Dashview ==
+
+In this view you'll see 6 gauges, one of which is double width & height. You can select
+a different 'zoomed' gauge, by selecting up/down.
+Gauges present are: Waypoint, Signal (Battery/GSM/GPS), time & distance traveled since
+startup, speed and altitude.
+Heading & Speed gauges have some form of 'history/cache', meaning that when you travel
+slow, they will use the data of several position events to average out heading/speed.
