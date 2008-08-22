@@ -158,12 +158,8 @@ class PositionWidget(Widget):
         return u"Wgs84", u"N%2.0f %7.4f\'" % (nd,nm), u"E%2.0f %7.4f\'" % (ed,em)
 
     def GetUTMTexts(self,lat,lon):
-        #x,y,z = datums.GetUTMFromWgs84(lat,lon)
         ellips = DataStorage.GetInstance().GetValue("app_ellips")
         z,x,y = datums.latlon_to_utm(ellips,lat,lon)
-
-        #print "UTM: ", x,y,z
-        #UTM: 31U  672894m E  5705374m N
         return u"UTM", z, str(int(x))+"E", str(int(y))+"N",
 
     def GetRDTexts(self,lat,lon):
@@ -1577,10 +1573,7 @@ class S60Application(Application, AlarmResponder):
                 view.UpdateWaypoint(alarm.avgheading,bearing,distance)
                 view.UpdateSpeed(alarm.avgspeed)
 
-            #self.storage.SetValue("app_lastknownposition",alarm.point)
-
         if alarm == self.proximityalarm:
-            #print "Proximity alarm!"
             appuifw.note(u"Waypoint reached!", "info")
             for i in range(0,5):
                  Vibrate(500,100)
@@ -1647,15 +1640,13 @@ class S60Application(Application, AlarmResponder):
         if dmslat is None:
             appuifw.note(u"Cancelled.", "info")
             return None
-        nd,nm,ns = dmslat.split("/")
-        nd = int(nd); nm = int(nm); ns = float(ns)
+        nd,nm,ns = map(float, dmslat.split("/"))
 
         dmslon = appuifw.query(u"Longitude (dd/mm/ss.ss):","text",(u"%i/%i/%f" % (ed,em,es)).strip("0"))
         if dmslon is None:
             appuifw.note(u"Cancelled.", "info")
             return None
-        ed,em,es = dmslon.split("/")
-        ed = int(ed); em = int(em); es = float(es)
+        ed,em,es = map(float, dmslon.split("/"))
 
         lat,lon = datums.GetWgs84FromDMS((nd,nm,ns),(ed,em,es))
         return lat,lon
@@ -1666,20 +1657,17 @@ class S60Application(Application, AlarmResponder):
         if dmlat is None:
             appuifw.note(u"Cancelled.", "info")
             return None
-        nd,nm = dmlat.split("/")
-        nd = int(nd); nm = float(nm)
+        nd,nm = map(float, dmlat.split("/"))
 
         dmlon = appuifw.query(u"Longitude (dd/mm.mmmm):","text",(u"%i/%f" % (ed,em)).strip("0"))
         if dmlon is None:
             appuifw.note(u"Cancelled.", "info")
             return None
-        ed,em = dmlon.split("/")
-        ed = int(ed); em = float(em)
+        ed,em = map(float, dmlon.split("/"))
 
         return datums.GetWgs84FromDM((nd,nm),(ed,em))
 
     def QueryUTMPosition(self,lat,lon):
-        #x,y,zone = datums.GetUTMFromWgs84(lat,lon)
         ellips = self.storage.GetValue("app_ellips")
         zone,x,y = datums.latlon_to_utm(ellips,lat,lon)
         zone = appuifw.query(u"UTM Zone:","text",zone)
@@ -1697,7 +1685,6 @@ class S60Application(Application, AlarmResponder):
             appuifw.note(u"Cancelled.", "info")
             return None
 
-        #lat,lon = datums.GetWgs84FromUTM(x,y,zone,False)
         lat,lon = datums.utm_to_latlon(ellips,zone,x,y)
         return lat,lon
 
@@ -1796,7 +1783,6 @@ class S60Application(Application, AlarmResponder):
                 self.provider.SetAlarm(self.proximityalarm)
                 appuifw.note(u"Monitoring waypoint %s, notify when within %8.0f meters." % (waypoint.name, distance), "info")
                 self.storage.SetValue("wpt_monitor",(waypoint.name,distance))
-                #print "stored waypoint in config"
 
 
     def StartRecording(self):
@@ -1809,7 +1795,6 @@ class S60Application(Application, AlarmResponder):
                     track = self.storage.tracks[trackname]
                 else:
                     track = Track(self.storage.GetTrackFilename(trackname))
-                    #self.storage.tracks[trackname]=track
 
                 track.Open()
 
@@ -1829,7 +1814,6 @@ class S60Application(Application, AlarmResponder):
         self.track = None
         self.trackname = None
         self.mapview.SetRecordingTrack(None)
-        #self.storage.StopRecording()
         appuifw.note(u"Recording stopped.")
 
     def OpenTrack(self):
@@ -1837,42 +1821,30 @@ class S60Application(Application, AlarmResponder):
         tracks.sort()
         id = appuifw.selection_list(tracks)
         if id != None:
-            #print "opening %s" % tracks[id]
             self.storage.tracks[tracks[id]].Open()
             appuifw.note(u"Track %s opened." % tracks[id], "info")
             self.mapview.OpenTrack(self.storage.tracks[tracks[id]])
-        #else:
-        #    print "no file selected for opening"
 
     def CloseTrack(self):
         tracks = self.storage.tracks.keys()
         tracks.sort()
         id = appuifw.selection_list(tracks)
         if id != None:
-            #print "closing %s" % tracks[id]
             self.storage.tracks[tracks[id]].Close()
             appuifw.note(u"Track %s closed." % tracks[id], "info")
             self.mapview.CloseTrack()
-        #else:
-        #    print "no file selected for closing"
 
     def DeleteTrack(self):
         tracks = self.storage.tracks.keys()
         tracks.sort()
         id = appuifw.selection_list(tracks)
         if id is not None:
-            #print "deleting %s" % tracks[id]
             self.storage.DeleteTrack(name=tracks[id])
             appuifw.note(u"Track %s deleted." % tracks[id], "info")
-        #else:
-        #    print "no file selected for deletion"
 
 
 
     def OpenMap(self):
-        #d = {}
-        #for m in self.storage.maps:
-        #    d[m.name]=m
         d = self.storage.maps
 
         maps = d.keys()
@@ -1880,11 +1852,8 @@ class S60Application(Application, AlarmResponder):
 
         id = appuifw.selection_list(maps)
         if id is not None:
-            #print "opening %s" % maps[id]
             self.mapview.LoadMap(d[maps[id]])
             appuifw.note(u"Map %s opened." % maps[id], "info")
-        #else:
-        #    print "no file selected for opening"
 
     def CloseMap(self):
         self.mapview.UnloadMap()
