@@ -260,8 +260,8 @@ class OziFile(file):
             self.write("OziExplorer Map Data File Version 2.2\n")
         elif mode == "r":
             file.__init__(self,b+'.map',mode)
-            l = self.readline()
-            if l != "OziExplorer Map Data File Version 2.2\n":
+            l = self.readline().strip()
+            if l != "OziExplorer Map Data File Version 2.2":
                 raise "Bad file"
             self.lines = self.readlines()
         else:
@@ -280,7 +280,7 @@ class OziFile(file):
         raise "Not implemented"
 
     def readResolution(self):
-        l = self.lines[-1][:-1].split(',')
+        l = self.lines[-1].strip().split(',')
         if l[0] != "IWH":
             raise "Bad file"
         return eval(l[2]),eval(l[3])
