@@ -361,6 +361,9 @@ class MapWidget(Widget):
             self.DrawTrackPoint(point,Color["darkred"])
         self.Draw()
 
+    def UpdateWaypoints(self):
+        self.Draw()
+
     def UpdateValues(self,heading,bearing,distance):
         self.heading = heading
         self.bearing = bearing
@@ -1274,6 +1277,10 @@ class S60MapView(View):
     def UpdateTime(self,time):
         pass
 
+    def UpdateWaypoints(self):
+        self.mapwidget.UpdateWaypoints()
+        self.update = True
+
     def UpdatePosition(self,point):
         #print point.latitude,point.longitude
         self.position = point
@@ -1730,6 +1737,7 @@ class S60Application(Application, AlarmResponder):
 
         self.storage.SaveWaypoint(self.storage.CreateWaypoint(name,latitude,longitude))
         self.storage.config["wpt_name"]=name
+        self.mapview.UpdateWaypoints()
 
     def ClearRefpoints(self):
         self.mapview.ClearRefpoints()
@@ -1763,6 +1771,7 @@ class S60Application(Application, AlarmResponder):
             name = waypoint.name
             self.storage.DeleteWaypoint(waypoint)
             appuifw.note(u"Waypoint %s deleted." % name, "info")
+            self.mapview.UpdateWaypoints()
 
     def QueryAndStore(self,msg,type,key):
         value = self.storage.GetValue(key)
