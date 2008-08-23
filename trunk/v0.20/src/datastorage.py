@@ -387,6 +387,7 @@ class DataStorage(AlarmResponder):
         while count < len(locations) and not found:
             try:
                 config = self.osal.OpenDbmFile(locations[count],"w")
+                self.configfile = locations[count]
                 found = True
             except:
                 count+=1
@@ -396,6 +397,7 @@ class DataStorage(AlarmResponder):
             #config = self.osal.OpenDbmFile(locations[count],"n")
             try:
                 config = self.osal.OpenDbmFile(locations[count],"n")
+                self.configfile = locations[count]
                 found = True
             except:
                 count+=1
@@ -417,18 +419,17 @@ class DataStorage(AlarmResponder):
 
     def GetValue(self,key):
         result = eval(self.config[key])
-        #print "GetValue(%s):" % key, result
         return result
 
 
 
 
     def InitWaypointList(self,dir='.'):
-        #print "InitWaypointList(%s)" % dir
+        filename = self.GetWaypointsFilename()
         try:
-            self.waypoints = self.osal.OpenDbmFile(self.GetWaypointsFilename(),"w")
+            self.waypoints = self.osal.OpenDbmFile(filename,"w")
         except:
-            self.waypoints = self.osal.OpenDbmFile(self.GetWaypointsFilename(),"n")
+            self.waypoints = self.osal.OpenDbmFile(filename,"n")
 
     def CreateWaypoint(self,name='',lat=0,lon=0,alt=0):
         self.waypoints[name] = Waypoint(name,lat,lon,alt)
@@ -445,7 +446,7 @@ class DataStorage(AlarmResponder):
 
 
     def InitTrackList(self,dir='.'):
-        #print "InitTrackList(%s)" % dir
+        print "InitTrackList using directory: ", dir
         selector = FileSelector(dir,self.osal.GetDbmExt())
         for file in selector.files.values():
             t = Track(file,open=False)
@@ -479,7 +480,6 @@ class DataStorage(AlarmResponder):
         # Track is now closed and name contains
         # base filename
 
-        #print "Deleting track %s" % name
         del self.tracks[name]
         os.remove(self.GetTrackFilename(name))
 
@@ -511,9 +511,8 @@ class DataStorage(AlarmResponder):
 
 
     def InitMapList(self,dir='.'):
-        #print "InitMapList(%s)" % dir
+        print "InitMapList using directory: ", dir
         selector = FileSelector(dir,".xml")
-        #self.maps = []
         self.maps = {}
         for key in selector.files.keys():
             filename = selector.files[key]
@@ -525,7 +524,6 @@ class DataStorage(AlarmResponder):
                 m = Map(key,base+'.jpg',refpoints)
             else:
                 m = Map(key,base+'.jpg',refpoints,resolution)
-            #self.maps.append(m)
             self.maps[m.name]=m
 
         selector = FileSelector(dir,".mcx")
@@ -539,7 +537,6 @@ class DataStorage(AlarmResponder):
                 m = Map(key,base+'.jpg',refpoints)
             else:
                 m = Map(key,base+'.jpg',refpoints,resolution)
-            #self.maps.append(m)
             self.maps[m.name]=m
 
         selector = FileSelector(dir,".map")
@@ -553,7 +550,6 @@ class DataStorage(AlarmResponder):
                 m = Map(key,base+'.jpg',refpoints)
             else:
                 m = Map(key,base+'.jpg',refpoints,resolution)
-            #self.maps.append(m)
             self.maps[m.name]=m
 
         selector = FileSelector(dir,".jpg")
@@ -804,27 +800,27 @@ s60defaults = {
         "app_ellips":"\"International\"",
 
         # Map settings
-        "map_dir":"u\"e:\\\\data\\\\tracker\\\\maps\"",
+        "map_dir":"u\"\\\\data\\\\tracker\\\\maps\"",
         "map_refname":"u\"Tracker-\"",
 
         # Waypoint settings
-        "wpt_dir":"u\"e:\\\\data\\\\tracker\"",
+        "wpt_dir":"u\"\\\\data\\\\tracker\"",
         "wpt_name":"u\"Tracker-\"",
         "wpt_tolerance":"100",
         "wpt_monitor":"None",
 
         # Route settings
-        "rte_dir":"u\"e:\\\\data\\\\tracker\\\\tracks\"",
+        "rte_dir":"u\"\\\\data\\\\tracker\\\\tracks\"",
         "rte_name":"u\"Tracker-\"",
 
         # Track settings
-        "trk_dir":"u\"e:\\\\data\\\\tracker\\\\tracks\"",
+        "trk_dir":"u\"\\\\data\\\\tracker\\\\tracks\"",
         "trk_name":"u\"Tracker-\"",
         "trk_interval":"25",
         "trk_recording":"None",
 
         # GPX settings
-        "gpx_dir":"u\"e:\\\\data\\\\tracker\\\\gpx\"",
+        "gpx_dir":"u\"\\\\data\\\\tracker\\\\gpx\"",
         "gpx_name":"u\"Tracker-\"",
 
         # View settings
@@ -860,23 +856,27 @@ class S60DataStorage(DataStorage):
             use_landmarks = False
             self.lmdb = None
 
-        self.InitWaypointList(self.GetValue("wpt_dir"))
-        self.InitMapList(self.GetValue("map_dir"))
-        self.InitTrackList(self.GetValue("trk_dir"))
+        self.InitWaypointList(self.GetDefaultDrive()+self.GetValue("wpt_dir"))
+        self.InitMapList(self.GetDefaultDrive()+self.GetValue("map_dir"))
+        self.InitTrackList(self.GetDefaultDrive()+self.GetValue("trk_dir"))
+
+    def GetDefaultDrive(self):
+        return self.configfile[:2]
 
     def GetWaypointsFilename(self):
-        return os.path.join(self.GetValue("wpt_dir"),"waypoints"+self.osal.GetDbmExt())
+        filename = os.path.join(self.GetDefaultDrive()+self.GetValue("wpt_dir"),"waypoints"+self.osal.GetDbmExt())
+        return filename
 
     def GetTrackFilename(self,name):
-        filename = os.path.join(self.GetValue("trk_dir"),name+self.osal.GetDbmExt())
+        filename = os.path.join(self.GetDefaultDrive()+self.GetValue("trk_dir"),name+self.osal.GetDbmExt())
         return filename
 
     def GetRouteFilename(self,name):
-        filename = os.path.join(self.GetValue("rte_dir"),name+self.osal.GetDbmExt())
+        filename = os.path.join(self.GetDefaultDrive()+self.GetValue("rte_dir"),name+self.osal.GetDbmExt())
         return filename
 
     def GetGPXFilename(self,name):
-        filename = os.path.join(self.GetValue("gpx_dir"),name+'.gpx')
+        filename = os.path.join(self.GetDefaultDrive()+self.GetValue("gpx_dir"),name+'.gpx')
         return filename
 
     def GetDefaultCategoryId(self):
@@ -899,13 +899,11 @@ class S60DataStorage(DataStorage):
         wpt.latitude = lat
         wpt.longitude = lon
         wpt.altitude = alt
-        #print "Created waypoint %s" % name
         return wpt
 
     def SaveWaypoint(self,waypoint):
         if self.lmdb is not None:
             if waypoint.lmid is None:
-                #print "adding waypoint %s to lmdb" % waypoint.name
                 landmark = landmarks.CreateLandmark()
                 landmark.SetLandmarkName(u'%s' % waypoint.name)
                 landmark.SetPosition(waypoint.latitude,waypoint.longitude,waypoint.altitude,0,0)
