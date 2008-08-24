@@ -394,7 +394,6 @@ class DataStorage(AlarmResponder):
 
         count = 0
         while count < len(locations) and not found:
-            #config = self.osal.OpenDbmFile(locations[count],"n")
             try:
                 config = self.osal.OpenDbmFile(locations[count],"n")
                 self.configfile = locations[count]
@@ -847,12 +846,32 @@ class S60DataStorage(DataStorage):
 
         DataStorage.__init__(self)
         DataStorage.instance = self
-        self.config = self.OpenConfig(s60locations,s60defaults)
+        try:
+            self.config = self.OpenConfig(s60locations,s60defaults)
+        except:
+            print "Creating data directories"
+            # Unable to create config file
+            # this probably means that the directory
+            # does not currently exist.
+            # So, let's create the data directories in c:\data\tracker
+            dirs = [
+                u"c:\\data\\tracker\\gpx",
+                u"c:\\data\\tracker\\maps",
+                u"c:\\data\\tracker\\tracks",
+                ]
+            try:
+                for d in dirs:
+                    if not os.path.isdir(d):
+                        os.makedirs(d)
+                self.config = self.OpenConfig(s60locations,s60defaults)
+            except:
+                print "Unable to create data directories!"
+
         try:
             import landmarks
             self.lmdb = landmarks.OpenDefaultDatabase()
         except:
-            print "unable to use landmarks module"
+            print "Unable to use landmarks module"
             use_landmarks = False
             self.lmdb = None
 
