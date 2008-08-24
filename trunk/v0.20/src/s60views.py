@@ -1845,15 +1845,16 @@ class S60Application(Application, AlarmResponder):
 
     def CloseTrack(self):
         tracks = self.storage.tracks.keys()
-        tracks.sort()
+        opentracks = []
         for t in tracks:
-            if not self.storage.tracks[t].isopen:
-                tracks.remove(t)
+            if self.storage.tracks[t].isopen:
+                opentracks.append(t)
+        opentracks.sort()
 
-        id = appuifw.selection_list(tracks)
+        id = appuifw.selection_list(opentracks)
         if id != None:
-            self.storage.tracks[tracks[id]].Close()
-            appuifw.note(u"Track %s closed." % tracks[id], "info")
+            self.storage.tracks[opentracks[id]].Close()
+            appuifw.note(u"Track %s closed." % opentracks[id], "info")
             self.mapview.CloseTrack()
 
     def DeleteTrack(self):
