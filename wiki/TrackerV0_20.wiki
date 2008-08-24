@@ -32,19 +32,20 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
 
 == Todo ==
   * Documentation: Installation guide
-  * Get debug/error logging system in place
   * Test input dialogs for invalid data handling
-  * Calibrate map from waypoints
-  * Implement routes
+  * (in svn) Calibrate map from waypoints
   * Show signal in mapview
   * Gauge options in dashview
+  * Implement routes
   * Create config dialog for map/track/waypoint dirs
+  * Get debug/error logging system in place
 
 == Known Bugs (v0.20.2) ==
   * (fixed in svn) Ozi .map files are not parsed correctly if the lines end in dos-style \r\n (use dos2unix to work around this problem)
   * (fixed in svn) Sis file does not create data directories (at least not as I would expect)
   * Sis file does not work on both C: and E: (on my phone it works on C: only, which is also where I installed python)
   * (fixed in svn) Waypoints in mapview not removed from map after delete (workaround: zoom in/out)
+  * (fixed in svn) Close track dialog shows all tracks, should be only open tracks
   * Some gauges sometimes show 'NaN' value
   * OSX/wxpython implementation needs a proper locking mechanism
 
