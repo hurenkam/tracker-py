@@ -514,42 +514,51 @@ class DataStorage(AlarmResponder):
         selector = FileSelector(dir,".xml")
         self.maps = {}
         for key in selector.files.keys():
-            filename = selector.files[key]
-            base,ext = os.path.splitext(filename)
-            f = MapFile(filename,"r")
-            resolution = f.readResolution()
-            refpoints = f.readRefpoints()
-            if resolution == None:
-                m = Map(key,base+'.jpg',refpoints)
-            else:
-                m = Map(key,base+'.jpg',refpoints,resolution)
-            self.maps[m.name]=m
+            try:
+                filename = selector.files[key]
+                base,ext = os.path.splitext(filename)
+                f = MapFile(filename,"r")
+                resolution = f.readResolution()
+                refpoints = f.readRefpoints()
+                if resolution == None:
+                    m = Map(key,base+'.jpg',refpoints)
+                else:
+                    m = Map(key,base+'.jpg',refpoints,resolution)
+                self.maps[m.name]=m
+            except:
+                print "Unable to parse calibration file ", filename
 
         selector = FileSelector(dir,".mcx")
         for key in selector.files.keys():
-            filename = selector.files[key]
-            base,ext = os.path.splitext(filename)
-            f = McxFile(filename,"r")
-            resolution = f.readResolution()
-            refpoints = f.readRefpoints()
-            if resolution == None:
-                m = Map(key,base+'.jpg',refpoints)
-            else:
-                m = Map(key,base+'.jpg',refpoints,resolution)
-            self.maps[m.name]=m
+            try:
+                filename = selector.files[key]
+                base,ext = os.path.splitext(filename)
+                f = McxFile(filename,"r")
+                resolution = f.readResolution()
+                refpoints = f.readRefpoints()
+                if resolution == None:
+                    m = Map(key,base+'.jpg',refpoints)
+                else:
+                    m = Map(key,base+'.jpg',refpoints,resolution)
+                self.maps[m.name]=m
+            except:
+                print "Unable to parse calibration file ", filename
 
         selector = FileSelector(dir,".map")
         for key in selector.files.keys():
-            filename = selector.files[key]
-            base,ext = os.path.splitext(filename)
-            f = OziFile(filename,"r")
-            resolution = f.readResolution()
-            refpoints = f.readRefpoints()
-            if resolution == None:
-                m = Map(key,base+'.jpg',refpoints)
-            else:
-                m = Map(key,base+'.jpg',refpoints,resolution)
-            self.maps[m.name]=m
+            try:
+                filename = selector.files[key]
+                base,ext = os.path.splitext(filename)
+                f = OziFile(filename,"r")
+                resolution = f.readResolution()
+                refpoints = f.readRefpoints()
+                if resolution == None:
+                    m = Map(key,base+'.jpg',refpoints)
+                else:
+                    m = Map(key,base+'.jpg',refpoints,resolution)
+                self.maps[m.name]=m
+            except:
+                print "Unable to parse calibration file ", filename
 
         selector = FileSelector(dir,".jpg")
         for key in selector.files.keys():
@@ -865,6 +874,8 @@ class S60DataStorage(DataStorage):
                         os.makedirs(d)
                 self.config = self.OpenConfig(s60locations,s60defaults)
             except:
+                self.config = s60defaults
+                self.configfile = "c:"
                 print "Unable to create data directories!"
 
         try:
@@ -875,9 +886,20 @@ class S60DataStorage(DataStorage):
             use_landmarks = False
             self.lmdb = None
 
-        self.InitWaypointList(self.GetDefaultDrive()+self.GetValue("wpt_dir"))
-        self.InitMapList(self.GetDefaultDrive()+self.GetValue("map_dir"))
-        self.InitTrackList(self.GetDefaultDrive()+self.GetValue("trk_dir"))
+        try:
+            self.InitWaypointList(self.GetDefaultDrive()+self.GetValue("wpt_dir"))
+        except:
+            print "Unable to read waypoints"
+
+        try:
+            self.InitMapList(self.GetDefaultDrive()+self.GetValue("map_dir"))
+        except:
+            print "Unable to read maps"
+
+        try:
+            self.InitTrackList(self.GetDefaultDrive()+self.GetValue("trk_dir"))
+        except:
+            print "Unable to read tracks"
 
     def GetDefaultDrive(self):
         return self.configfile[:2]
