@@ -28,6 +28,7 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
   * Load uncalibrated jpg images (and save calibration data once two refpoints are set)
   * Save map calibration data
   * pkg_tracker.sh script created to package tracker.py into a sis file
+  * can work without e: drive
 
 == Todo ==
   * Documentation: Installation guide
@@ -41,7 +42,7 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
 
 == Known Bugs (v0.20.2) ==
   * (fixed in svn) Ozi .map files are not parsed correctly if the lines end in dos-style \r\n (use dos2unix to work around this problem)
-  * Sis file does not create data directories (at least not as I would expect)
+  * (fixed in svn) Sis file does not create data directories (at least not as I would expect)
   * Sis file does not work on both C: and E: (on my phone it works on C: only)
   * (fixed in svn) Waypoints in mapview not removed from map after delete (workaround: zoom in/out)
   * Some gauges sometimes show 'NaN' value
