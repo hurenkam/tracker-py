@@ -1430,12 +1430,12 @@ class S60Application(Application, AlarmResponder):
                             (u'About',                      self.About),
                             (u'Map',
                                 (
-                                    (u'Open',               self.OpenMap),
-                                    (u'Close',              self.CloseMap),
-                                    (u'Import',             self.Dummy),
-                                    (u'Add Refpoint',       self.AddRefpoint),
-                                    (u'Save',               self.SaveCalibrationData),
-                                    (u'Clear Refpoints',    self.ClearRefpoints),
+                                    (u'Open',                   self.OpenMap),
+                                    (u'Close',                  self.CloseMap),
+                                    (u'Add Refpoint',           self.AddRefpoint),
+                                    (u'Add Ref from Waypoint',  self.AddRefFromWaypoint),
+                                    (u'Save',                   self.SaveCalibrationData),
+                                    (u'Clear Refpoints',        self.ClearRefpoints),
                                 )
                             ),
                             (u'Datum',
@@ -1761,6 +1761,15 @@ class S60Application(Application, AlarmResponder):
 
         self.mapview.AddRefpoint(name,latitude,longitude)
 
+    def AddRefFromWaypoint(self):
+        waypoints = self.storage.GetWaypoints()
+        waypoint = self.SelectWaypoint(waypoints)
+        if waypoint is not None:
+            latitude = waypoint.latitude
+            longitude = waypoint.longitude
+            name = waypoint.name
+            self.mapview.AddRefpoint(name,latitude,longitude)
+
     def SaveCalibrationData(self):
         self.mapview.SaveCalibrationData()
 
@@ -1837,6 +1846,10 @@ class S60Application(Application, AlarmResponder):
     def CloseTrack(self):
         tracks = self.storage.tracks.keys()
         tracks.sort()
+        for t in tracks:
+            if not self.storage.tracks[t].isopen:
+                tracks.remove(t)
+
         id = appuifw.selection_list(tracks)
         if id != None:
             self.storage.tracks[tracks[id]].Close()
