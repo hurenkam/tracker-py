@@ -31,13 +31,15 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
   * pkg_tracker.sh script created to package tracker.py into a sis file
   * can work without e: drive
 
-== Todo ==
+== Todo before 1st beta ==
   * Documentation: Installation guide
   * Show signal in mapview
   * Gauge options in dashview
   * Implement routes
-  * Create config dialog for map/track/waypoint dirs
+
+== Other Todo ==
   * Get debug/error logging system in place
+  * Create config dialog for map/track/waypoint dirs
 
 == Known Bugs (v0.20.3) ==
   * Sis file does not work on both C: and E: (on my phone it works on C: only, which is also where I installed python)
