@@ -958,6 +958,12 @@ class S60DataStorage(DataStorage):
         else:
             pass
 
+    def InitWaypointList(self,dir='.'):
+        if self.lmdb != None:
+            self.waypoints = self.ScanWaypoints()
+        else:
+            DataStorage.InitWaypointList(self, dir)
+
     def CreateWaypoint(self,name='',lat=0,lon=0,alt=0):
         wpt = S60Waypoint()
         wpt.name = name
@@ -995,12 +1001,12 @@ class S60DataStorage(DataStorage):
             DataStorage.DeleteWaypoint(self,waypoint)
 
     def GetWaypoints(self):
-        if self.lmdb is not None:
+        if self.lmdb != None:
             if self.waypoints == None:
-                self.waypoints = ScanWaypoints()
+                self.waypoints = self.ScanWaypoints()
             return self.waypoints
         else:
-            return DataStorage.GetWaypoints()
+            return DataStorage.GetWaypoints(self)
 
     def ScanWaypoints(self):
         dict = {}
