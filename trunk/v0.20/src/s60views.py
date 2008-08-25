@@ -1735,9 +1735,13 @@ class S60Application(Application, AlarmResponder):
             appuifw.note(u"Cancelled.", "info")
             return
 
-        self.storage.SaveWaypoint(self.storage.CreateWaypoint(name,latitude,longitude))
-        self.storage.config["wpt_name"]=name
-        self.mapview.UpdateWaypoints()
+        try:
+            self.storage.SaveWaypoint(self.storage.CreateWaypoint(name,latitude,longitude))
+            self.storage.config["wpt_name"]=name
+            self.mapview.UpdateWaypoints()
+        except:
+            appuifw.note(u"Unable to create waypoint %s." % name, "error")
+
 
     def ClearRefpoints(self):
         self.mapview.ClearRefpoints()
@@ -1759,16 +1763,22 @@ class S60Application(Application, AlarmResponder):
             appuifw.note(u"Cancelled.", "info")
             return
 
-        self.mapview.AddRefpoint(name,latitude,longitude)
+        try:
+            self.mapview.AddRefpoint(name,latitude,longitude)
+        except:
+            appuifw.note(u"Unable to create refpoint %s." % name, "error")
 
     def AddRefFromWaypoint(self):
         waypoints = self.storage.GetWaypoints()
         waypoint = self.SelectWaypoint(waypoints)
-        if waypoint is not None:
-            latitude = waypoint.latitude
-            longitude = waypoint.longitude
-            name = waypoint.name
-            self.mapview.AddRefpoint(name,latitude,longitude)
+        if waypoint == None:
+            appuifw.note(u"Cancelled.", "info")
+            return
+
+        try:
+            self.mapview.AddRefpoint(waypoint.name,waypoint.latitude,waypoint.longitude)
+        except:
+            appuifw.note(u"Unable to create refpoint %s." % waypoint.name, "error")
 
     def SaveCalibrationData(self):
         self.mapview.SaveCalibrationData()
@@ -1776,11 +1786,17 @@ class S60Application(Application, AlarmResponder):
     def DeleteWaypoint(self):
         waypoints = self.storage.GetWaypoints()
         waypoint = self.SelectWaypoint(waypoints)
-        if waypoint is not None:
-            name = waypoint.name
+        if waypoint == None:
+            appuifw.note(u"Cancelled.", "info")
+            return
+
+        name = waypoint.name
+        try:
             self.storage.DeleteWaypoint(waypoint)
             appuifw.note(u"Waypoint %s deleted." % name, "info")
             self.mapview.UpdateWaypoints()
+        except:
+            appuifw.note(u"Unable to delete waypoint %s." % name, "error")
 
     def QueryAndStore(self,msg,type,key):
         value = self.storage.GetValue(key)
@@ -1805,10 +1821,14 @@ class S60Application(Application, AlarmResponder):
 
     def StartRecording(self):
         trackname = self.QueryAndStore(u"Trackname:","text","trk_name")
-        if trackname is not None:
-            interval = self.QueryAndStore(u"Interval (m):","float","trk_interval")
-            if interval is not None:
+        if trackname == None:
+            appuifw.note(u"Cancelled.", "info")
+            return
 
+        interval = self.QueryAndStore(u"Interval (m):","float","trk_interval")
+        if interval is not None:
+
+            try:
                 if trackname in self.storage.tracks.keys():
                     track = self.storage.tracks[trackname]
                 else:
@@ -1821,9 +1841,9 @@ class S60Application(Application, AlarmResponder):
                 self.trackalarm = PositionAlarm(None,interval,self)
                 DataProvider.GetInstance().SetAlarm(self.trackalarm)
                 self.mapview.SetRecordingTrack(self.track)
-                return
+            except:
+                appuifw.note(u"Unable to start record track %s." % trackname, "error")
 
-        appuifw.note(u"Cancelled StartRecording!", "info")
 
     def StopRecording(self):
         self.storage.tracks[self.trackname]=self.track
@@ -1838,10 +1858,16 @@ class S60Application(Application, AlarmResponder):
         tracks = self.storage.tracks.keys()
         tracks.sort()
         id = appuifw.selection_list(tracks)
-        if id != None:
+        if id == None:
+            appuifw.note(u"Cancelled.", "info")
+            return
+
+        try:
             self.storage.tracks[tracks[id]].Open()
             appuifw.note(u"Track %s opened." % tracks[id], "info")
             self.mapview.OpenTrack(self.storage.tracks[tracks[id]])
+        except:
+            appuifw.note(u"Unable to open track %s." % tracks[id], "error")
 
     def CloseTrack(self):
         tracks = self.storage.tracks.keys()
@@ -1852,18 +1878,30 @@ class S60Application(Application, AlarmResponder):
         opentracks.sort()
 
         id = appuifw.selection_list(opentracks)
-        if id != None:
+        if id == None:
+            appuifw.note(u"Cancelled.", "info")
+            return
+
+        try:
             self.storage.tracks[opentracks[id]].Close()
             appuifw.note(u"Track %s closed." % opentracks[id], "info")
             self.mapview.CloseTrack()
+        except:
+            appuifw.note(u"Unable to close track %s." % opentracks[id], "error")
 
     def DeleteTrack(self):
         tracks = self.storage.tracks.keys()
         tracks.sort()
         id = appuifw.selection_list(tracks)
-        if id is not None:
+        if id == None:
+            appuifw.note(u"Cancelled.", "info")
+            return
+
+        try:
             self.storage.DeleteTrack(name=tracks[id])
             appuifw.note(u"Track %s deleted." % tracks[id], "info")
+        except:
+            appuifw.note(u"Unable to delete track %s." % tracks[id], "error")
 
 
 
@@ -1874,9 +1912,15 @@ class S60Application(Application, AlarmResponder):
         maps.sort()
 
         id = appuifw.selection_list(maps)
-        if id is not None:
+        if id == None:
+            appuifw.note(u"Cancelled.", "info")
+            return
+
+        try:
             self.mapview.LoadMap(d[maps[id]])
             appuifw.note(u"Map %s opened." % maps[id], "info")
+        except:
+            appuifw.note(u"Unable to open map %s." % maps[id], "error")
 
     def CloseMap(self):
         self.mapview.UnloadMap()
@@ -1886,21 +1930,30 @@ class S60Application(Application, AlarmResponder):
 
     def GPXExport(self):
         name = self.QueryAndStore(u"GPX Filename:","text","gpx_name")
-        if name is not None:
+        if name == None:
+            appuifw.note(u"Cancelled.", "info")
+            return
+
+        try:
             self.storage.GPXExport(name)
             appuifw.note(u"Exported waypoints and tracks to %s." % name, "info")
+        except:
+            appuifw.note(u"Unable to export gpx file %s." % name, "error")
 
     def GPXImport(self):
         files = FileSelector(self.storage.GetValue("gpx_dir"),".gpx").files
         keys = files.keys()
         keys.sort()
         id = appuifw.selection_list(keys)
-        if id is not None:
-            #print "importing %s" % files[keys[id]]
+        if id == None:
+            appuifw.note(u"Cancelled.", "info")
+            return
+
+        try:
             self.storage.GPXImport(files[keys[id]])
             appuifw.note(u"GPX file %s imported." % files[keys[id]], "info")
-        #else:
-        #    print "no file selected for opening"
+        except:
+            appuifw.note(u"Unable to import gpx file %s." % keys[id], "error")
 
 
 
@@ -1930,10 +1983,9 @@ class S60Application(Application, AlarmResponder):
         value = self.storage.GetValue("app_screensaver")
         self.storage.SetValue("app_screensaver",not value)
         self.UpdateMenu()
-        #print "Toggled screensaver"
 
     def About(self):
-        appuifw.note(u"Tracker\n(c) 2007,2008 by Mark Hurenkamp\nThis program is licensed under GPLv2.", "info")
+        appuifw.note(u"Tracker v0.20.x\n(c) 2007,2008 by Mark Hurenkamp\nThis program is licensed under GPLv2.", "info")
 
     def Dummy(self):
         appuifw.note(u"Not yet implemented.", "info")
