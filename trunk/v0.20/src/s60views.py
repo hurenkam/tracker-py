@@ -329,10 +329,12 @@ class MapWidget(Widget):
         self.Draw()
 
     def LoadMap(self):
+        if self.map == None:
+            return
+
         self.mapimage = Image.open(u"%s" % self.map.filename)
         self.zoom = Zoom.index(1.0)
-        if self.map != None:
-            self.map.SetSize(self.mapimage.size)
+        self.map.SetSize(self.mapimage.size)
         self.UpdatePosition(self.position)
         self.lastarea = None
         self.DrawOpenTracks()
@@ -355,6 +357,9 @@ class MapWidget(Widget):
         self.Draw()
 
     def UpdateTrack(self,track=None,point=None):
+        if self.map == None:
+            return
+
         if track != None:
             self.DrawTrack(track)
         if point != None:
@@ -1372,6 +1377,7 @@ class S60MapView(View):
         self.image.text(coords,text,font=f)
 
 
+
 class S60Application(Application, AlarmResponder):
     def __init__(self):
         Application.__init__(self)
@@ -1388,8 +1394,6 @@ class S60Application(Application, AlarmResponder):
             )
         appuifw.app.body = canvas
         appuifw.app.exit_key_handler=self.Exit
-
-        self.UpdateMenu()
 
         self.handledkeys = {
             EKeyLeftArrow:self.SelectMapview,
@@ -1415,63 +1419,123 @@ class S60Application(Application, AlarmResponder):
                  "DM"    : self.QueryDMPosition,
                  }
         self.position = self.storage.GetValue("app_lastknownposition")
-
-
+        self.UpdateMenu()
 
     def UpdateMenu(self):
+        storage = DataStorage.GetInstance()
+        map = self.mapview.mapwidget.map
+
+        def HasMaps():
+            return len(storage.maps) > 0
+
+        def HasOpenMap():
+            return map != None
+
+        def HasRefpoints():
+            if HasOpenMap():
+                return len(map.refpoints) > 0
+            else:
+                return False
+
+        def HasWaypoints():
+            return len(storage.GetWaypoints()) > 0
+
+        def HasOpenMapAndWaypoints():
+            return HasOpenMap() and HasWaypoints()
+
+        def HasTracks():
+            return len(storage.tracks) > 0
+
+        def HasOpenTracks():
+            return len(storage.GetOpenTracks()) > 0
+
+        def IsRecording():
+            return self.track != None
+
+        def IsNotRecording():
+            return not IsRecording()
+
+        def HasGPXItems():
+            return HasWaypoints() or HasTracks()
+
+        def Dummy():
+            return True
+
+        def CreateMenu(items):
+            menu = []
+            for i in items:
+                if i[0]():
+                    menu.append((i[1],i[2]))
+            if len(menu) > 0:
+                return tuple(menu)
+            else:
+                return None
+
+        map_items = [
+                # Precondition func       Text in menu               Function to call when selected
+                # =================================================================================
+                ( HasMaps,                u'Open',                   self.OpenMap ),
+                ( HasOpenMap,             u'Close',                  self.CloseMap ),
+                ( HasOpenMap,             u'Add Refpoint',           self.AddRefpoint ),
+                ( HasOpenMapAndWaypoints, u'Add Ref from Waypoint',  self.AddRefFromWaypoint ),
+                ( HasRefpoints,           u'Save',                   self.SaveCalibrationData ),
+                ( HasRefpoints,           u'Clear Refpoints',        self.ClearRefpoints ),
+            ]
+        wpt_items = [
+                # Precondition func       Text in menu               Function to call when selected
+                # =================================================================================
+                ( HasWaypoints,           u'Monitor',                self.MonitorWaypoint ),
+                ( Dummy,                  u'Add',                    self.AddWaypoint ),
+                ( HasWaypoints,           u'Delete',                 self.DeleteWaypoint ),
+            ]
+        trk_items = [
+                # Precondition func       Text in menu               Function to call when selected
+                # =================================================================================
+                ( IsNotRecording,         u'Start',                  self.StartRecording ),
+                ( IsRecording,            u'Stop',                   self.StopRecording ),
+                ( HasTracks,              u'Open',                   self.OpenTrack ),
+                ( HasOpenTracks,          u'Close',                  self.CloseTrack ),
+                ( HasTracks,              u'Delete',                 self.DeleteTrack ),
+            ]
+        gpx_items = [
+                # Precondition func       Text in menu               Function to call when selected
+                # =================================================================================
+                ( Dummy,                  u'Import GPX File',        self.GPXImport ),
+                ( HasGPXItems,            u'Export GPX File',        self.GPXExport ),
+            ]
+
         if self.storage.GetValue("app_screensaver"):
            togglescreensaver=(u"Disable Screensaver", self.ToggleScreenSaver)
         else:
            togglescreensaver=(u"Enable Screensaver", self.ToggleScreenSaver)
 
+        menu = [
+            togglescreensaver,
+            (u'About',                          self.About),
+            (u'Datum',
+                (
+                    (u'Wgs84 (dd.dddddd)',      self.DatumWgs84),
+                    (u'Wgs84 (dd mm\'ss.ss\")', self.DatumDMS),
+                    (u'Wgs84 (dd mm.mmmm\')',   self.DatumDM),
+                    (u'UTM',                    self.DatumUTM),
+                    (u'RD',                     self.DatumRD),
+                )
+            ) ]
 
-        appuifw.app.menu = [
-                            togglescreensaver,
-                            (u'About',                      self.About),
-                            (u'Map',
-                                (
-                                    (u'Open',                   self.OpenMap),
-                                    (u'Close',                  self.CloseMap),
-                                    (u'Add Refpoint',           self.AddRefpoint),
-                                    (u'Add Ref from Waypoint',  self.AddRefFromWaypoint),
-                                    (u'Save',                   self.SaveCalibrationData),
-                                    (u'Clear Refpoints',        self.ClearRefpoints),
-                                )
-                            ),
-                            (u'Datum',
-                                (
-                                    (u'Wgs84 (dd.dddddd)',      self.DatumWgs84),
-                                    (u'Wgs84 (dd mm\'ss.ss\")', self.DatumDMS),
-                                    (u'Wgs84 (dd mm.mmmm\')',   self.DatumDM),
-                                    (u'UTM',                    self.DatumUTM),
-                                    (u'RD',                     self.DatumRD),
-                                )
-                            ),
-                            (u'Waypoints',
-                                (
-                                    (u'Monitor',            self.MonitorWaypoint),
-                                    (u'Add',                self.AddWaypoint),
-                                    (u'Delete',             self.DeleteWaypoint),
-                                )
-                            ),
-                            (u'Tracks',
-                                (
-                                    (u'Start',              self.StartRecording),
-                                    (u'Stop',               self.StopRecording),
-                                    (u'Open',               self.OpenTrack),
-                                    (u'Close',              self.CloseTrack),
-                                    (u'Delete',             self.DeleteTrack),
-                                )
-                            ),
-                            (u'Im/Export',
-                                (
-                                    (u'Import GPX',         self.GPXImport),
-                                    #(u'Import KML',         self.Dummy),
-                                    (u'Export GPX',         self.GPXExport),
-                                    #(u'Export KML',         self.Dummy),
-                                )
-                            ),
-                            (u'About',                      self.About)]
+        map_menu = CreateMenu(map_items)
+        if map_menu != None:
+            menu.append( (u'Map', CreateMenu(map_items)) )
+        wpt_menu = CreateMenu(wpt_items)
+        if wpt_menu != None:
+            menu.append( (u'Waypoint', CreateMenu(wpt_items)) )
+        trk_menu = CreateMenu(trk_items)
+        if trk_menu != None:
+            menu.append( (u'Track', CreateMenu(trk_items)) )
+        gpx_menu = CreateMenu(gpx_items)
+        if gpx_menu != None:
+            menu.append( (u'Im/Export', CreateMenu(gpx_items)) )
+
+        appuifw.app.menu = menu
 
     def QueryAndStore(self,msg,type,key):
         value = self.storage.GetValue(key)
@@ -1615,7 +1679,7 @@ class S60Application(Application, AlarmResponder):
         self.storage.CloseAll()
         SetSystemApp(0)
         Application.Exit(self)
-        appuifw.app.set_exit()
+        #appuifw.app.set_exit()
 
 
 
@@ -1739,12 +1803,14 @@ class S60Application(Application, AlarmResponder):
             self.storage.SaveWaypoint(self.storage.CreateWaypoint(name,latitude,longitude))
             self.storage.config["wpt_name"]=name
             self.mapview.UpdateWaypoints()
+            self.UpdateMenu()
         except:
             appuifw.note(u"Unable to create waypoint %s." % name, "error")
 
 
     def ClearRefpoints(self):
         self.mapview.ClearRefpoints()
+        self.UpdateMenu()
 
     def AddRefpoint(self):
         pos = self.QueryPosition(self.position.latitude,self.position.longitude)
@@ -1765,6 +1831,7 @@ class S60Application(Application, AlarmResponder):
 
         try:
             self.mapview.AddRefpoint(name,latitude,longitude)
+            self.UpdateMenu()
         except:
             appuifw.note(u"Unable to create refpoint %s." % name, "error")
 
@@ -1777,6 +1844,7 @@ class S60Application(Application, AlarmResponder):
 
         try:
             self.mapview.AddRefpoint(waypoint.name,waypoint.latitude,waypoint.longitude)
+            self.UpdateMenu()
         except:
             appuifw.note(u"Unable to create refpoint %s." % waypoint.name, "error")
 
@@ -1795,6 +1863,7 @@ class S60Application(Application, AlarmResponder):
             self.storage.DeleteWaypoint(waypoint)
             appuifw.note(u"Waypoint %s deleted." % name, "info")
             self.mapview.UpdateWaypoints()
+            self.UpdateMenu()
         except:
             appuifw.note(u"Unable to delete waypoint %s." % name, "error")
 
@@ -1841,6 +1910,7 @@ class S60Application(Application, AlarmResponder):
                 self.trackalarm = PositionAlarm(None,interval,self)
                 DataProvider.GetInstance().SetAlarm(self.trackalarm)
                 self.mapview.SetRecordingTrack(self.track)
+                self.UpdateMenu()
             except:
                 appuifw.note(u"Unable to start record track %s." % trackname, "error")
 
@@ -1853,45 +1923,41 @@ class S60Application(Application, AlarmResponder):
         self.trackname = None
         self.mapview.SetRecordingTrack(None)
         appuifw.note(u"Recording stopped.")
+        self.UpdateMenu()
 
     def OpenTrack(self):
-        tracks = self.storage.tracks.keys()
-        tracks.sort()
+        tracks = self.storage.GetTrackNames()
         id = appuifw.selection_list(tracks)
         if id == None:
             appuifw.note(u"Cancelled.", "info")
             return
 
         try:
-            self.storage.tracks[tracks[id]].Open()
+            self.storage.OpenTrack(name=tracks[id])
             appuifw.note(u"Track %s opened." % tracks[id], "info")
             self.mapview.OpenTrack(self.storage.tracks[tracks[id]])
+            self.UpdateMenu()
         except:
             appuifw.note(u"Unable to open track %s." % tracks[id], "error")
 
     def CloseTrack(self):
-        tracks = self.storage.tracks.keys()
-        opentracks = []
-        for t in tracks:
-            if self.storage.tracks[t].isopen:
-                opentracks.append(t)
-        opentracks.sort()
-
+        opentracks = self.storage.GetOpenTracks()
         id = appuifw.selection_list(opentracks)
         if id == None:
             appuifw.note(u"Cancelled.", "info")
             return
 
+        trackname = opentracks[id]
         try:
-            self.storage.tracks[opentracks[id]].Close()
-            appuifw.note(u"Track %s closed." % opentracks[id], "info")
+            self.storage.CloseTrack(name=trackname)
+            appuifw.note(u"Track %s closed." % trackname, "info")
             self.mapview.CloseTrack()
+            self.UpdateMenu()
         except:
-            appuifw.note(u"Unable to close track %s." % opentracks[id], "error")
+            appuifw.note(u"Unable to close track %s." % trackname, "error")
 
     def DeleteTrack(self):
-        tracks = self.storage.tracks.keys()
-        tracks.sort()
+        tracks = self.storage.GetTrackNames()
         id = appuifw.selection_list(tracks)
         if id == None:
             appuifw.note(u"Cancelled.", "info")
@@ -1900,6 +1966,7 @@ class S60Application(Application, AlarmResponder):
         try:
             self.storage.DeleteTrack(name=tracks[id])
             appuifw.note(u"Track %s deleted." % tracks[id], "info")
+            self.UpdateMenu()
         except:
             appuifw.note(u"Unable to delete track %s." % tracks[id], "error")
 
@@ -1919,12 +1986,14 @@ class S60Application(Application, AlarmResponder):
         try:
             self.mapview.LoadMap(d[maps[id]])
             appuifw.note(u"Map %s opened." % maps[id], "info")
+            self.UpdateMenu()
         except:
             appuifw.note(u"Unable to open map %s." % maps[id], "error")
 
     def CloseMap(self):
         self.mapview.UnloadMap()
         appuifw.note(u"Map closed.", "info")
+        self.UpdateMenu()
 
 
 
@@ -1952,6 +2021,7 @@ class S60Application(Application, AlarmResponder):
         try:
             self.storage.GPXImport(files[keys[id]])
             appuifw.note(u"GPX file %s imported." % files[keys[id]], "info")
+            self.UpdateMenu()
         except:
             appuifw.note(u"Unable to import gpx file %s." % keys[id], "error")
 

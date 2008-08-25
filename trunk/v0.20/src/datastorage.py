@@ -320,7 +320,9 @@ class DataStorage(AlarmResponder):
     def __init__(self):
         self.maps = {}
         self.tracks = {}
+        self.opentracks = []
         self.routes = {}
+        self.openroutes = []
         self.waypoints = None
         self.config = None
         self.recording = None
@@ -367,7 +369,8 @@ class DataStorage(AlarmResponder):
             self.config = None
 
         for track in self.tracks.values():
-            track.Close()
+            if track.isopen:
+                track.Close()
 
         if self.waypoints != None:
             self.waypoints.close()
@@ -451,10 +454,24 @@ class DataStorage(AlarmResponder):
             t = Track(file,open=False)
             self.tracks[t.name]=t
 
-    def CloseTrack(self,track=None,name=None):
+    def OpenTrack(self,name=None,track=None):
         if track != None:
+            track.Open()
+            self.opentracks.append(track.name)
+            self.opentracks.sort()
+        elif name != None:
+            self.tracks[name].Open()
+            self.opentracks.append(name)
+            self.opentracks.sort()
+        else:
+            print "Track not found"
+
+    def CloseTrack(self,name=None,track=None):
+        if track != None:
+            self.opentracks.remove(track.name)
             track.Close()
         elif name != None:
+            self.opentracks.remove(name)
             self.tracks[name].Close()
         else:
             print "Track not found"
@@ -465,7 +482,7 @@ class DataStorage(AlarmResponder):
                 self.StopRecording()
 
             if track.isopen:
-                track.Close()
+                self.CloseTrack(track)
 
             name = track.name
 
@@ -474,7 +491,7 @@ class DataStorage(AlarmResponder):
                 self.StopRecording()
 
             if self.tracks[name].isopen:
-                self.tracks[name].Close()
+                self.CloseTrack(name = name)
 
         # Track is now closed and name contains
         # base filename
@@ -485,6 +502,14 @@ class DataStorage(AlarmResponder):
     def GetTracks(self):
         return self.tracks
 
+    def GetTrackNames(self):
+        keys = self.tracks.keys()
+        keys.sort()
+        return keys
+
+    def GetOpenTracks(self):
+        print self.opentracks
+        return self.opentracks
 
     def OpenRoute(self,name=''):
         route = Route(name,self)
@@ -970,24 +995,33 @@ class S60DataStorage(DataStorage):
             DataStorage.DeleteWaypoint(self,waypoint)
 
     def GetWaypoints(self):
-        dict = {}
         if self.lmdb is not None:
-            tsc = landmarks.CreateCategoryCriteria(0,0,u'Waypoint')
-            search = self.lmdb.CreateSearch()
-            operation = search.StartLandmarkSearch(tsc, landmarks.EAscending, 0, 0)
-            operation.Execute()
-            operation.Close()
-
-            count = search.NumOfMatches()
-            if count > 0:
-                iter = search.MatchIterator();
-                waypoints = iter.GetItemIds(0,count)
-                for lmid in waypoints:
-                    w = S60Waypoint(self.lmdb.ReadLandmark(lmid))
-                    if w.name not in dict.keys():
-                        dict[w.name] = w
-                    else:
-                        dict[u"%s-lmid%i" % (w.name,lmid)] = w
-            return dict
+            if self.waypoints == None:
+                self.waypoints = ScanWaypoints()
+            return self.waypoints
         else:
-            return DataStorage.GetWaypoints(self)
+            return DataStorage.GetWaypoints()
+
+    def ScanWaypoints(self):
+        dict = {}
+        tsc = landmarks.CreateCategoryCriteria(0,0,u'Waypoint')
+        search = self.lmdb.CreateSearch()
+        operation = search.StartLandmarkSearch(tsc, landmarks.EAscending, 0, 0)
+        operation.Execute()
+        operation.Close()
+
+        count = search.NumOfMatches()
+        if count > 0:
+            iter = search.MatchIterator();
+            waypoints = iter.GetItemIds(0,count)
+            for lmid in waypoints:
+                w = S60Waypoint(self.lmdb.ReadLandmark(lmid))
+                if w.name not in dict.keys():
+                    dict[w.name] = w
+                else:
+                    dict[u"%s-lmid%i" % (w.name,lmid)] = w
+        return dict
+
+    def CloseAll(self):
+        self.waypoints=None
+        DataStorage.CloseAll(self)
