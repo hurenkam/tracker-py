@@ -1,0 +1,12 @@
+== Fixed since v0.20.2 ==
+  * More robust user actions
+  * Calibrate map from waypoints
+  * Ozi .map files are now parsed correctly if the lines end in dos-style \r\n
+  * Tracker now creates data directories on C: if it can't find any
+  * Waypoints in mapview now removed from map after delete
+  * Close track dialog now shows only open tracks
+
+== Known Bugs ==
+  * Sis file does not work on both C: and E: (on my phone it works on C: only, which is also where I installed python)
+  * Some gauges sometimes show 'NaN' value
+  * OSX/wxpython implementation needs a proper locking mechanism
