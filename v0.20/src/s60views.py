@@ -1161,6 +1161,9 @@ class S60MapView(View):
 
         #self.LoadMap(map)
 
+    def UpdateMenu(self):
+        Application.GetInstance().UpdateMenu()
+
     def GetPosition(self):
         return self.mapwidget.GetPosition()
 
@@ -1242,12 +1245,14 @@ class S60MapView(View):
                         self.LoadMap(d[maps[id]])
                         self.mapwidget.FollowGPS()
                         appuifw.note(u"Map %s opened." % maps[id], "info")
+                        self.UpdateMenu()
                     else:
                         print "no file selected for opening"
 
                 if not onmap:
                     self.LoadMap(availablemaps[0])
                     appuifw.note(u"Map %s opened." % availablemaps[0].name, "info")
+                    self.UpdateMenu()
 
             else:
                 appuifw.note(u"No maps found.", "info")
@@ -1456,7 +1461,7 @@ class S60Application(Application, AlarmResponder):
             return not IsRecording()
 
         def HasGPXItems():
-            return HasWaypoints() or HasTracks()
+            return HasWaypoints() or HasOpenTracks()
 
         def Dummy():
             return True
