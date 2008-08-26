@@ -1046,7 +1046,7 @@ class S60DashView(View):
         self.positionwidget = PositionWidget((200,25))
         #self.positionwidget = PositionWidget((156,45))
         self.menuwidget = TextWidget("Menu",fgcolor=0xffffff,bgcolor=0x0000ff)
-        self.editwidget = TextWidget("Edit",fgcolor=0xffffff,bgcolor=0x0000ff)
+        self.optionswidget = TextWidget("Options",fgcolor=0xffffff,bgcolor=0x0000ff)
         self.exitwidget = TextWidget("Exit",fgcolor=0xffffff,bgcolor=0x0000ff)
 
         self.gauges = [
@@ -1209,7 +1209,7 @@ class S60DashView(View):
             source = ((0,0),s),
             scale = 0 )
 
-        w = self.editwidget
+        w = self.optionswidget
         s = w.GetImage().size
         self.image.blit(
             image = w.GetImage(),
