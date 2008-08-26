@@ -17,7 +17,7 @@ Install the dependencies:
 Each of these files needs to be signed at http://www.symbiansigned.com using at least Location
 capabilities (but why not choose all caps while you're there ;-)
 
-Then do the same with [http://tracker-py.google.com/files/tracker_v0.20.3-unsigned-testrange.sis Tracker]
+Then do the same with [http://tracker-py.googlecode.com/files/tracker_v0.20.3-unsigned-testrange.sis Tracker]
 
 Now, it should install fine on C: or E:, however, I've noticed that on my phone it only
 works on C: (which is where I also installed the other modules). So your best bet is to
