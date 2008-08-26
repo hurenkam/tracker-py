@@ -36,7 +36,12 @@ Color = {
           "batsignal":0xf04040,
           "gsmsignal":0x404040,
           "satsignal":0x4040f0,
-          "nosignal":0xe0e0e0
+          "nosignal":0xe0e0e0,
+
+          "bar_c1": 0x00cf00,
+          "bar_c2": 0xff0000,
+          "bar_c3": 0x000000,
+          "bar_bg": 0x0000ff,
     }
 
 def SetSystemApp(value):
@@ -102,6 +107,14 @@ class Widget:
         self.image.text((x,y),u'%s' % text,font=self.font,fill=self.fgcolor)
         return (w,h)
 
+    def DrawDot(self,point,color=0,width=1):
+        self.image.point(point,outline=color,width=width)
+
+    def DrawEllipse(self,rect,color,width=1,fill=None):
+        self.image.ellipse(rect,outline=color,width=width,fill=fill)
+
+
+
 class TextWidget(Widget):
     def __init__(self,text='',hpad=5,vpad=3,fgcolor=0,bgcolor=0xf0f0f0):
         Widget.__init__(self)
@@ -126,6 +139,85 @@ class TextWidget(Widget):
         Widget.Draw(self)
         self.DrawText( (self.hpad,self.vpad), u'%s' % self.text)
 
+
+
+class BarWidget(Widget):
+    def __init__(self,size=None,c1=Color["bar_c1"],c2=Color["bar_c2"],range=100,bars=7):
+        Widget.__init__(self)
+        self.bgcolor = Color["bar_bg"]
+        self.v1=40
+        self.v2=80
+        self.SetParams(c1,c2,range,bars)
+        self.Resize(size)
+
+    def SetParams(self,c1=Color["bar_c1"],c2=Color["bar_c2"],range=100,bars=7):
+        self.c1=c1
+        self.c2=c2
+        self.bars = bars
+        self.range = range
+        self.Resize(self.size)
+
+    def UpdateValues(self,v1,v2):
+        self.v1 = v1
+        self.v2 = v2
+        self.Draw()
+
+    def Resize(self,size):
+        if size == None:
+            Widget.Resize(self,size)
+            return
+
+        w,h = size
+        self.x = w / 2.0
+        self.y = 2
+        self.dy = (h-2*self.y)/float(self.bars)
+        #self.y -= self.dy/2
+        if self.dy > 4:
+            self.width = (self.dy - 2)
+        else:
+            self.width = 2
+
+        self.y += int(self.width/2.0+0.5)
+        Widget.Resize(self,size)
+
+    def Draw(self):
+        if self.size == None:
+            return
+
+        Widget.Draw(self)
+
+        if self.v1 == None:
+            v1=0
+        else:
+            v1 = int(0.5 + float(self.v1) * float(self.bars) / float(self.range))
+        if self.v2 == None:
+            v2 = v1
+        else:
+            v2 = int(0.5 + float(self.v2) * float(self.bars) / float(self.range))
+        if v2 < v1:
+            v2=v1
+
+        if v1 > self.bars:
+            v1 = self.bars
+        if v2 > self.bars:
+            v2 = self.bars
+        if v1 < 0:
+            v1 = 0
+        if v2 < 0:
+            v2 = 0
+
+        #print 0,v2,v2,self.bars,self.x,self.y,self.dy
+        for i in range (0,v1):
+            y = self.y+(self.bars-(i+1))*self.dy
+            self.DrawDot((self.x,y),self.c1,self.width)
+        for i in range (v1,v2):
+            y = self.y+(self.bars-(i+1))*self.dy
+            self.DrawDot((self.x,y),self.c2,self.width)
+        for i in range (v2,self.bars):
+            y = self.y+(self.bars-(i+1))*self.dy
+            self.DrawDot((self.x,y),Color["black"],self.width)
+
+
 class PositionWidget(Widget):
     def __init__(self,size = None):
         s = DataStorage.GetInstance()
@@ -137,7 +229,12 @@ class PositionWidget(Widget):
                  "DMS"   : self.GetDMSTexts,
                  "DM"    : self.GetDMTexts,
                  }
-        Widget.__init__(self,size)
+        Widget.__init__(self)
+        self.font = ('normal',11)
+        self.fontsize = 11
+        self.fgcolor = 0x0
+        self.bgcolor = 0xc0c0ff
+        self.Resize(size)
 
     def UpdateDatum(self):
         self.Draw()
@@ -936,23 +1033,25 @@ class S60DashView(View):
         self.storage = DataStorage.GetInstance()
         self.osal = Osal.GetInstance()
 
-        self.signalgauge = SignalGauge(None)
-        #self.clockgauge = ClockGauge(None)
+        #self.signalgauge = SignalGauge(None)
+        self.clockgauge = ClockGauge(None)
         self.waypointgauge = WaypointGauge(None)
         self.speedgauge = SpeedGauge(None)
         self.distancegauge = DistanceGauge(None)
         self.altitudegauge = AltitudeGauge(None)
         self.timegauge = TimeGauge(None)
 
-        self.positionwidget = PositionWidget((230,25))
+        self.satwidget = BarWidget((15,50),bars=5,range=10)
+        self.batwidget = BarWidget((15,50),bars=5,range=100)
+        self.positionwidget = PositionWidget((200,25))
         #self.positionwidget = PositionWidget((156,45))
         self.menuwidget = TextWidget("Menu",fgcolor=0xffffff,bgcolor=0x0000ff)
         self.editwidget = TextWidget("Edit",fgcolor=0xffffff,bgcolor=0x0000ff)
         self.exitwidget = TextWidget("Exit",fgcolor=0xffffff,bgcolor=0x0000ff)
 
         self.gauges = [
-                self.signalgauge,
-                #self.clockgauge,
+                #self.signalgauge,
+                self.clockgauge,
                 self.timegauge,
                 self.distancegauge,
                 self.speedgauge,
@@ -1013,18 +1112,27 @@ class S60DashView(View):
         self.update = True
 
     def UpdateSignal(self,signal):
-        bat = sysinfo.battery()*7/100
-        gsm = sysinfo.signal_bars()
-        sat = signal.used
-        self.signalgauge.UpdateValues({'bat':bat, 'gsm':gsm, 'sat':sat})
+        #bat = sysinfo.battery()*7/100
+        #gsm = sysinfo.signal_bars()
+        #sat = signal.used
+        #self.signalgauge.UpdateValues({'bat':bat, 'gsm':gsm, 'sat':sat})
+        if signal.used < 4:
+            self.satwidget.UpdateValues(signal.used,signal.found)
+        else:
+            self.satwidget.UpdateValues(signal.used,0)
         self.update = True
 
     def UpdateTime(self,time):
         if self.time is None:
             self.time = time
 
-        #self.clockgauge.UpdateValue(time)
+        self.clockgauge.UpdateValue(time)
         self.timegauge.UpdateValue(time-self.time)
+        bat = sysinfo.battery()
+        if bat <50:
+            self.batwidget.UpdateValues(0,bat)
+        else:
+            self.batwidget.UpdateValues(bat,0)
         self.update = True
 
     def UpdatePosition(self,point):
@@ -1067,11 +1175,29 @@ class S60DashView(View):
                     mask = g.GetMask(),
                     scale = 0 )
 
+        self.image.rectangle((0,270,self.image.size[0],self.image.size[1]),fill=0x0000ff)
+
+        w = self.satwidget
+        s = w.GetImage().size
+        self.image.blit(
+            image = w.GetImage(),
+            target = (0,270),
+            source = ((0,0),s),
+            scale = 0 )
+
+        w = self.batwidget
+        s = w.GetImage().size
+        self.image.blit(
+            image = w.GetImage(),
+            target = (225,270),
+            source = ((0,0),s),
+            scale = 0 )
+
         w = self.positionwidget
         s = w.GetImage().size
         self.image.blit(
             image = w.GetImage(),
-            target = (5,275),
+            target = (20,275),
             source = ((0,0),s),
             scale = 0 )
 
@@ -1079,7 +1205,7 @@ class S60DashView(View):
         s = w.GetImage().size
         self.image.blit(
             image = w.GetImage(),
-            target = (5,320-s[1]),
+            target = (20,320-s[1]),
             source = ((0,0),s),
             scale = 0 )
 
@@ -1095,7 +1221,7 @@ class S60DashView(View):
         s = w.GetImage().size
         self.image.blit(
             image = w.GetImage(),
-            target = (235-s[0],320-s[1]),
+            target = (220-s[0],320-s[1]),
             source = ((0,0),s),
             scale = 0 )
 
@@ -1128,11 +1254,13 @@ class S60MapView(View):
         self.storage = DataStorage.GetInstance()
         self.osal = Osal.GetInstance()
 
-        self.mapwidget = MapWidget((230,265))
+        self.mapwidget = MapWidget((230,260))
+        self.satwidget = BarWidget((15,50),bars=5,range=10)
+        self.batwidget = BarWidget((15,50),bars=5,range=100)
         self.menuwidget = TextWidget("Menu",fgcolor=0xffffff,bgcolor=0x0000ff)
         self.editwidget = TextWidget("Find map",fgcolor=0xffffff,bgcolor=0x0000ff)
         self.exitwidget = TextWidget("Exit",fgcolor=0xffffff,bgcolor=0x0000ff)
-        self.positionwidget = PositionWidget((230,25))
+        self.positionwidget = PositionWidget((200,25))
 
         self.distance = 0
         self.longitude = 0
@@ -1282,10 +1410,19 @@ class S60MapView(View):
         self.update = True
 
     def UpdateSignal(self,signal):
-        pass
+        if signal.used < 4:
+            self.satwidget.UpdateValues(signal.used,signal.found)
+        else:
+            self.satwidget.UpdateValues(signal.used,0)
+        self.update = True
 
     def UpdateTime(self,time):
-        pass
+        bat = sysinfo.battery()
+        if bat <50:
+            self.batwidget.UpdateValues(0,bat)
+        else:
+            self.batwidget.UpdateValues(bat,0)
+        self.update = True
 
     def UpdateWaypoints(self):
         self.mapwidget.UpdateWaypoints()
@@ -1318,6 +1455,8 @@ class S60MapView(View):
         if self.image !=None:
             self.update = False
 
+            self.image.rectangle((0,270,self.image.size[0],self.image.size[1]),fill=0x0000ff)
+
             w = self.mapwidget
             s = w.GetImage().size
             self.image.blit(
@@ -1326,12 +1465,28 @@ class S60MapView(View):
                 source = ((0,0),s),
                 scale = 0 )
 
+            w = self.satwidget
+            s = w.GetImage().size
+            self.image.blit(
+                image = w.GetImage(),
+                target = (0,270),
+                source = ((0,0),s),
+                scale = 0 )
+
+            w = self.batwidget
+            s = w.GetImage().size
+            self.image.blit(
+                image = w.GetImage(),
+                target = (225,270),
+                source = ((0,0),s),
+                scale = 0 )
+
             w = self.positionwidget
             w.UpdatePosition(self.mapwidget.GetPosition())
             s = w.GetImage().size
             self.image.blit(
                 image = w.GetImage(),
-                target = (5,275),
+                target = (20,275),
                 source = ((0,0),s),
                 scale = 0 )
 
@@ -1339,7 +1494,7 @@ class S60MapView(View):
             s = w.GetImage().size
             self.image.blit(
                 image = w.GetImage(),
-                target = (5,320-s[1]),
+                target = (20,320-s[1]),
                 source = ((0,0),s),
                 scale = 0 )
 
@@ -1355,7 +1510,7 @@ class S60MapView(View):
             s = w.GetImage().size
             self.image.blit(
                 image = w.GetImage(),
-                target = (235-s[0],320-s[1]),
+                target = (220-s[0],320-s[1]),
                 source = ((0,0),s),
                 scale = 0 )
 
@@ -1571,25 +1726,30 @@ class S60Application(Application, AlarmResponder):
 
     def DatumWgs84(self):
         self.storage.SetValue("app_datum","Wgs84")
-        self.view.UpdateDatum()
+        for view in self.views:
+            view.UpdateDatum()
 
     def DatumDMS(self):
         self.storage.SetValue("app_datum","DMS")
-        self.view.UpdateDatum()
+        for view in self.views:
+            view.UpdateDatum()
 
     def DatumDM(self):
         self.storage.SetValue("app_datum","DM")
-        self.view.UpdateDatum()
+        for view in self.views:
+            view.UpdateDatum()
 
     def DatumUTM(self):
         self.storage.SetValue("app_datum","UTM")
         ellips = self.QueryListAndStore(datums.Ellipsoid.keys(),"app_ellips")
         appuifw.note(u"Selected UTM with ellips %s" % ellips, "info")
-        self.view.UpdateDatum()
+        for view in self.views:
+            view.UpdateDatum()
 
     def DatumRD(self):
         self.storage.SetValue("app_datum","RD")
-        self.view.UpdateDatum()
+        for view in self.views:
+            view.UpdateDatum()
 
     def SelectView(self,id):
         if id < 0 or id > 1:
