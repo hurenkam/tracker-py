@@ -6,6 +6,26 @@ WishList | RoadMap | CodeArchitecture
 Tracker has two main views, uses the left softkey for a menu, the righ softkey as exit,
 and the D-Pad center key (ok/select) as a context dependent softkey.
 
+== Installation ==
+
+Install the dependencies:
+  * [http://sourceforge.net/project/showfiles.php?group_id=154155 pyS60] 1.4.x (mandatory)
+  * [https://www.iyouit.eu/portal/software.aspx Landmarks module] (recommended)
+  * [http://sourceforge.net/project/showfiles.php?group_id=132176 Envy module] (recommended)
+  * [http://cyke64.googlepages.com Misty module] (recommended)
+
+Each of these files needs to be signed at http://www.symbiansigned.com using at least Location
+capabilities (but why not choose all caps while you're there ;-)
+
+Then do the same with [http://tracker-py.google.com/files/tracker_v0.20.3-unsigned-testrange.sis Tracker]
+
+Now, it should install fine on C: or E:, however, I've noticed that on my phone it only
+works on C: (which is where I also installed the other modules). So your best bet is to
+simply install this on C:
+
+When all is installed, you should find a tracker application in your applications folder,
+you can select this to startup Tracker.
+
 == Menus ==
 
 Currently the menus are not view dependent, which means that the following applies to all
