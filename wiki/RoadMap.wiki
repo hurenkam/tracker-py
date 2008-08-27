@@ -10,6 +10,7 @@ see the WishList
 New versions will be focussed on bugfixing, but some small
 features may get implemented here.
   * Dynamic menus
+  * Routes
 
 == Short term (v0.21.x) ==
   * Multiple resolutions
