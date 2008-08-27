@@ -36,10 +36,9 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
   * Some gauges sometimes show 'NaN' value
 
 == Todo before 1st beta ==
-  * Documentation: Installation guide
   * (in svn) Show signal in mapview
   * Gauge options in dashview
-  * Implement routes
+  * (in svn) Implement routes
   * Make Sis file work on E:
 
 == Other Todo ==
