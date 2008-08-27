@@ -405,21 +405,21 @@ class Route:
         self.filename = filename
         b,e = os.path.splitext(filename)
         self.name = os.path.basename(b)
-        self.osal = osal.Osal.GetInstance()
+        self.osal = Osal.GetInstance()
+        self.isrecording = False
         if open:
             self.Open()
-            self.data[u"name"]=u"%s" % self.name
+            self.data["name"]="%s" % self.name
 
     def Open(self):
         if self.isopen:
             return
 
         try:
-            self.data = self.osal.OpenDbmFile(filename,"w")
+            self.data = self.osal.OpenDbmFile(self.filename,"w")
         except:
-            self.data = self.osal.OpenDbmFile(filename,"n")
+            self.data = self.osal.OpenDbmFile(self.filename,"n")
         self.isopen = True
-
 
     def AddPoint(self,point):
         self.data[str(point.time)] = u"(%s,%s,%s)" % (point.latitude,point.longitude,point.altitude)
@@ -432,6 +432,65 @@ class Route:
         if self.isopen:
             self.data.close()
         self.isopen = False
+
+    def FindPointsOnMap(self,map):
+        def isinrange(v,v1,v2):
+            if v1>v2:
+                if v < v1 and v > v2:
+                    return True
+            else:
+                if v > v1 and v < v2:
+                    return True
+            return False
+
+        if not self.isopen:
+            print "track not open"
+            return []
+
+        if not map.iscalibrated:
+            print "map not calibrated"
+            return []
+
+        keys =  self.data.keys()
+        try:
+            keys.remove("name")
+        except:
+            pass
+
+        lat1,lon1,lat2,lon2 = map.WgsArea()
+        list = []
+        keys.sort()
+        for k in keys:
+            lat,lon,alt = eval(self.data[k])
+            if isinrange(lat,lat1,lat2) and isinrange(lon,lon1,lon2):
+                list.append(Point(k,lat,lon,alt))
+
+        return list
+
+
+    def GetPoints(self):
+        if not self.isopen:
+            print "route not open"
+            return []
+
+        keys =  self.data.keys()
+        try:
+            keys.remove("name")
+        except:
+            pass
+
+        list = []
+        keys.sort()
+        for k in keys:
+            lat,lon,alt = eval(self.data[k])
+            list.append(Point(k,lat,lon,alt))
+
+        return list
+
+
+    def PrintInfo(self,area=None):
+        print "Track %s" % self.name
+
 
 
 

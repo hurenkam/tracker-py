@@ -508,30 +508,69 @@ class DataStorage(AlarmResponder):
         return keys
 
     def GetOpenTracks(self):
-        print self.opentracks
+        #print self.opentracks
         return self.opentracks
 
-    def OpenRoute(self,name=''):
-        route = Route(name,self)
-        return route
 
-    def CloseRoute(self,route):
-        route.Close()
 
-    def DeleteRoute(self,route):
-        if route in self.routes.values():
-            name = route.data["name"]
-            self.CloseTrack(route)
+    def InitRouteList(self,dir='.'):
+        print "InitRouteList using directory: ", dir
+        selector = FileSelector(dir,self.osal.GetDbmExt())
+        for file in selector.files.values():
+            r = Route(file,open=False)
+            self.routes[r.name]=r
+
+    def OpenRoute(self,name=None,route=None):
+        if route != None:
+            route.Open()
+            self.openroutes.append(route.name)
+            self.openroutes.sort()
+        elif name != None:
+            self.routes[name].Open()
+            self.openroutes.append(name)
+            self.openroutes.sort()
         else:
             print "Route not found"
-            return
 
-        print "Deleting route %s" % name
+    def CloseRoute(self,name=None,route=None):
+        if route != None:
+            self.openroute.remove(route.name)
+            route.Close()
+        elif name != None:
+            self.openroutes.remove(name)
+            self.routes[name].Close()
+        else:
+            print "Route not found"
+
+    def DeleteRoute(self,name=None,route=None):
+        if route != None:
+            if route.isopen:
+                self.CloseRoute(route)
+
+            name = route.name
+
+        elif name != None:
+            if self.routes[name].isopen:
+                self.CloseRoute(name = name)
+
+        # Route is now closed and name contains
+        # base filename
+
         del self.routes[name]
-
+        os.remove(self.GetRouteFilename(name))
 
     def GetRoutes(self):
         return self.routes
+
+    def GetRouteNames(self):
+        keys = self.routes.keys()
+        keys.sort()
+        return keys
+
+    def GetOpenRoutes(self):
+        #print self.opentracks
+        return self.openroutes
+
 
 
     def InitMapList(self,dir='.'):
@@ -642,6 +681,7 @@ class DataStorage(AlarmResponder):
                 route = Route(self.GetRouteFilename(name))
                 file.GetRoutePoints(route,node)
                 route.Close()
+                self.routes[u"%s" % name]=route
 
         trknodes = file.GetTrackNodes()
         if trknodes != None:
@@ -650,6 +690,7 @@ class DataStorage(AlarmResponder):
                 track = Track(self.GetTrackFilename(name))
                 file.GetTrackPoints(track,node)
                 track.Close()
+                self.tracks[u"%s" % name]=track
 
         file.close()
 
@@ -843,7 +884,7 @@ s60defaults = {
         "wpt_monitor":"None",
 
         # Route settings
-        "rte_dir":"u\"\\\\data\\\\tracker\\\\tracks\"",
+        "rte_dir":"u\"\\\\data\\\\tracker\\\\routes\"",
         "rte_name":"u\"Tracker-\"",
 
         # Track settings
@@ -892,6 +933,7 @@ class S60DataStorage(DataStorage):
                 u"c:\\data\\tracker\\gpx",
                 u"c:\\data\\tracker\\maps",
                 u"c:\\data\\tracker\\tracks",
+                u"c:\\data\\tracker\\routes",
                 ]
             try:
                 for d in dirs:
@@ -925,6 +967,12 @@ class S60DataStorage(DataStorage):
             self.InitTrackList(self.GetDefaultDrive()+self.GetValue("trk_dir"))
         except:
             print "Unable to read tracks"
+
+        try:
+            self.InitRouteList(self.GetDefaultDrive()+self.GetValue("rte_dir"))
+        except:
+            print "Unable to read routes"
+
 
     def GetDefaultDrive(self):
         return self.configfile[:2]

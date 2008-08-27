@@ -123,17 +123,25 @@ class GPXFile(file):
 
 
     def GetRoutePoints(self,route,node):
-        for rtept in route.childnodes['rtept']:
+        osal = Osal.GetInstance()
+        reftime = osal.GetTime()
+        for rtept in node.childnodes['rtept']:
 
             lat = rtept.properties['lat']
             lon = rtept.properties['lon']
+            keys = rtept.childnodes.keys()
+            if 'time' in keys:
+                time = rtept.childnodes['time'][0].content
+            else:
+                time = osal.GetIsoTime(reftime)
+                reftime += 1
 
             keys = rtept.childnodes.keys()
             if 'ele' in keys:
                 alt = eval(rtept.childnodes['ele'][0].content)
-                route.AddPoint(Point(lat,lon,alt))
+                route.AddPoint(Point(time,lat,lon,alt))
             else:
-                route.AddPoint(Point(lat,lon))
+                route.AddPoint(Point(time,lat,lon))
 
 
     def GetTrackNodes(self):
