@@ -438,8 +438,7 @@ class MapWidget(Widget):
             for p in points:
                 if p0 != None:
                     self.DrawRouteSection(p0,p,color)
-                else:
-                    p0 = p
+                p0 = p
 
         else:
             print "No route sections found"
@@ -2206,17 +2205,13 @@ class S60Application(Application, AlarmResponder):
             appuifw.note(u"Cancelled.", "info")
             return
 
-        self.storage.OpenRoute(name=routes[id])
-        appuifw.note(u"Route %s opened." % routes[id], "info")
-        self.mapview.OpenRoute(self.storage.routes[routes[id]])
-        self.UpdateMenu()
-        #try:
-        #    self.storage.OpenRoute(name=routes[id])
-        #    appuifw.note(u"Route %s opened." % routes[id], "info")
-        #    self.mapview.OpenRoute(self.storage.routes[routes[id]])
-        #    self.UpdateMenu()
-        #except:
-        #    appuifw.note(u"Unable to open route %s." % routes[id], "error")
+        try:
+            self.storage.OpenRoute(name=routes[id])
+            appuifw.note(u"Route %s opened." % routes[id], "info")
+            self.mapview.OpenRoute(self.storage.routes[routes[id]])
+            self.UpdateMenu()
+        except:
+            appuifw.note(u"Unable to open route %s." % routes[id], "error")
 
     def CloseRoute(self):
         openroutes = self.storage.GetOpenRoutes()
