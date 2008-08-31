@@ -2413,6 +2413,8 @@ class S60Application(Application, AlarmResponder):
                 self.handledkeys[key](event)
             else:
                 self.view.KeyboardEvent(event)
+        except AttributeError:
+            pass # view not yet available
         except:
             XStore()
 
@@ -2421,6 +2423,8 @@ class S60Application(Application, AlarmResponder):
         try:
             if self.view:
                 self.view.Show()
+        except AttributeError:
+            pass # view not yet available
         except:
             XStore()
 
@@ -2428,6 +2432,8 @@ class S60Application(Application, AlarmResponder):
         try:
             if self.view:
                 self.view.Resize(rect)
+        except AttributeError:
+            pass # view not yet available
         except:
             XStore()
 
