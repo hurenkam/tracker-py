@@ -4,6 +4,9 @@ from XmlParser import *
 from gpx import *
 import os
 from osal import *
+from trace import safe_call as XWrap
+from trace import dump_exceptions as XSave
+from trace import store_exception as XStore
 
 class MapFile(file):
 #<?xml version "1.0" ?>
@@ -311,6 +314,7 @@ class OziFile(file):
             #print "found refpoint", name, x,y,lat,lon
             return Refpoint("",lat,lon,x,y)
         except:
+            XStore()
             #print "invalid refpoint", name
             pass
 
@@ -590,6 +594,7 @@ class DataStorage(AlarmResponder):
                     m = Map(key,base+'.jpg',refpoints,resolution)
                 self.maps[m.name]=m
             except:
+                XStore()
                 print "Unable to parse calibration file ", filename
 
         selector = FileSelector(dir,".mcx")
@@ -606,6 +611,7 @@ class DataStorage(AlarmResponder):
                     m = Map(key,base+'.jpg',refpoints,resolution)
                 self.maps[m.name]=m
             except:
+                XStore()
                 print "Unable to parse calibration file ", filename
 
         selector = FileSelector(dir,".map")
@@ -622,6 +628,7 @@ class DataStorage(AlarmResponder):
                     m = Map(key,base+'.jpg',refpoints,resolution)
                 self.maps[m.name]=m
             except:
+                XStore()
                 print "Unable to parse calibration file ", filename
 
         selector = FileSelector(dir,".jpg")
@@ -960,6 +967,7 @@ class S60DataStorage(DataStorage):
                         os.makedirs(d)
                 self.config = self.OpenConfig(s60locations,s60defaults)
             except:
+                XStore()
                 self.config = s60defaults
                 self.configfile = "c:"
                 print "Unable to create data directories!"
@@ -975,21 +983,25 @@ class S60DataStorage(DataStorage):
         try:
             self.InitWaypointList(self.GetDefaultDrive()+self.GetValue("wpt_dir"))
         except:
+            XStore()
             print "Unable to read waypoints"
 
         try:
             self.InitMapList(self.GetDefaultDrive()+self.GetValue("map_dir"))
         except:
+            XStore()
             print "Unable to read maps"
 
         try:
             self.InitTrackList(self.GetDefaultDrive()+self.GetValue("trk_dir"))
         except:
+            XStore()
             print "Unable to read tracks"
 
         try:
             self.InitRouteList(self.GetDefaultDrive()+self.GetValue("rte_dir"))
         except:
+            XStore()
             print "Unable to read routes"
 
 

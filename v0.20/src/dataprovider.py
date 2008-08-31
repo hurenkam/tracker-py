@@ -1,6 +1,9 @@
 import datums
 from osal import Osal
 from datatypes import *
+from trace import safe_call as XWrap
+from trace import dump_exceptions as XSave
+from trace import store_exception as XStore
 
 class DataProvider:
     instance = None
@@ -25,7 +28,7 @@ class DataProvider:
                 if DataProvider.alarmlist[key].SingleShot():
                     del DataProvider.alarmlist[key]
           except:
-            pass
+            XStore()
 
     def SetAlarm(alarm):
         alarm.id = DataProvider.idcount

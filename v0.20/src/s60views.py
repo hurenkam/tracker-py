@@ -10,6 +10,9 @@ import datums
 import sys
 from osal import *
 from datastorage import *
+from trace import safe_call as XWrap
+from trace import dump_exceptions as XSave
+from trace import store_exception as XStore
 
 Zoom =     [ 0.5, 0.75, 1.0, 1.5, 2.0 ]
 Scroll =   [ 100,   20,  10,   5,   1 ]
@@ -2107,6 +2110,7 @@ class S60Application(Application, AlarmResponder):
             self.mapview.UpdateWaypoints()
             self.UpdateMenu()
         except:
+            XStore()
             appuifw.note(u"Unable to create waypoint %s." % name, "error")
 
 
@@ -2135,6 +2139,7 @@ class S60Application(Application, AlarmResponder):
             self.mapview.AddRefpoint(name,latitude,longitude)
             self.UpdateMenu()
         except:
+            XStore()
             appuifw.note(u"Unable to create refpoint %s." % name, "error")
 
     def AddRefFromWaypoint(self):
@@ -2148,6 +2153,7 @@ class S60Application(Application, AlarmResponder):
             self.mapview.AddRefpoint(waypoint.name,waypoint.latitude,waypoint.longitude)
             self.UpdateMenu()
         except:
+            XStore()
             appuifw.note(u"Unable to create refpoint %s." % waypoint.name, "error")
 
     def SaveCalibrationData(self):
@@ -2167,6 +2173,7 @@ class S60Application(Application, AlarmResponder):
             self.mapview.UpdateWaypoints()
             self.UpdateMenu()
         except:
+            XStore()
             appuifw.note(u"Unable to delete waypoint %s." % name, "error")
 
     def QueryAndStore(self,msg,type,key):
@@ -2216,6 +2223,7 @@ class S60Application(Application, AlarmResponder):
                 self.mapview.SetRecordingTrack(self.track)
                 self.UpdateMenu()
             except:
+                XStore()
                 appuifw.note(u"Unable to start record track %s." % trackname, "error")
 
 
@@ -2242,6 +2250,7 @@ class S60Application(Application, AlarmResponder):
             self.mapview.OpenTrack(self.storage.tracks[tracks[id]])
             self.UpdateMenu()
         except:
+            XStore()
             appuifw.note(u"Unable to open track %s." % tracks[id], "error")
 
     def CloseTrack(self):
@@ -2258,6 +2267,7 @@ class S60Application(Application, AlarmResponder):
             self.mapview.CloseTrack()
             self.UpdateMenu()
         except:
+            XStore()
             appuifw.note(u"Unable to close track %s." % trackname, "error")
 
     def DeleteTrack(self):
@@ -2272,6 +2282,7 @@ class S60Application(Application, AlarmResponder):
             appuifw.note(u"Track %s deleted." % tracks[id], "info")
             self.UpdateMenu()
         except:
+            XStore()
             appuifw.note(u"Unable to delete track %s." % tracks[id], "error")
 
     def TrackOptions(self):
@@ -2291,6 +2302,7 @@ class S60Application(Application, AlarmResponder):
             self.mapview.OpenRoute(self.storage.routes[routes[id]])
             self.UpdateMenu()
         except:
+            XStore()
             appuifw.note(u"Unable to open route %s." % routes[id], "error")
 
     def CloseRoute(self):
@@ -2307,6 +2319,7 @@ class S60Application(Application, AlarmResponder):
             self.mapview.CloseRoute()
             self.UpdateMenu()
         except:
+            XStore()
             appuifw.note(u"Unable to close route %s." % trackname, "error")
 
     def DeleteRoute(self):
@@ -2321,6 +2334,7 @@ class S60Application(Application, AlarmResponder):
             appuifw.note(u"Route %s deleted." % routes[id], "info")
             self.UpdateMenu()
         except:
+            XStore()
             appuifw.note(u"Unable to delete route %s." % tracks[id], "error")
 
     def RouteOptions(self):
@@ -2343,6 +2357,7 @@ class S60Application(Application, AlarmResponder):
             appuifw.note(u"Map %s opened." % maps[id], "info")
             self.UpdateMenu()
         except:
+            XStore()
             appuifw.note(u"Unable to open map %s." % maps[id], "error")
 
     def CloseMap(self):
@@ -2364,6 +2379,7 @@ class S60Application(Application, AlarmResponder):
             self.storage.GPXExport(name)
             appuifw.note(u"Exported waypoints and tracks to %s." % name, "info")
         except:
+            XStore()
             appuifw.note(u"Unable to export gpx file %s." % name, "error")
 
     def GPXImport(self):
@@ -2383,6 +2399,7 @@ class S60Application(Application, AlarmResponder):
             appuifw.note(u"GPX file %s imported." % files[keys[id]], "info")
             self.UpdateMenu()
         except:
+            XStore()
             appuifw.note(u"Unable to import gpx file %s." % keys[id], "error")
 
     def GPXOptions(self):
@@ -2397,7 +2414,7 @@ class S60Application(Application, AlarmResponder):
             else:
                 self.view.KeyboardEvent(event)
         except:
-            pass
+            XStore()
 
 
     def Redraw(self,rect=None):
@@ -2405,14 +2422,14 @@ class S60Application(Application, AlarmResponder):
             if self.view:
                 self.view.Show()
         except:
-            pass
+            XStore()
 
     def Resize(self,rect=None):
         try:
             if self.view:
                 self.view.Resize(rect)
         except:
-            pass
+            XStore()
 
     def ToggleScreenSaver(self):
         value = self.storage.GetValue("app_screensaver")
