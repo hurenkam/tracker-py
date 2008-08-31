@@ -7,6 +7,7 @@ import appuifw
 import time
 import math
 import datums
+import sys
 from osal import *
 from datastorage import *
 
@@ -865,10 +866,10 @@ class CompasGauge(Gauge):
 
 class TwoHandGauge(Gauge):
 
-    def __init__(self,radius=None,name='',units=u'%8.0f',divider=(1,10),scale=(10,50)):
+    def __init__(self,radius=None,name='',format=u'%8.0f',divider=(1,10),scale=(10,50)):
         Gauge.__init__(self,radius)                   #   100 1000
         self.name = name
-        self.units = units
+        self.format = format
         self.longdivider = divider[0]
         self.shortdivider = divider[1]
         self.factor = divider[1]/divider[0]
@@ -885,19 +886,87 @@ class TwoHandGauge(Gauge):
         if (self.value != None):
             longhand =  (self.value % self.shortdivider) / self.longdivider * 360/self.factor
             shorthand = (self.value / self.shortdivider)                    * 360/self.factor
-            self.DrawText(((self.radius,1.6*self.radius)), self.units % self.value, size=1.5)
+            self.DrawText(((self.radius,1.6*self.radius)), self.format % self.value, size=1.5)
             self.DrawTriangleHand (longhand,  0.7 * self.radius, 0, 4)
             self.DrawTriangleHand (shorthand, 0.5 * self.radius, 0, 4)
 
 
 class DistanceGauge(TwoHandGauge):
+#        "distance_units":"\"km\"",
+#        "distance_type":\"trip\",
+#        "distance_tolerance":"25",
+#        "distance_trip":"0",
+#        "distance_total":"0",
+
     def __init__(self,radius=None):
-        TwoHandGauge.__init__(self,radius,'distance',u'%6.2f')
+        self.GetOptions()
+        TwoHandGauge.__init__(self,radius,"%s-%s" % (self.type,self.units),u'%6.2f')
         self.value = 0
+        self.distance = 0
 
     def Draw(self):
+        if self.units == "km":
+            self.value = self.distance
+        else: # self.units == "miles"
+            self.value = self.distance / 1.6
+
     	TwoHandGauge.Draw(self)
 
+    def UpdateValue(self,value):
+        self.distance = value
+        self.Draw()
+
+    def GetOptions(self):
+        s = DataStorage.GetInstance()
+        self.units = s.GetValue("distance_units")
+        self.type = s.GetValue("distance_type")
+        self.trip = s.GetValue("distance_trip")
+        self.total = s.GetValue("distance_total")
+        self.tolerance = s.GetValue("distance_tolerance")
+
+    def SaveOptions(self):
+        s = DataStorage.GetInstance()
+        s.SetValue("distance_units",self.units)
+        s.SetValue("distance_type",self.type)
+        s.SetValue("distance_trip",self.trip)
+        s.SetValue("distance_total",self.total)
+        s.SetValue("distance_tolerance",self.tolerance)
+
+    def SelectOptions(self):
+        units = [ u"km", u"miles" ]
+        types = [ u"total", u"trip" ]
+
+
+        if self.units in units:
+            oldid = units.index(self.units)
+        else:
+            oldid = 0
+        id = appuifw.selection_list(units,oldid)
+        if id == None:
+            return
+        self.units = units[id]
+
+
+        if self.type in types:
+            oldid = types.index(self.type)
+        else:
+            oldid = 0
+        id = appuifw.selection_list(types,oldid)
+        if id == None:
+            return
+        self.type = types[id]
+
+
+        value = appuifw.query(u"Tolerance:","number",self.tolerance)
+        if value == None:
+            return
+        self.tolerance = value
+
+
+        self.name = "%s-%s" % (self.type,self.units)
+        self.SaveOptions()
+
+        self.Draw()
 
 class AltitudeGauge(TwoHandGauge):
     def __init__(self,radius=None):
@@ -1109,6 +1178,7 @@ class S60DashView(View):
         self.handledkeys = {
             EKeyUpArrow:self.MoveUp,
             EKeyDownArrow:self.MoveDown,
+            #EKeySelect:self.GaugeOptions,
             }
 
     def MoveUp(self,event):
@@ -1121,6 +1191,13 @@ class S60DashView(View):
         self.storage.SetValue("dashview_zoom",self.zoomedgauge)
         self.Resize()
 
+    def GaugeOptions(self,event):
+        print "GaugeOptions"
+        #try:
+        #    self.gauges[self.zoomedgauge].SelectOptions()
+        #except:
+        #    pass
+        self.gauges[2].SelectOptions()
 
     def Resize(self,rect=None):
         size = appuifw.app.body.size
@@ -1314,7 +1391,11 @@ class S60MapView(View):
             EKey8:self.MoveDown,
             }
 
-        #name = self.storage.GetValue("mapview_lastmap")
+        name = self.storage.GetValue("mapview_lastmap")
+        if name in self.storage.maps.keys():
+            self.map = self.storage.maps[name]
+            self.LoadMap(self.map)
+
         #for map in self.storage.maps:
         #    if map.name == name:
         #        self.map = map
@@ -1849,9 +1930,8 @@ class S60Application(Application, AlarmResponder):
                 view.UpdateTime(alarm.time)
 
         if alarm == self.positionalarm:
-            p = alarm.point
-            self.storage.SetValue("app_lastknownposition","Point(%f,%f,%f,%f)" % (p.time,p.latitude,p.longitude,p.altitude) )
-            self.position = p
+            self.position = alarm.point
+            self.storage.SetValue("app_lastknownposition",self.position )
 
             if self.proximityalarm != None:
                 bearing = self.proximityalarm.bearing
@@ -2311,10 +2391,13 @@ class S60Application(Application, AlarmResponder):
 
     def KeyboardEvent(self,event):
         key = event['keycode']
-        if key in self.handledkeys.keys():
-            self.handledkeys[key](event)
-        else:
-            self.view.KeyboardEvent(event)
+        try:
+            if key in self.handledkeys.keys():
+                self.handledkeys[key](event)
+            else:
+                self.view.KeyboardEvent(event)
+        except:
+            pass
 
 
     def Redraw(self,rect=None):

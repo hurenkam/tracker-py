@@ -128,7 +128,7 @@ class Point:
         self.altitude = alt
 
     def __repr__(self):
-        return "Point(%f,%f,%f,%f)" % (self.time,self.latitude, self.longitude, self.altitude)
+        return "Point(\"%s\",%f,%f,%f)" % (self.time,self.latitude, self.longitude, self.altitude)
 
     def DistanceAndBearing(self,point):
         return datums.CalculateDistanceAndBearing(
