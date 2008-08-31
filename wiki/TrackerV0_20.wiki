@@ -17,11 +17,11 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
   * Persistent storage of several settings
   * Integrated with landmarks database (anything in category 'Waypoints' shows up in tracker
   * Track recording
-  * Track display
+  * Track & route display
   * Show waypoints on map
   * Show heading in mapview
   * Scroll/Zoom map
-  * Im/export of tracks & waypoints in GPX format (needs more testing)
+  * Im/export of tracks, routes & waypoints in GPX format (needs more testing)
   * Display position in Wgs84 (in 3 formats)/UTM (with 23 ellipsoids)/RD datums
   * Map calibration
   * Calibrate from waypoint
@@ -32,14 +32,11 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
   * can work without e: drive
 
 == Known Bugs (v0.20.3) ==
-  * Sis file does not work on both C: and E: (on my phone it works on C: only, which is also where I installed python)
   * Some gauges sometimes show 'NaN' value
 
 == Todo before 1st beta ==
-  * (in svn) Show signal in mapview
   * Gauge options in dashview
-  * (in svn) Implement routes
-  * Make Sis file work on E:
+  * Make sure Sis file works on E: as well
 
 == Other Todo ==
   * Get debug/error logging system in place
