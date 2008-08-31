@@ -31,7 +31,7 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
   * pkg_tracker.sh script created to package tracker.py into a sis file
   * can work without e: drive
 
-== Known Bugs (v0.20.3) ==
+== Known Bugs (v0.20.4) ==
   * Some gauges sometimes show 'NaN' value
 
 == Todo before 1st beta ==
