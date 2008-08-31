@@ -11,6 +11,7 @@ New versions will be focussed on bugfixing, but some small
 features may get implemented here.
   * Dynamic menus
   * Routes
+  * Monitor route
 
 == Short term (v0.21.x) ==
   * Multiple resolutions
@@ -20,6 +21,8 @@ features may get implemented here.
   * Exchange of Landmarks via SMS/Bluetooth
   * Integrate s60views and wxviews
   * Use Accelerometer to scroll the map
+  * Route symbol signalling (e.g. turn-right at next route point)
+  * Create & Edit routes
 
 == Long term (v0.30.x) ==
   * Direction up map display?
