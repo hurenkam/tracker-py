@@ -900,7 +900,26 @@ s60defaults = {
         # View settings
         "dashview_zoom":"0",
         "mapview_zoom":"0",
-        "mapview_lastmap":"u\"51g11_eindhoven\""
+        "mapview_lastmap":"u\"51g11_eindhoven\"",
+
+        # Gauge settings
+        "speed_showmax":"True",
+        "speed_type":"u\"actual\"",
+        "speed_interval":"15",
+        "speed_units":"u\"km/h\"",
+
+        "distance_type":"u\"trip\"",
+        "distance_units":"u\"km\"",
+        "distance_tolerance":"25",
+        "distance_trip":"0",
+        "distance_total":"0",
+
+        "alt_type":"u\"actual\"",
+        "alt_interval":"15",
+        "alt_tolerance":"100",
+        "alt_units":"u\"m\"",
+        "alt_showmax":"True",
+        "alt_showmin":"True",
     }
 
 class S60Waypoint(Waypoint):
