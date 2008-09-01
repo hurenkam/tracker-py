@@ -894,6 +894,7 @@ class TwoHandGauge(Gauge):
             self.DrawTriangleHand (shorthand, 0.5 * self.radius, 0, 4)
 
 
+
 class DistanceGauge(TwoHandGauge):
 #        "distance_units":"\"km\"",
 #        "distance_type":\"trip\",
@@ -906,6 +907,7 @@ class DistanceGauge(TwoHandGauge):
         TwoHandGauge.__init__(self,radius,"%s-%s" % (self.type,self.units),u'%6.2f')
         self.value = 0
         self.distance = 0
+        self.GetOptions()
 
     def Draw(self):
         if self.units == "km":
@@ -940,21 +942,13 @@ class DistanceGauge(TwoHandGauge):
         types = [ u"total", u"trip" ]
 
 
-        if self.units in units:
-            oldid = units.index(self.units)
-        else:
-            oldid = 0
-        id = appuifw.selection_list(units,oldid)
+        id = appuifw.selection_list(units,0)
         if id == None:
             return
         self.units = units[id]
 
 
-        if self.type in types:
-            oldid = types.index(self.type)
-        else:
-            oldid = 0
-        id = appuifw.selection_list(types,oldid)
+        id = appuifw.selection_list(types,0)
         if id == None:
             return
         self.type = types[id]
@@ -971,21 +965,146 @@ class DistanceGauge(TwoHandGauge):
 
         self.Draw()
 
+
+
 class AltitudeGauge(TwoHandGauge):
     def __init__(self,radius=None):
         TwoHandGauge.__init__(self,radius,'altitude',u'%8.0f',(100,1000))
         self.value = 0
+        self.altitude = 0
+        self.GetOptions()
 
     def Draw(self):
     	TwoHandGauge.Draw(self)
+
+    def GetOptions(self):
+        s = DataStorage.GetInstance()
+        self.type = s.GetValue("alt_type")
+        self.interval = s.GetValue("alt_interval")
+        self.tolerance = s.GetValue("alt_tolerance")
+        self.units = s.GetValue("alt_units")
+        self.showmax = s.GetValue("alt_showmax")
+        self.showmin = s.GetValue("alt_showmin")
+
+    def SaveOptions(self):
+        s = DataStorage.GetInstance()
+        s.SetValue("alt_type",self.type)
+        s.SetValue("alt_interval",self.interval)
+        s.SetValue("alt_tolerance",self.tolerance)
+        s.SetValue("alt_units",self.units)
+        s.SetValue("alt_showmax",self.showmax)
+        s.SetValue("alt_showmin",self.showmin)
+
+    def SelectOptions(self):
+        units = [ u"m", u"ft" ]
+        types = [ u"alt", u"asc", u"desc", u"alt-avg" ]
+
+
+        id = appuifw.selection_list(units,0)
+        if id == None:
+            return
+        self.units = units[id]
+
+
+        id = appuifw.selection_list(types,0)
+        if id == None:
+            return
+        self.type = types[id]
+
+        if self.type == u"avg":
+            value = appuifw.query(u"Interval:","number",self.interval)
+            if value == None:
+                return
+            self.interval = value
+
+        value = appuifw.query(u"Tolerance:","number",self.tolerance)
+        if value == None:
+            return
+        self.tolerance = value
+
+        self.name = "%s-%s" % (self.type,self.units)
+        self.SaveOptions()
+
+        self.Draw()
+
+    def Draw(self):
+        if self.units == "m":
+            self.value = self.altitude
+        else: # self.units == "ft"
+            self.value = self.altitude * 3.0
+
+        TwoHandGauge.Draw(self)
+
+    def UpdateValue(self,value):
+        self.altitude = value
+        self.Draw()
+
+
 
 class SpeedGauge(TwoHandGauge):
     def __init__(self,radius=None):
         TwoHandGauge.__init__(self,radius,'speed',u'%8.2f')
         self.value = 0
+        self.speed = 0
+        self.GetOptions()
 
     def Draw(self):
     	TwoHandGauge.Draw(self)
+
+    def GetOptions(self):
+        s = DataStorage.GetInstance()
+        self.units = s.GetValue("speed_units")
+        self.type = s.GetValue("speed_type")
+        self.interval = s.GetValue("speed_interval")
+        self.showmax = s.GetValue("speed_showmax")
+
+    def SaveOptions(self):
+        s = DataStorage.GetInstance()
+        s.SetValue("speed_units",self.units)
+        s.SetValue("speed_type",self.type)
+        s.SetValue("speed_interval",self.interval)
+        s.SetValue("speed_showmax",self.showmax)
+
+    def SelectOptions(self):
+        units = [ u"km/h", u"mph" ]
+        types = [ u"speed", u"speed-avg" ]
+
+
+        id = appuifw.selection_list(units,0)
+        if id == None:
+            return
+        self.units = units[id]
+
+
+        id = appuifw.selection_list(types,0)
+        if id == None:
+            return
+        self.type = types[id]
+
+        if self.type == "speed-avg":
+            value = appuifw.query(u"Interval:","number",self.interval)
+            if value == None:
+                return
+            self.tolerance = value
+
+
+        self.name = "%s-%s" % (self.type,self.units)
+        self.SaveOptions()
+
+        self.Draw()
+
+    def Draw(self):
+        if self.units == u"km/h":
+            self.value = self.speed
+        else: # self.units == "mph"
+            self.value = self.speed / 1.6
+
+        TwoHandGauge.Draw(self)
+
+    def UpdateValue(self,value):
+        self.speed = value
+        self.Draw()
+
 
 class ClockGauge(Gauge):
 
@@ -1154,7 +1273,6 @@ class S60DashView(View):
         self.exitwidget = TextWidget("Exit",fgcolor=0xffffff,bgcolor=0x0000ff)
 
         self.gauges = [
-                #self.signalgauge,
                 self.clockgauge,
                 self.timegauge,
                 self.distancegauge,
@@ -1163,12 +1281,12 @@ class S60DashView(View):
                 self.waypointgauge
             ]
         self.spots = [
+                ((0,80),    (160,160)),
                 ((0,0),     (80,80)),
                 ((80,0),    (80,80)),
                 ((160,0),   (80,80)),
                 ((160,80),  (80,80)),
                 ((160,160), (80,80)),
-                ((0,80),    (160,160)),
                 ]
         self.zoomedgauge = self.storage.GetValue("dashview_zoom")
 
@@ -1181,26 +1299,22 @@ class S60DashView(View):
         self.handledkeys = {
             EKeyUpArrow:self.MoveUp,
             EKeyDownArrow:self.MoveDown,
-            #EKeySelect:self.GaugeOptions,
+            EKeySelect:self.GaugeOptions,
             }
 
     def MoveUp(self,event):
-        self.zoomedgauge = (self.zoomedgauge +1) % (len(self.spots))
-        self.storage.SetValue("dashview_zoom",self.zoomedgauge)
-        self.Resize()
-
-    def MoveDown(self,event):
         self.zoomedgauge = (self.zoomedgauge -1) % (len(self.spots))
         self.storage.SetValue("dashview_zoom",self.zoomedgauge)
         self.Resize()
 
+    def MoveDown(self,event):
+        self.zoomedgauge = (self.zoomedgauge +1) % (len(self.spots))
+        self.storage.SetValue("dashview_zoom",self.zoomedgauge)
+        self.Resize()
+
     def GaugeOptions(self,event):
-        print "GaugeOptions"
-        #try:
-        #    self.gauges[self.zoomedgauge].SelectOptions()
-        #except:
-        #    pass
-        self.gauges[2].SelectOptions()
+        print "GaugeOptions: ", self.zoomedgauge
+        self.gauges[self.zoomedgauge].SelectOptions()
 
     def Resize(self,rect=None):
         size = appuifw.app.body.size
@@ -1208,7 +1322,7 @@ class S60DashView(View):
         self.image.clear(0xc0c0c0)
 
         for i in range(0,len(self.spots)):
-            j = (self.zoomedgauge+i) % (len(self.spots))
+            j = (i-self.zoomedgauge) % (len(self.spots))
             g = self.gauges[i]
             if g:
                 p = self.spots[j][0]
@@ -1275,7 +1389,7 @@ class S60DashView(View):
     	self.update = False
 
         for i in range(0,len(self.spots)):
-            j = (self.zoomedgauge+i) % (len(self.spots))
+            j = (i-self.zoomedgauge) % (len(self.spots))
 
             g = self.gauges[i]
             if g:
@@ -1352,7 +1466,10 @@ class S60DashView(View):
     def KeyboardEvent(self,event):
         key = event['keycode']
         if key in self.handledkeys.keys():
-            self.handledkeys[key](event)
+            try:
+                self.handledkeys[key](event)
+            except:
+                XStore()
 
     def DrawText(self,coords,text,size=1.0):
         f = ('normal',int(14*size))
@@ -1653,7 +1770,10 @@ class S60MapView(View):
     def KeyboardEvent(self,event):
         key = event['keycode']
         if key in self.handledkeys.keys():
-            self.handledkeys[key](event)
+            try:
+                self.handledkeys[key](event)
+            except:
+                XStore()
 
     def DrawText(self,coords,text,size=1.0):
         f = ('normal',int(14*size))
