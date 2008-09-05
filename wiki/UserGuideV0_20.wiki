@@ -21,7 +21,7 @@ Then do the same with [http://tracker-py.googlecode.com/files/tracker_v0.20.3-un
 
 Now, it should install fine on C: or E:, however, I've noticed that on my phone it only
 works on C: (which is where I also installed the other modules). So your best bet is to
-simply install this on C:
+simply install this on same drive where you installed PyS60.
 
 When all is installed, you should find a tracker application in your applications folder,
 you can select this to startup Tracker.
