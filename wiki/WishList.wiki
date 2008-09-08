@@ -10,12 +10,6 @@ mode, meaning it depends on a 240x320 pixel resolution. When used on
 other S60 phones, this resolution may not be available, or prefereable,
 so support for different resolutions is desired.
 
-=== Dynamic menus ===
-The menu layout is very static right now, only the 'screensaver' option
-is dynamic. A lot more menu items can be made dynamic however, the option
-to 'add refpoint', or 'save map' for instance are depending on a map being
-present.
-
 === Integrate s60views and wxviews ===
 A lot of code in s60views.py and wxviews.py is identical, probably about
 80 to 90 percent of the code can be shared between the two. It would be
@@ -96,6 +90,10 @@ Map-display is done in North-up display, which is natural if you are used
 to reading paper maps.
 However, for many people it feels more natural to have a direction-up
 display, thus rotating the map whenever you change direction.
+
+=== Route or Track based calibration ===
+Display a route or track on an uncalibrated map, and drag certain points
+of the route/track to a point on the map, thus calibrating the map.
 
 === Others? Please let me know! ===
 If something is holding you back from using this software, please let me
