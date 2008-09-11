@@ -68,6 +68,9 @@ to sleep again for 10 minutes. When hiking (especially in the mountains),
 10 minutes is not a long time, and the track will still be pretty accurate.
 I'm not sure how much power would be saved this way, but surely it must make
 a significant difference.
+Another way to figure out when to power-up the GPS could be to use the cell
+signal strength/number of different towers passed, to detect movement/
+estimate distance.
 
 === Calibrate GPS to adjust for known deviations ===
 Some GPS devices can report positions with an average error that you may
@@ -94,6 +97,26 @@ display, thus rotating the map whenever you change direction.
 === Route or Track based calibration ===
 Display a route or track on an uncalibrated map, and drag certain points
 of the route/track to a point on the map, thus calibrating the map.
+Ideas on how to tackle this:
+  * Detect sharp corners, and enable dragging these while updating map & track display
+  * Rotate & scale the track/route, also with continuous screen updates.
+
+=== Fetch maps from Google/Yahoo/MSN through their API ===
+Google, Yahoo and Microsoft provide API's to access geographical/map data.
+Tracker could use these to download a map over the network.
+
+=== Use accelerometer in low-power mode ===
+When GPS is powered off, use the accelerometer to detect strong movements,
+and thus as an aid to determine when to power-up the GPS to get a position.
+The accelerometer can also be used to powerdown the screen/gps, e.g. if the
+device is upside down.
+
+=== Monitor route/track ===
+Currently it is only possible to monitor a waypoint. Similarly, it should
+be possible to monitor a route (as series of waypoints), or track.
+When in monitor track/route mode, an algorithm can be used to determine
+at which moments the GPS should be powered up/down, depending on the
+form of the current speed and distance to next corner/route point.
 
 === Others? Please let me know! ===
 If something is holding you back from using this software, please let me
