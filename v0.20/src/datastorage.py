@@ -257,6 +257,7 @@ class OziFile(file):
 #IWH,Map Image Width/Height,2048,2048
 
     def __init__(self,name,mode):
+        self.ozifilename = name
         b,e = os.path.splitext(name)
         if mode == "w":
             file.__init__(self,b+'.mcx',mode)
@@ -302,21 +303,21 @@ class OziFile(file):
     def readRefpoint(self,line):
         properties = line.split(",")
         name = properties[0]
-        try:
-            x = eval(properties[2])
-            y = eval(properties[3])
-            lat = eval(properties[6])+eval(properties[7])/60
-            lon = eval(properties[9])+eval(properties[10])/60
-            if properties[8]!="N":
-                lat *= -1
-            if properties[11]!="E":
-                lon *= -1
-            #print "found refpoint", name, x,y,lat,lon
-            return Refpoint("",lat,lon,x,y)
-        except:
-            XStore()
-            #print "invalid refpoint", name
-            pass
+        if properties[2].strip()!="":
+            try:
+                x = eval(properties[2])
+                y = eval(properties[3])
+                lat = eval(properties[6])+eval(properties[7])/60
+                lon = eval(properties[9])+eval(properties[10])/60
+                if properties[8]!="N":
+                    lat *= -1
+                if properties[11]!="E":
+                    lon *= -1
+                #print "found refpoint", name, x,y,lat,lon
+                return Refpoint("",lat,lon,x,y)
+            except:
+                XStore()
+                #print "invalid refpoint", self.ozifilename, name
 
 class DataStorage(AlarmResponder):
     instance = None

@@ -966,6 +966,125 @@ class DistanceGauge(TwoHandGauge):
         self.Draw()
 
 
+class AltitudeForm(object):
+
+    def __init__(self,gauge):
+        self.gauge = gauge
+        self._IsSaved = False
+
+        self._Types = [u'Actual', u'Ascent', u'Descent', u'Average']
+        self._Units = [u'Meters', u'Feet']
+        self._ToleranceMeters = [u'5 meters', u'10 meters', u'25 meters', u'50 meters', u'100 meters', u'250 meters']
+        self._ToleranceFeet = [u'15 feet', u'30 feet', u'75 feet', u'150 feet', u'300 feet', u'750 feet']
+        self._Interval = [ u'5 seconds', u'15 seconds', u'30 seconds', u'1 minute', u'2 minutes', u'5 minutes',
+                           u'15 minutes', u'30 minutes', u'1 hour', u'2 hours', u'5 hours' ]
+        _Tolerance = [ 5, 10, 25, 50, 100, 250 ]
+        _Interval = [ 5, 15, 30, 60, 120, 300, 900, 1800, 3600, 7200, 18000 ]
+        self._Bool = [u'No',u'Yes']
+
+        self.gauge.GetOptions()
+        if self.gauge.type in self._Types:
+            itype = self._Types.index(self.gauge.type)
+        else:
+            itype = 0
+
+        if self.gauge.units in self._Units:
+            iunits = self._Units.index(self.gauge.units)
+        else:
+            iunits = 0
+
+        if self.gauge.interval in _Interval:
+            iinterval = _Interval.index(self.gauge.interval)
+        else:
+            iinterval = 0
+
+        if self.gauge.tolerance in _Tolerance:
+            itolerance = _Tolerance.index(self.gauge.tolerance)
+        else:
+            itolerance = 0
+
+        if iunits == 0:
+            tolerance = self._ToleranceMeters
+        else:
+            tolerance = self._ToleranceFeet
+
+        self._Fields = [
+                         ( u'Type', 'combo', ( self._Types, itype ) ),
+                         ( u'Units', 'combo', ( self._Units, iunits ) ),
+                         ( u'Tolerance', 'combo', ( tolerance, itolerance ) ),
+                         ( u'Interval', 'combo', ( self._Interval, iinterval ) ),
+                         #( u'Max','combo', (self._Bool, 0) ),
+                         #( u'Min','combo', (self._Bool, 0) ),
+        ]
+
+    def GetField(self,name):
+        for f in self._Form:
+            if f[0] == name:
+                return f
+        return None
+
+    def Run( self ):
+        self._IsSaved = False
+        self._Form = appuifw.Form(self._Fields, appuifw.FFormEditModeOnly)
+        self._Form.save_hook = self.MarkSaved
+        self._Form.flags = appuifw.FFormEditModeOnly
+
+        appuifw.app.title = u'Altitude Options'
+        appuifw.app.screen = 'normal'
+        self._Form.execute( )
+        appuifw.app.screen = 'full'
+        appuifw.app.title = u'Tracker'
+        if self.IsSaved():
+            self.gauge.type = self.GetType()
+            self.gauge.units = self.GetUnits()
+            self.gauge.tolerance = self.GetTolerance()
+            self.gauge.interval = self.GetInterval()
+            print "Saving: ", self.gauge.type, self.gauge.units, self.gauge.tolerance, self.gauge.interval
+            self.gauge.SaveOptions()
+
+    def MarkSaved( self, bool ):
+        self._IsSaved = bool
+
+    def IsSaved( self ):
+        return self._IsSaved
+
+    def GetType( self ):
+        field = self.GetField(u'Type')
+        if field != None:
+            return self._Types[field[2][1]].encode( "utf-8" )
+
+    def GetUnits( self ):
+        field = self.GetField(u'Units')
+        if field != None:
+            return self._Units[field[2][1]].encode( "utf-8" )
+
+    def GetTolerance( self ):
+        field = self.GetField(u'Tolerance')
+        if field != None:
+            tolerance = [ 5, 10, 25, 50, 100, 250 ]
+            return tolerance[field[2][1]]
+
+    def GetInterval( self ):
+        field = self.GetField(u'Interval')
+        if field != None:
+            interval = [ 5, 15, 30, 60, 120, 300, 900, 1800, 3600, 7200, 18000 ]
+            return interval[field[2][1]]
+
+    def GetMax( self ):
+        field = self.GetField(u'Show max')
+        if field != None:
+            return (field[2][1]==1)
+        else:
+            return False
+
+    def GetMin( self ):
+        field = self.GetField(u'Show min')
+        if field != None:
+            return (field[2][1]==1)
+        else:
+            return False
+
+
 
 class AltitudeGauge(TwoHandGauge):
     def __init__(self,radius=None):
@@ -996,35 +1115,9 @@ class AltitudeGauge(TwoHandGauge):
         s.SetValue("alt_showmin",self.showmin)
 
     def SelectOptions(self):
-        units = [ u"m", u"ft" ]
-        types = [ u"alt", u"asc", u"desc", u"alt-avg" ]
-
-
-        id = appuifw.selection_list(units,0)
-        if id == None:
-            return
-        self.units = units[id]
-
-
-        id = appuifw.selection_list(types,0)
-        if id == None:
-            return
-        self.type = types[id]
-
-        if self.type == u"avg":
-            value = appuifw.query(u"Interval:","number",self.interval)
-            if value == None:
-                return
-            self.interval = value
-
-        value = appuifw.query(u"Tolerance:","number",self.tolerance)
-        if value == None:
-            return
-        self.tolerance = value
-
+        form = AltitudeForm(self)
+        form.Run()
         self.name = "%s-%s" % (self.type,self.units)
-        self.SaveOptions()
-
         self.Draw()
 
     def Draw(self):
@@ -1301,6 +1394,7 @@ class S60DashView(View):
             EKeyDownArrow:self.MoveDown,
             EKeySelect:self.GaugeOptions,
             }
+        self.norepaint = False
 
     def MoveUp(self,event):
         self.zoomedgauge = (self.zoomedgauge -1) % (len(self.spots))
@@ -1314,7 +1408,10 @@ class S60DashView(View):
 
     def GaugeOptions(self,event):
         print "GaugeOptions: ", self.zoomedgauge
+        self.norepaint = True
         self.gauges[self.zoomedgauge].SelectOptions()
+        self.norepaint = False
+        self.Blit()
 
     def Resize(self,rect=None):
         size = appuifw.app.body.size
@@ -1454,7 +1551,7 @@ class S60DashView(View):
     def Blit(self,rect=None):
     	if self.update:
     	    self.Draw()
-        if self.image != None:
+        if self.image != None and not self.norepaint:
             appuifw.app.body.blit(self.image)
 
     def Show(self):
@@ -1890,19 +1987,19 @@ class S60Application(Application, AlarmResponder):
                 ( HasOpenMapAndWaypoints, u'Add Ref from Waypoint',  self.AddRefFromWaypoint ),
                 ( HasRefpoints,           u'Save',                   self.SaveCalibrationData ),
                 ( HasRefpoints,           u'Clear Refpoints',        self.ClearRefpoints ),
-                ( Always,                 u'Options',                self.MapOptions ),
+                #( Always,                 u'Options',                self.MapOptions ),
             ]
         wpt_items = [
                 ( HasWaypoints,           u'Monitor',                self.MonitorWaypoint ),
                 ( Always,                 u'Add',                    self.AddWaypoint ),
                 ( HasWaypoints,           u'Delete',                 self.DeleteWaypoint ),
-                ( Always,                 u'Options',                self.WaypointOptions ),
+                #( Always,                 u'Options',                self.WaypointOptions ),
             ]
         rte_items = [
                 ( HasRoutes,              u'Open',                   self.OpenRoute ),
                 ( HasOpenRoutes,          u'Close',                  self.CloseRoute ),
                 ( HasRoutes,              u'Delete',                 self.DeleteRoute ),
-                ( Always,                 u'Options',                self.RouteOptions ),
+                #( Always,                 u'Options',                self.RouteOptions ),
             ]
         trk_items = [
                 ( IsNotRecording,         u'Start',                  self.StartRecording ),
@@ -1910,12 +2007,12 @@ class S60Application(Application, AlarmResponder):
                 ( HasTracks,              u'Open',                   self.OpenTrack ),
                 ( HasOpenTracks,          u'Close',                  self.CloseTrack ),
                 ( HasTracks,              u'Delete',                 self.DeleteTrack ),
-                ( Always,                 u'Options',                self.TrackOptions ),
+                #( Always,                 u'Options',                self.TrackOptions ),
             ]
         gpx_items = [
                 ( Always,                 u'Import GPX File',        self.GPXImport ),
                 ( HasGPXItems,            u'Export GPX File',        self.GPXExport ),
-                ( Always,                 u'Options',                self.GPXOptions ),
+                #( Always,                 u'Options',                self.GPXOptions ),
             ]
 
         if self.storage.GetValue("app_screensaver"):
@@ -1938,19 +2035,19 @@ class S60Application(Application, AlarmResponder):
 
         map_menu = CreateMenu(map_items)
         if map_menu != None:
-            menu.append( (u'Map', CreateMenu(map_items)) )
+            menu.append( (u'Map', map_menu) )
         wpt_menu = CreateMenu(wpt_items)
         if wpt_menu != None:
-            menu.append( (u'Waypoint', CreateMenu(wpt_items)) )
+            menu.append( (u'Waypoint', wpt_menu) )
         trk_menu = CreateMenu(trk_items)
         if trk_menu != None:
-            menu.append( (u'Track', CreateMenu(trk_items)) )
+            menu.append( (u'Track', trk_menu) )
         rte_menu = CreateMenu(rte_items)
         if rte_menu != None:
-            menu.append( (u'Route', CreateMenu(rte_items)) )
+            menu.append( (u'Route', rte_menu) )
         gpx_menu = CreateMenu(gpx_items)
         if gpx_menu != None:
-            menu.append( (u'Im/Export', CreateMenu(gpx_items)) )
+            menu.append( (u'Im/Export', gpx_menu) )
 
         appuifw.app.menu = menu
 
@@ -2490,7 +2587,7 @@ class S60Application(Application, AlarmResponder):
 
 
     def GPXExport(self):
-        name = self.QueryAndStore(u"GPX Filename:","text","gpx_name")
+        name = self.QueryAndStore(u"GPX Filename:","text",u"gpx_name")
         if name == None:
             appuifw.note(u"Cancelled.", "info")
             return
