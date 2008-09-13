@@ -972,34 +972,36 @@ class AltitudeForm(object):
         self.gauge = gauge
         self._IsSaved = False
 
-        self._Types = [u'Actual', u'Ascent', u'Descent', u'Average']
+        self._Types = [u'Altitude', u'Ascent', u'Descent', u'Average']
+        self._ShortTypes = [u'alt', u'asc', u'desc', u'avg-alt']
         self._Units = [u'Meters', u'Feet']
+        self._ShortUnits = [u'm',u'ft']
         self._ToleranceMeters = [u'5 meters', u'10 meters', u'25 meters', u'50 meters', u'100 meters', u'250 meters']
         self._ToleranceFeet = [u'15 feet', u'30 feet', u'75 feet', u'150 feet', u'300 feet', u'750 feet']
         self._Interval = [ u'5 seconds', u'15 seconds', u'30 seconds', u'1 minute', u'2 minutes', u'5 minutes',
                            u'15 minutes', u'30 minutes', u'1 hour', u'2 hours', u'5 hours' ]
-        _Tolerance = [ 5, 10, 25, 50, 100, 250 ]
-        _Interval = [ 5, 15, 30, 60, 120, 300, 900, 1800, 3600, 7200, 18000 ]
+        self._ToleranceValues = [ 5, 10, 25, 50, 100, 250 ]
+        self._IntervalValues = [ 5, 15, 30, 60, 120, 300, 900, 1800, 3600, 7200, 18000 ]
         self._Bool = [u'No',u'Yes']
 
         self.gauge.GetOptions()
-        if self.gauge.type in self._Types:
-            itype = self._Types.index(self.gauge.type)
+        if self.gauge.type in self._ShortTypes:
+            itype = self._ShortTypes.index(self.gauge.type)
         else:
             itype = 0
 
-        if self.gauge.units in self._Units:
-            iunits = self._Units.index(self.gauge.units)
+        if self.gauge.units in self._ShortUnits:
+            iunits = self._ShortUnits.index(self.gauge.units)
         else:
             iunits = 0
 
-        if self.gauge.interval in _Interval:
-            iinterval = _Interval.index(self.gauge.interval)
+        if self.gauge.interval in self._IntervalValues:
+            iinterval = self._IntervalValues.index(self.gauge.interval)
         else:
             iinterval = 0
 
-        if self.gauge.tolerance in _Tolerance:
-            itolerance = _Tolerance.index(self.gauge.tolerance)
+        if self.gauge.tolerance in self._ToleranceValues:
+            itolerance = self._ToleranceValues.index(self.gauge.tolerance)
         else:
             itolerance = 0
 
@@ -1039,8 +1041,11 @@ class AltitudeForm(object):
             self.gauge.units = self.GetUnits()
             self.gauge.tolerance = self.GetTolerance()
             self.gauge.interval = self.GetInterval()
-            print "Saving: ", self.gauge.type, self.gauge.units, self.gauge.tolerance, self.gauge.interval
+            #print "Saving: ", self.gauge.type, self.gauge.units, self.gauge.tolerance, self.gauge.interval
             self.gauge.SaveOptions()
+            self.gauge.name = "%s (%s)" % (self.gauge.type,self.gauge.units)
+            return True
+        return False
 
     def MarkSaved( self, bool ):
         self._IsSaved = bool
@@ -1051,24 +1056,22 @@ class AltitudeForm(object):
     def GetType( self ):
         field = self.GetField(u'Type')
         if field != None:
-            return self._Types[field[2][1]].encode( "utf-8" )
+            return self._ShortTypes[field[2][1]].encode( "utf-8" )
 
     def GetUnits( self ):
         field = self.GetField(u'Units')
         if field != None:
-            return self._Units[field[2][1]].encode( "utf-8" )
+            return self._ShortUnits[field[2][1]].encode( "utf-8" )
 
     def GetTolerance( self ):
         field = self.GetField(u'Tolerance')
         if field != None:
-            tolerance = [ 5, 10, 25, 50, 100, 250 ]
-            return tolerance[field[2][1]]
+            return self._ToleranceValues[field[2][1]]
 
     def GetInterval( self ):
         field = self.GetField(u'Interval')
         if field != None:
-            interval = [ 5, 15, 30, 60, 120, 300, 900, 1800, 3600, 7200, 18000 ]
-            return interval[field[2][1]]
+            return self._IntervalValues[field[2][1]]
 
     def GetMax( self ):
         field = self.GetField(u'Show max')
@@ -1104,6 +1107,7 @@ class AltitudeGauge(TwoHandGauge):
         self.units = s.GetValue("alt_units")
         self.showmax = s.GetValue("alt_showmax")
         self.showmin = s.GetValue("alt_showmin")
+        self.name = "%s (%s)" % (self.type,self.units)
 
     def SaveOptions(self):
         s = DataStorage.GetInstance()
@@ -1116,9 +1120,8 @@ class AltitudeGauge(TwoHandGauge):
 
     def SelectOptions(self):
         form = AltitudeForm(self)
-        form.Run()
-        self.name = "%s-%s" % (self.type,self.units)
-        self.Draw()
+        if form.Run():
+            self.Draw()
 
     def Draw(self):
         if self.units == "m":
@@ -2069,11 +2072,13 @@ class S60Application(Application, AlarmResponder):
         value = u"%s" % self.storage.GetValue(key)
         if value in l:
             index = l.index(value)
+            del(l[index])
+            l.insert(0,value)
         else:
             print "Could not find %s in list:" % value, l
-            index = 0
+        #    index = 0
 
-        result = appuifw.selection_list(l,index)
+        result = appuifw.selection_list(l,1)
 
         if result != None:
             self.storage.SetValue(key,l[result])
