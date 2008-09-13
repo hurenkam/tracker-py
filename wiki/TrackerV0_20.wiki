@@ -33,7 +33,7 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
 
 == Known Bugs (v0.20.4) ==
   * Some gauges sometimes show 'NaN' value
-  * Some content can cause GPX export to break
+  * Due to a problem in the menus, route & GPX items may not work
 
 == Todo before 1st beta ==
   * Gauge options in dashview
