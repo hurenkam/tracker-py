@@ -33,12 +33,14 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
 
 == Known Bugs (v0.20.4) ==
   * Some gauges sometimes show 'NaN' value
-  * Due to a PyS60 limitation in the menu code, some menu items may not work depending on available options.
+  * (fixed in svn) Due to a PyS60 limitation in the menu code, some menu items may not work depending on available options.
 
 == Todo before 1st beta ==
-  * Gauge options in dashview
+  * (in svn) Gauge options in dashview
+  * Implement ascent/descent/average altitude
+  * Implement average speed
+  * Implement total distance
   * Make sure Sis file works on E: as well
-  * Fix menu
 
 == Other Todo ==
   * (in svn) Get debug/error logging system in place
