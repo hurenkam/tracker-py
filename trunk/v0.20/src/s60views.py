@@ -752,120 +752,6 @@ class Gauge:
         self.image.polygon((point1,point2,point3),color,fill=color)
 
 
-class SateliteGauge(Gauge):
-
-    def __init__(self,radius=None):
-        self.satlist = []
-        Gauge.__init__(self,radius)
-
-    def UpdateSatInfo(self,satlist):
-        self.satlist = satlist
-        self.Draw()
-
-    def Draw(self):
-        if self.radius is None:
-            return
-
-        Gauge.Draw(self)
-        self.DrawText(((self.radius,0.6*self.radius)),u'satelites')
-        self.DrawInnerCircle(self.radius*0.4)
-        self.DrawInnerCross()
-
-        if len(self.satlist) > 0:
-            for info in self.satlist:
-                angle = info['azimuth']
-                pos = self.radius * ((90.0 - info['elevation'])/100)
-                color = 0x40c040 * info['inuse']
-                self.DrawDotHand(angle,pos,color,handwidth=self.radius/10)
-
-
-class SignalGauge(Gauge):
-
-    def __init__(self,radius=None,items=None):
-        Gauge.__init__(self,radius)
-        if items is not None:
-            self.items = items
-        else:
-            self.items = {
-                'bat':[7,2,5,0xf04040],
-                'gsm':[7,2,6,0x404040],
-                'sat':[7,2,2,0x4040f0],
-                }
-
-    def UpdateValues(self,values):
-        for key in values.keys():
-            self.items[key][2] = values[key]
-
-        self.Draw()
-
-    def DrawArc(self,radius,start,end,width=1,color=0):
-        start = start * math.pi / 180
-        end = end * math.pi / 180
-        point1 = (self.radius - radius,self.radius - radius)
-        point2 = (self.radius + radius,self.radius + radius)
-        self.image.arc((point1,point2), start, end,color,width=width)
-
-    def DrawSignal(self,item,start,end):
-        w = int(self.radius / item[0] * 0.4)
-        if w < 1:
-           w = 1
-
-        if item[2] > item[0]:
-           v=item[0]
-        else:
-           v=item[2]
-
-        for i in range (0,v):
-            r = self.radius * 0.9 * (i+1)/item[0]
-            self.DrawArc(r,start,end,w,item[3])
-        for i in range (v,item[0]):
-            r = self.radius * 0.9 * (i+1)/item[0]
-            self.DrawArc(r,start,end,w,0xe0e0e0)
-
-    def DrawTag(self,name,pos,color,size=1.0):
-        f = ('normal',int(self.radius/5*size))
-        box = self.image.measure_text(name,font=f)
-        x = self.radius * 1.35
-        ((tlx,tly,brx,bry),newx,newy) = box
-        pos = pos + bry - tly + 2
-        self.image.text((x,pos),u"%s" % name,font=f,fill=color)
-        return pos
-
-    def Draw(self):
-        if self.radius is None:
-            return
-
-        Gauge.Draw(self)
-        angle = 60
-        pos = self.radius/2
-        increment = 240 / len(self.items)
-        for key in self.items.keys():
-            pos = self.DrawTag(key,pos,self.items[key][3])
-            self.DrawSignal(self.items[key],angle+10,angle+increment-10)
-            angle += increment
-
-
-class CompasGauge(Gauge):
-
-    def __init__(self,radius=None,tag="heading"):
-        Gauge.__init__(self,radius)
-        self.tag = tag
-        self.value = 0
-
-    def Draw(self):
-        if self.radius is None:
-            return
-
-        Gauge.Draw(self)
-        self.DrawScale(12,60)
-        if (self.radius >= 30):
-            self.DrawText(((self.radius,0.6*self.radius)),u'%s' %self.tag)
-        if (self.value != None) and (self.radius >= 10):
-            if (self.radius >=30):
-                self.DrawText(((self.radius,1.6*self.radius)),u'%05.1f' % self.value,size=1.5)
-            self.DrawTriangleHand(0-self.value,   self.radius-10, 0x0000ff, 8)
-            self.DrawTriangleHand(180-self.value, self.radius-10, 0x000000, 8)
-
 
 class TwoHandGauge(Gauge):
 
@@ -895,12 +781,96 @@ class TwoHandGauge(Gauge):
 
 
 
-class DistanceGauge(TwoHandGauge):
+class DistanceForm(object):
 #        "distance_units":"\"km\"",
 #        "distance_type":\"trip\",
 #        "distance_tolerance":"25",
 #        "distance_trip":"0",
 #        "distance_total":"0",
+
+    def __init__(self,gauge):
+        self.gauge = gauge
+        self._IsSaved = False
+
+        self._Types = [u'Total', u'Trip']
+        self._ShortTypes = [u'total', u'trip']
+        self._Units = [u'Kilometers', u'Miles']
+        self._ShortUnits = [u'km',u'miles']
+        self._Bool = [u'No',u'Yes']
+
+        self.gauge.GetOptions()
+        if self.gauge.type in self._ShortTypes:
+            itype = self._ShortTypes.index(self.gauge.type)
+        else:
+            itype = 0
+
+        if self.gauge.units in self._ShortUnits:
+            iunits = self._ShortUnits.index(self.gauge.units)
+        else:
+            iunits = 0
+
+        self._Fields = [
+                         ( u'Type', 'combo', ( self._Types, itype ) ),
+                         ( u'Units', 'combo', ( self._Units, iunits ) ),
+                         #( u'Tolerance', 'combo', ( tolerance, itolerance ) ),
+                         #( u'Interval', 'combo', ( self._Interval, iinterval ) ),
+                         #( u'Max','combo', (self._Bool, 0) ),
+                         #( u'Min','combo', (self._Bool, 0) ),
+        ]
+
+    def GetField(self,name):
+        for f in self._Form:
+            if f[0] == name:
+                return f
+        return None
+
+    def Run( self ):
+        self._IsSaved = False
+        self._Form = appuifw.Form(self._Fields, appuifw.FFormEditModeOnly)
+        self._Form.save_hook = self.MarkSaved
+        self._Form.flags = appuifw.FFormEditModeOnly
+
+        appuifw.app.title = u'Distance Options'
+        appuifw.app.screen = 'normal'
+        self._Form.execute( )
+        appuifw.app.screen = 'full'
+        appuifw.app.title = u'Tracker'
+        if self.IsSaved():
+            self.gauge.type = self.GetType()
+            self.gauge.units = self.GetUnits()
+            #self.gauge.tolerance = self.GetTolerance()
+            #self.gauge.interval = self.GetInterval()
+            #print "Saving: ", self.gauge.type, self.gauge.units, self.gauge.tolerance, self.gauge.interval
+            self.gauge.SaveOptions()
+            self.gauge.name = "%s (%s)" % (self.gauge.type,self.gauge.units)
+            return True
+        return False
+
+    def MarkSaved( self, bool ):
+        self._IsSaved = bool
+
+    def IsSaved( self ):
+        return self._IsSaved
+
+    def GetType( self ):
+        field = self.GetField(u'Type')
+        if field != None:
+            return self._ShortTypes[field[2][1]].encode( "utf-8" )
+
+    def GetUnits( self ):
+        field = self.GetField(u'Units')
+        if field != None:
+            return self._ShortUnits[field[2][1]].encode( "utf-8" )
+
+    #def GetTolerance( self ):
+    #    field = self.GetField(u'Tolerance')
+    #    if field != None:
+    #        return self._ToleranceValues[field[2][1]]
+
+
+
+
+class DistanceGauge(TwoHandGauge):
 
     def __init__(self,radius=None):
         self.GetOptions()
@@ -938,32 +908,10 @@ class DistanceGauge(TwoHandGauge):
         s.SetValue("distance_tolerance",self.tolerance)
 
     def SelectOptions(self):
-        units = [ u"km", u"miles" ]
-        types = [ u"total", u"trip" ]
+        form = DistanceForm(self)
+        if form.Run():
+            self.Draw()
 
-
-        id = appuifw.selection_list(units,0)
-        if id == None:
-            return
-        self.units = units[id]
-
-
-        id = appuifw.selection_list(types,0)
-        if id == None:
-            return
-        self.type = types[id]
-
-
-        value = appuifw.query(u"Tolerance:","number",self.tolerance)
-        if value == None:
-            return
-        self.tolerance = value
-
-
-        self.name = "%s-%s" % (self.type,self.units)
-        self.SaveOptions()
-
-        self.Draw()
 
 
 class AltitudeForm(object):
@@ -1137,6 +1085,103 @@ class AltitudeGauge(TwoHandGauge):
 
 
 
+class SpeedForm(object):
+#        units = [ u"km/h", u"mph" ]
+#        types = [ u"speed", u"speed-avg" ]
+
+    def __init__(self,gauge):
+        self.gauge = gauge
+        self._IsSaved = False
+
+        self._Types = [u'Actual', u'Average']
+        self._ShortTypes = [u'speed', u'avg-speed']
+        self._Units = [u'Km/h', u'Mph']
+        self._ShortUnits = [u'km/h',u'mph']
+        self._Interval = [ u'5 seconds', u'15 seconds', u'30 seconds', u'1 minute', u'2 minutes', u'5 minutes',
+                           u'15 minutes', u'30 minutes', u'1 hour', u'2 hours', u'5 hours' ]
+        self._IntervalValues = [ 5, 15, 30, 60, 120, 300, 900, 1800, 3600, 7200, 18000 ]
+        self._Bool = [u'No',u'Yes']
+
+        self.gauge.GetOptions()
+        if self.gauge.type in self._ShortTypes:
+            itype = self._ShortTypes.index(self.gauge.type)
+        else:
+            itype = 0
+
+        if self.gauge.units in self._ShortUnits:
+            iunits = self._ShortUnits.index(self.gauge.units)
+        else:
+            iunits = 0
+
+        if self.gauge.interval in self._IntervalValues:
+            iinterval = self._IntervalValues.index(self.gauge.interval)
+        else:
+            iinterval = 0
+
+        self._Fields = [
+                         ( u'Type', 'combo', ( self._Types, itype ) ),
+                         ( u'Units', 'combo', ( self._Units, iunits ) ),
+                         ( u'Interval', 'combo', ( self._Interval, iinterval ) ),
+                         #( u'Max','combo', (self._Bool, 0) ),
+        ]
+
+    def GetField(self,name):
+        for f in self._Form:
+            if f[0] == name:
+                return f
+        return None
+
+    def Run( self ):
+        self._IsSaved = False
+        self._Form = appuifw.Form(self._Fields, appuifw.FFormEditModeOnly)
+        self._Form.save_hook = self.MarkSaved
+        self._Form.flags = appuifw.FFormEditModeOnly
+
+        appuifw.app.title = u'Speed Options'
+        appuifw.app.screen = 'normal'
+        self._Form.execute( )
+        appuifw.app.screen = 'full'
+        appuifw.app.title = u'Tracker'
+        if self.IsSaved():
+            self.gauge.type = self.GetType()
+            self.gauge.units = self.GetUnits()
+            self.gauge.interval = self.GetInterval()
+            #print "Saving: ", self.gauge.type, self.gauge.units, self.gauge.tolerance, self.gauge.interval
+            self.gauge.SaveOptions()
+            self.gauge.name = "%s (%s)" % (self.gauge.type,self.gauge.units)
+            return True
+        return False
+
+    def MarkSaved( self, bool ):
+        self._IsSaved = bool
+
+    def IsSaved( self ):
+        return self._IsSaved
+
+    def GetType( self ):
+        field = self.GetField(u'Type')
+        if field != None:
+            return self._ShortTypes[field[2][1]].encode( "utf-8" )
+
+    def GetUnits( self ):
+        field = self.GetField(u'Units')
+        if field != None:
+            return self._ShortUnits[field[2][1]].encode( "utf-8" )
+
+    def GetInterval( self ):
+        field = self.GetField(u'Interval')
+        if field != None:
+            return self._IntervalValues[field[2][1]]
+
+    def GetMax( self ):
+        field = self.GetField(u'Show max')
+        if field != None:
+            return (field[2][1]==1)
+        else:
+            return False
+
+
+
 class SpeedGauge(TwoHandGauge):
     def __init__(self,radius=None):
         TwoHandGauge.__init__(self,radius,'speed',u'%8.2f')
@@ -1162,32 +1207,9 @@ class SpeedGauge(TwoHandGauge):
         s.SetValue("speed_showmax",self.showmax)
 
     def SelectOptions(self):
-        units = [ u"km/h", u"mph" ]
-        types = [ u"speed", u"speed-avg" ]
-
-
-        id = appuifw.selection_list(units,0)
-        if id == None:
-            return
-        self.units = units[id]
-
-
-        id = appuifw.selection_list(types,0)
-        if id == None:
-            return
-        self.type = types[id]
-
-        if self.type == "speed-avg":
-            value = appuifw.query(u"Interval:","number",self.interval)
-            if value == None:
-                return
-            self.tolerance = value
-
-
-        self.name = "%s-%s" % (self.type,self.units)
-        self.SaveOptions()
-
-        self.Draw()
+        form = SpeedForm(self)
+        if form.Run():
+            self.Draw()
 
     def Draw(self):
         if self.units == u"km/h":
@@ -1290,6 +1312,114 @@ class TimeGauge(Gauge):
                     self.DrawTriangleHand (minuteshand, 0.7  * self.radius, 0, 4)
                     self.DrawTriangleHand (hourshand,   0.5  * self.radius, 0, 4)
 
+
+
+class WaypointForm(object):
+
+    def __init__(self,gauge):
+        self.gauge = gauge
+        self._IsSaved = False
+
+        storage = DataStorage.GetInstance()
+        self._Waypoints = storage.GetWaypoints().keys()
+        self._Waypoints.sort()
+
+        #self._Types = [u'Bearing', u'Distance']
+        #self._ShortTypes = [u'wpt-bear', u'wpt-dist']
+        self._DistanceUnits = [u'Meters', u'Feet']
+        self._ShortDistanceUnits = [u'm',u'ft']
+        #self._BearingUnits = [u'Degrees', u'Radians']
+        #self._ShortBearingUnits = [u'deg',u'rad']
+        self._ToleranceMeters = [u'5 meters', u'10 meters', u'25 meters', u'50 meters', u'100 meters', u'250 meters' ]
+        self._ToleranceFeet = [u'15 feet', u'30 feet', u'75 feet', u'150 feet', u'300 feet', u'750 feet' ]
+        self._ToleranceValues = [ 5,10,25,50,100,250 ]
+        #self._Bool = [u'No',u'Yes']
+
+        self.gauge.GetOptions()
+        #if self.gauge.type in self._ShortTypes:
+        #    itype = self._ShortTypes.index(self.gauge.type)
+        #else:
+        #    itype = 0
+
+        if self.gauge.waypoint in self._Waypoints:
+            iwaypoints = self._Waypoints.index(self.gauge.waypoint)
+        else:
+            iwaypoints = 0
+
+        if self.gauge.distunits in self._ShortDistanceUnits:
+            idunits = self._ShortDistanceUnits.index(self.gauge.distunits)
+        else:
+            idunits = 0
+
+        if self.gauge.tolerance in self._ToleranceValues:
+            itolerance = self._ToleranceValues.index(self.gauge.tolerance)
+        else:
+            itolerance = 0
+
+        if idunits == 0:
+            tolerance = self._ToleranceMeters
+        else:
+            tolerance = self._ToleranceFeet
+
+        self._Fields = [
+                         #( u'Type', 'combo', ( self._Types, itype ) ),
+                         ( u'Monitor waypoint', 'combo', ( self._Waypoints, iwaypoints ) ),
+                         ( u'Distance Units', 'combo', ( self._DistanceUnits, idunits ) ),
+                         ( u'Distance Tolerance', 'combo', ( tolerance, itolerance ) ),
+                         #( u'Max','combo', (self._Bool, 0) ),
+                         #( u'Min','combo', (self._Bool, 0) ),
+        ]
+
+    def GetField(self,name):
+        for f in self._Form:
+            if f[0] == name:
+                return f
+        return None
+
+    def Run( self ):
+        self._IsSaved = False
+        self._Form = appuifw.Form(self._Fields, appuifw.FFormEditModeOnly)
+        self._Form.save_hook = self.MarkSaved
+        self._Form.flags = appuifw.FFormEditModeOnly
+
+        appuifw.app.title = u'Waypoint Options'
+        appuifw.app.screen = 'normal'
+        self._Form.execute( )
+        appuifw.app.screen = 'full'
+        appuifw.app.title = u'Tracker'
+        if self.IsSaved():
+            self.gauge.type = self.GetType()
+            self.gauge.distunits = self.GetDistanceUnits()
+            self.gauge.tolerance = self.GetDistanceTolerance()
+            #print "Saving: ", self.gauge.type, self.gauge.units, self.gauge.tolerance, self.gauge.interval
+            self.gauge.SaveOptions()
+            self.gauge.tag = u"%s" % self.gauge.waypoint
+            return True
+        return False
+
+    def MarkSaved( self, bool ):
+        self._IsSaved = bool
+
+    def IsSaved( self ):
+        return self._IsSaved
+
+    def GetType( self ):
+        field = self.GetField(u'Type')
+        if field != None:
+            return self._ShortTypes[field[2][1]].encode( "utf-8" )
+
+    def GetDistanceUnits( self ):
+        field = self.GetField(u'Distance Units')
+        if field != None:
+            return self._ShortDistanceUnits[field[2][1]].encode( "utf-8" )
+
+    def GetDistanceTolerance( self ):
+        field = self.GetField(u'Distance Tolerance')
+        if field != None:
+            return self._ToleranceValues[field[2][1]]
+
+
+
 class WaypointGauge(Gauge):
 
     def __init__(self,radius=None,tag="wpt"):
@@ -1298,6 +1428,29 @@ class WaypointGauge(Gauge):
         self.heading = None
         self.bearing = None
         self.distance = None
+        self.GetOptions()
+
+    def GetOptions(self):
+        s = DataStorage.GetInstance()
+        t = s.GetValue("wpt_monitor")
+        if t == None:
+            self.waypoint = "None"
+            self.tolerance = 10
+        else:
+            self.waypoint, self.tolerance = t
+        self.distunits = s.GetValue("wpt_distunits")
+        self.type = s.GetValue("wpt_type")
+
+    def SaveOptions(self):
+        s = DataStorage.GetInstance()
+        #s.SetValue("wpt_monitor",(self.waypoint,self.tolerance))
+        s.SetValue("wpt_distunits",self.distunits)
+        s.SetValue("wpt_type",self.type)
+
+    def SelectOptions(self):
+        form = WaypointForm(self)
+        if form.Run():
+            self.Draw()
 
     def UpdateValues(self,heading,bearing,distance):
         self.heading = heading
