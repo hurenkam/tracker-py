@@ -888,6 +888,8 @@ s60defaults = {
         # Waypoint settings
         "wpt_dir":"u\"\\\\data\\\\tracker\"",
         "wpt_name":"u\"Tracker-\"",
+        "wpt_type":"u\"wpt-dist\"",
+        "wpt_distunits":"u\"meters\"",
         "wpt_tolerance":"100",
         "wpt_monitor":"None",
 
