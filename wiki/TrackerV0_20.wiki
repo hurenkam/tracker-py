@@ -39,7 +39,7 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
   * (in svn) Gauge options in dashview
   * Implement ascent/descent/average altitude
   * Implement average speed
-  * Implement total distance
+  * (in svn) Implement total distance
   * Make sure Sis file works on E: as well
 
 == Other Todo ==
