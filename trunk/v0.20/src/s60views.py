@@ -876,35 +876,38 @@ class DistanceGauge(TwoHandGauge):
         self.GetOptions()
         TwoHandGauge.__init__(self,radius,"%s-%s" % (self.type,self.units),u'%6.2f')
         self.value = 0
-        self.distance = 0
+        self.total = 0
+        self.trip = 0
         self.GetOptions()
 
     def Draw(self):
+        if self.type == "total":
+            distance = self.total
+        else: # self.type == "trip"
+            distance = self.trip
+
         if self.units == "km":
-            self.value = self.distance
+            self.value = distance / 1000
         else: # self.units == "miles"
-            self.value = self.distance / 1.6
+            self.value = distance / 1600
 
     	TwoHandGauge.Draw(self)
 
-    def UpdateValue(self,value):
-        self.distance = value
+    def UpdateValues(self,total,trip):
+        self.total = total
+        self.trip = trip
         self.Draw()
 
     def GetOptions(self):
         s = DataStorage.GetInstance()
         self.units = s.GetValue("distance_units")
         self.type = s.GetValue("distance_type")
-        self.trip = s.GetValue("distance_trip")
-        self.total = s.GetValue("distance_total")
         self.tolerance = s.GetValue("distance_tolerance")
 
     def SaveOptions(self):
         s = DataStorage.GetInstance()
         s.SetValue("distance_units",self.units)
         s.SetValue("distance_type",self.type)
-        s.SetValue("distance_trip",self.trip)
-        s.SetValue("distance_total",self.total)
         s.SetValue("distance_tolerance",self.tolerance)
 
     def SelectOptions(self):
@@ -1539,7 +1542,9 @@ class S60DashView(View):
                 ]
         self.zoomedgauge = self.storage.GetValue("dashview_zoom")
 
-        self.distance = 0
+        #self.distance = 0
+        self.dist_total = self.storage.GetValue("distance_total")
+        self.dist_trip = self.storage.GetValue("distance_trip")
         self.longitude = 0
         self.latitude = 0
         self.time = None
@@ -1623,8 +1628,12 @@ class S60DashView(View):
 
     def UpdateDistance(self,distance):
         if str(distance) != "NaN":
-            self.distance += distance
-        self.distancegauge.UpdateValue(self.distance/1000)
+            self.dist_total += distance
+            self.dist_trip += distance
+            self.storage.SetValue("distance_total",self.dist_total)
+            #self.storage.SetValue("distance_trip",self.dist_trip)
+
+        self.distancegauge.UpdateValues(self.dist_total,self.dist_trip)
         self.update = True
 
     def UpdateWaypoint(self,heading,bearing,distance):
