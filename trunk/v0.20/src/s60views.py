@@ -1218,7 +1218,7 @@ class SpeedGauge(TwoHandGauge):
         if self.units == u"km/h":
             self.value = self.speed
         else: # self.units == "mph"
-            self.value = self.speed / 1.6
+            self.value = self.speed * 0.621371192237
 
         TwoHandGauge.Draw(self)
 
@@ -1327,8 +1327,8 @@ class WaypointForm(object):
         self._Waypoints = storage.GetWaypoints().keys()
         self._Waypoints.sort()
 
-        #self._Types = [u'Bearing', u'Distance']
-        #self._ShortTypes = [u'wpt-bear', u'wpt-dist']
+        self._Types = [u'Distance', u'ETA']
+        self._ShortTypes = [u'wpt-dist', u'wpt-eta']
         self._DistanceUnits = [u'Meters', u'Feet']
         self._ShortDistanceUnits = [u'm',u'ft']
         #self._BearingUnits = [u'Degrees', u'Radians']
@@ -1339,10 +1339,10 @@ class WaypointForm(object):
         #self._Bool = [u'No',u'Yes']
 
         self.gauge.GetOptions()
-        #if self.gauge.type in self._ShortTypes:
-        #    itype = self._ShortTypes.index(self.gauge.type)
-        #else:
-        #    itype = 0
+        if self.gauge.type in self._ShortTypes:
+            itype = self._ShortTypes.index(self.gauge.type)
+        else:
+            itype = 0
 
         if self.gauge.waypoint in self._Waypoints:
             iwaypoints = self._Waypoints.index(self.gauge.waypoint)
@@ -1365,7 +1365,7 @@ class WaypointForm(object):
             tolerance = self._ToleranceFeet
 
         self._Fields = [
-                         #( u'Type', 'combo', ( self._Types, itype ) ),
+                         ( u'Type', 'combo', ( self._Types, itype ) ),
                          ( u'Monitor waypoint', 'combo', ( self._Waypoints, iwaypoints ) ),
                          ( u'Distance Units', 'combo', ( self._DistanceUnits, idunits ) ),
                          ( u'Distance Tolerance', 'combo', ( tolerance, itolerance ) ),
@@ -1431,6 +1431,7 @@ class WaypointGauge(Gauge):
         self.heading = None
         self.bearing = None
         self.distance = None
+        self.eta = None
         self.GetOptions()
 
     def GetOptions(self):
@@ -1455,19 +1456,22 @@ class WaypointGauge(Gauge):
         if form.Run():
             self.Draw()
 
-    def UpdateValues(self,heading,bearing,distance):
+    def UpdateValues(self,heading,bearing,distance,eta):
         self.heading = heading
         self.bearing = bearing
         self.distance = distance
+        self.eta = int(eta/60)
         self.Draw()
 
     def _sanevalues(self):
-        if self.heading is None or str(self.heading) is 'NaN':
+        if self.heading is None or str(self.heading) == 'NaN':
             self.heading = 0
-        if self.bearing is None or str(self.bearing) is 'NaN':
+        if self.bearing is None or str(self.bearing) == 'NaN':
             self.bearing = 0
-        if self.distance is None or str(self.distance) is'NaN':
+        if self.distance is None or str(self.distance) =='NaN':
             self.distance = 0
+        if self.eta is None or str(self.eta) == 'NaN':
+            self.eta = 0
 
         north = 0 - self.heading
         bearing = north + self.bearing
@@ -1488,7 +1492,10 @@ class WaypointGauge(Gauge):
     def DrawInfo(self):
         if (self.radius >= 40):
             self.DrawText(((self.radius,0.5*self.radius+7)),u'%s' %self.tag)
-            self.DrawText(((self.radius,1.5*self.radius   )),u'%8.0fm' % self.distance)
+            if self.type == "wpt-dist":
+                self.DrawText(((self.radius,1.5*self.radius   )),u'%8.0fm' % self.distance)
+            else:
+                self.DrawText(((self.radius,1.5*self.radius   )),u'%02i:%02i' % (int(self.eta/60),self.eta % 60))
             self.DrawText(((self.radius,1.5*self.radius+14)),u'%05.1f' % self.bearing)
 
     def Draw(self):
@@ -2301,6 +2308,7 @@ class S60Application(Application, AlarmResponder):
         wpt = self.storage.GetValue("wpt_monitor")
         if wpt != None:
             name, distance = wpt
+            self.eta = None
             waypoints = self.storage.GetWaypoints()
             if name in waypoints.keys():
                 self.proximityalarm=ProximityAlarm(waypoints[name],distance,self)
@@ -2309,12 +2317,23 @@ class S60Application(Application, AlarmResponder):
         self.provider.StartGPS()
         self.view.Show()
 
+    def UpdateTime(self,time):
+        self.time = time
+
+    def UpdateETA(self,heading,bearing,distance):
+        if self.eta_data == None:
+            self.eta_data = { "start_time": self.time, "start_distance": distance, "eta" : None }
+        else:
+            delta_dist = distance - self.eta_data["start_distance"]
+            delta_time = self.time - self.eta_data["start_time"]
+            self.eta = delta_time / delta_dist * distance
 
     def AlarmTriggered(self,alarm):
         if alarm == self.timealarm:
             for view in self.views:
                 view.UpdateSignal(alarm.signal)
                 view.UpdateTime(alarm.time)
+                self.UpdateTime(alarm.time)
 
         if alarm == self.positionalarm:
             self.position = alarm.point
@@ -2323,14 +2342,17 @@ class S60Application(Application, AlarmResponder):
             if self.proximityalarm != None:
                 bearing = self.proximityalarm.bearing
                 distance = self.proximityalarm.distance
+                self.UpdateETA(alarm.avgheading,bearing,distance)
             else:
                 bearing = 0
                 distance = 0
+                self.eta = None
+                self.eta_data = None
 
             for view in self.views:
                 view.UpdatePosition(alarm.point)
                 view.UpdateDistance(alarm.distance)
-                view.UpdateWaypoint(alarm.avgheading,bearing,distance)
+                view.UpdateWaypoint(alarm.avgheading,bearing,distance,self.eta)
                 view.UpdateSpeed(alarm.avgspeed)
 
         if alarm == self.proximityalarm:
@@ -2579,6 +2601,16 @@ class S60Application(Application, AlarmResponder):
                 self.provider.SetAlarm(self.proximityalarm)
                 appuifw.note(u"Monitoring waypoint %s, notify when within %8.0f meters." % (waypoint.name, distance), "info")
                 self.storage.SetValue("wpt_monitor",(waypoint.name,distance))
+                self.eta = None
+                self.eta_data = None
+
+    def _MonitorWaypoint(self,waypoint,tolerance):
+        self.monitorwaypoint = waypoint
+        self.proximityalarm = ProximityAlarm(self.monitorwaypoint,distance,self)
+        self.provider.SetAlarm(self.proximityalarm)
+        self.storage.SetValue("wpt_monitor",(waypoint.name,distance))
+        self.eta = None
+        self.eta_data = None
 
     def WaypointOptions(self):
         appuifw.note(u"Not yet implemented.", "info")
