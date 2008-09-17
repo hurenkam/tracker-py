@@ -37,7 +37,7 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
 
 == Todo before 1st beta ==
   * (in svn) Gauge options in dashview
-  * Implement ascent/descent/average altitude
+  * (in svn) Implement ascent/descent/average altitude
   * Implement average speed
   * (in svn) Implement ETA in wpt gauge
   * (in svn) Implement total distance
