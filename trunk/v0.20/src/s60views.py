@@ -1444,6 +1444,7 @@ class WaypointGauge(Gauge):
             self.waypoint, self.tolerance = t
         self.distunits = s.GetValue("wpt_distunits")
         self.type = s.GetValue("wpt_type")
+        self.tag = u"%s" % self.waypoint
 
     def SaveOptions(self):
         s = DataStorage.GetInstance()
@@ -1460,7 +1461,10 @@ class WaypointGauge(Gauge):
         self.heading = heading
         self.bearing = bearing
         self.distance = distance
-        self.eta = int(eta/60)
+        if eta != None:
+            self.eta = int(eta/60)
+        else:
+            self.eta = 0
         self.Draw()
 
     def _sanevalues(self):
@@ -1643,8 +1647,8 @@ class S60DashView(View):
         self.distancegauge.UpdateValues(self.dist_total,self.dist_trip)
         self.update = True
 
-    def UpdateWaypoint(self,heading,bearing,distance):
-        self.waypointgauge.UpdateValues(heading,bearing,distance)
+    def UpdateWaypoint(self,heading,bearing,distance,eta):
+        self.waypointgauge.UpdateValues(heading,bearing,distance,eta)
         self.update = True
 
     def UpdateSpeed(self,speed):
@@ -1947,7 +1951,7 @@ class S60MapView(View):
     def UpdateDistance(self,distance):
         pass
 
-    def UpdateWaypoint(self,heading,bearing,distance):
+    def UpdateWaypoint(self,heading,bearing,distance,eta):
         self.mapwidget.UpdateValues(heading,bearing,distance)
         self.update = True
 
@@ -2306,9 +2310,10 @@ class S60Application(Application, AlarmResponder):
         self.provider.SetAlarm(self.positionalarm)
 
         wpt = self.storage.GetValue("wpt_monitor")
+        self.eta = None
+        self.eta_data = None
         if wpt != None:
             name, distance = wpt
-            self.eta = None
             waypoints = self.storage.GetWaypoints()
             if name in waypoints.keys():
                 self.proximityalarm=ProximityAlarm(waypoints[name],distance,self)
