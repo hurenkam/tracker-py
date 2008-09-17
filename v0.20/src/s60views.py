@@ -935,7 +935,6 @@ class AltitudeForm(object):
         self._IntervalValues = [ 5, 15, 30, 60, 120, 300, 900, 1800, 3600, 7200, 18000 ]
         self._Bool = [u'No',u'Yes']
 
-        self.gauge.GetOptions()
         if self.gauge.type in self._ShortTypes:
             itype = self._ShortTypes.index(self.gauge.type)
         else:
@@ -988,13 +987,14 @@ class AltitudeForm(object):
         appuifw.app.screen = 'full'
         appuifw.app.title = u'Tracker'
         if self.IsSaved():
-            self.gauge.type = self.GetType()
-            self.gauge.units = self.GetUnits()
-            self.gauge.tolerance = self.GetTolerance()
-            self.gauge.interval = self.GetInterval()
-            #print "Saving: ", self.gauge.type, self.gauge.units, self.gauge.tolerance, self.gauge.interval
+            self.gauge.SetOptions(
+                self.GetType(),
+                self.GetUnits(),
+                self.GetInterval(),
+                self.GetTolerance(),
+            )
             self.gauge.SaveOptions()
-            self.gauge.name = "%s (%s)" % (self.gauge.type,self.gauge.units)
+
             return True
         return False
 
@@ -1045,20 +1045,46 @@ class AltitudeGauge(TwoHandGauge):
         TwoHandGauge.__init__(self,radius,'altitude',u'%8.0f',(100,1000))
         self.value = 0
         self.altitude = 0
-        self.GetOptions()
+        self.ascent = 0
+        self.descent = 0
+        self.base = 0
+        self.tolerance = 0
+        self.interval = 0
+        self.avglist = []
+        self.avgbase = 0
+        self.avgcount = 0
+        self.step = None
+        self.LoadOptions()
 
     def Draw(self):
     	TwoHandGauge.Draw(self)
 
-    def GetOptions(self):
-        s = DataStorage.GetInstance()
-        self.type = s.GetValue("alt_type")
-        self.interval = s.GetValue("alt_interval")
-        self.tolerance = s.GetValue("alt_tolerance")
-        self.units = s.GetValue("alt_units")
-        self.showmax = s.GetValue("alt_showmax")
-        self.showmin = s.GetValue("alt_showmin")
+    def SetOptions(self,type="alt",units="m",interval=300,tolerance=100,max=False,min=False):
+        self.type = type
+        self.units = units
+        if self.interval != interval:
+            self.interval = interval
+            if interval >= 300:
+                self.step = int(interval / 100)
+            else:
+                self.step = None
+            self.average_values=[]
+
+        self.tolerance = tolerance
+        self.showmax = max
+        self.showmin = min
         self.name = "%s (%s)" % (self.type,self.units)
+
+    def LoadOptions(self):
+        s = DataStorage.GetInstance()
+        self.SetOptions(
+            s.GetValue("alt_type"),
+            s.GetValue("alt_units"),
+            s.GetValue("alt_interval"),
+            s.GetValue("alt_tolerance"),
+            s.GetValue("alt_showmax"),
+            s.GetValue("alt_showmin")
+        )
 
     def SaveOptions(self):
         s = DataStorage.GetInstance()
@@ -1075,15 +1101,55 @@ class AltitudeGauge(TwoHandGauge):
             self.Draw()
 
     def Draw(self):
+        def sum(l):
+            s = 0
+            for i in l:
+                s += i
+            return s
+
+        if self.type == "alt":
+            value = self.altitude
+        if self.type == "asc":
+            value = self.ascent
+        if self.type == "desc":
+            value = self.descent
+        if self.type == "avg-alt":
+            l = len(self.avglist)
+            if l > 0:
+                value = sum(self.avglist)/l
+            else:
+                value = 0
+
         if self.units == "m":
-            self.value = self.altitude
+            self.value = value
         else: # self.units == "ft"
-            self.value = self.altitude * 3.0
+            self.value = value * 3.2808398950131235
 
         TwoHandGauge.Draw(self)
 
     def UpdateValue(self,value):
-        self.altitude = value
+        delta = value -self.base
+        if delta > self.tolerance:
+            self.ascent += delta
+            self.base = value
+        if (-1 * delta) > self.tolerance:
+            self.descent -= delta
+            self.base = value
+
+        if self.step == None:
+            self.avglist.append(value)
+            if len(self.avglist)>self.interval:
+                del(self.avglist[0])
+        else:
+            self.avgbase += (value/self.step)
+            self.avgcount += 1
+            if self.avgcount == self.step:
+                self.avglist.append(self.avgcount)
+                if len(self.avglist) > 100:
+                    del(self.avglist[0])
+                self.avgbase = 0
+                self.avgcount = 0
+
         self.Draw()
 
 
