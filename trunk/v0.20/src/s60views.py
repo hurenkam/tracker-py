@@ -889,7 +889,7 @@ class DistanceGauge(TwoHandGauge):
         if self.units == "km":
             self.value = distance / 1000
         else: # self.units == "miles"
-            self.value = distance / 1600
+            self.value = distance / 1000 * 0.621371192
 
     	TwoHandGauge.Draw(self)
 
@@ -1068,7 +1068,8 @@ class AltitudeGauge(TwoHandGauge):
                 self.step = int(interval / 100)
             else:
                 self.step = None
-            self.average_values=[]
+            self.avglist=[]
+            self.avgcount = 0
 
         self.tolerance = tolerance
         self.showmax = max
@@ -1172,7 +1173,6 @@ class SpeedForm(object):
         self._IntervalValues = [ 5, 15, 30, 60, 120, 300, 900, 1800, 3600, 7200, 18000 ]
         self._Bool = [u'No',u'Yes']
 
-        self.gauge.GetOptions()
         if self.gauge.type in self._ShortTypes:
             itype = self._ShortTypes.index(self.gauge.type)
         else:
@@ -1257,17 +1257,39 @@ class SpeedGauge(TwoHandGauge):
         TwoHandGauge.__init__(self,radius,'speed',u'%8.2f')
         self.value = 0
         self.speed = 0
-        self.GetOptions()
+        #self.GetOptions()
+        self.interval = 0
+        self.avglist = []
+        self.avgbase = 0
+        self.avgcount = 0
+        self.step = None
+        self.LoadOptions()
 
-    def Draw(self):
-    	TwoHandGauge.Draw(self)
+    def SetOptions(self,type="speed",units="m",interval=300,max=False):
+        self.type = type
+        self.units = units
+        if self.interval != interval:
+            self.interval = interval
+            if interval >= 300:
+                self.step = int(interval / 100)
+            else:
+                self.step = None
+            self.avglist=[]
+            self.avgcount = 0
 
-    def GetOptions(self):
+        self.showmax = max
+        self.showmin = min
+        self.name = "%s (%s)" % (self.type,self.units)
+
+    def LoadOptions(self):
         s = DataStorage.GetInstance()
-        self.units = s.GetValue("speed_units")
-        self.type = s.GetValue("speed_type")
-        self.interval = s.GetValue("speed_interval")
-        self.showmax = s.GetValue("speed_showmax")
+        self.SetOptions(
+            s.GetValue("speed_type"),
+            s.GetValue("speed_units"),
+            s.GetValue("speed_interval"),
+            s.GetValue("speed_showmax")
+        )
+
 
     def SaveOptions(self):
         s = DataStorage.GetInstance()
@@ -1282,15 +1304,44 @@ class SpeedGauge(TwoHandGauge):
             self.Draw()
 
     def Draw(self):
+        def sum(l):
+            s = 0
+            for i in l:
+                s += i
+            return s
+
+        value = 0
+        if self.type == "speed":
+            value = self.speed
+        if self.type == "avg-speed":
+            l = len(self.avglist)
+            if l > 0:
+                value = sum(self.avglist)/l
+
         if self.units == u"km/h":
-            self.value = self.speed
+            self.value = value
         else: # self.units == "mph"
-            self.value = self.speed * 0.621371192237
+            self.value = value * 0.621371192237
 
         TwoHandGauge.Draw(self)
 
     def UpdateValue(self,value):
         self.speed = value
+        
+        if self.step == None:
+            self.avglist.append(value)
+            if len(self.avglist)>self.interval:
+                del(self.avglist[0])
+        else:
+            self.avgbase += (value/self.step)
+            self.avgcount += 1
+            if self.avgcount == self.step:
+                self.avglist.append(self.avgcount)
+                if len(self.avglist) > 100:
+                    del(self.avglist[0])
+                self.avgbase = 0
+                self.avgcount = 0
+
         self.Draw()
 
 
@@ -2395,8 +2446,9 @@ class S60Application(Application, AlarmResponder):
     def UpdateETA(self,heading,bearing,distance):
         if self.eta_data == None:
             self.eta_data = { "start_time": self.time, "start_distance": distance, "eta" : None }
+            self.eta = 0
         else:
-            delta_dist = distance - self.eta_data["start_distance"]
+            delta_dist = float(abs(distance - self.eta_data["start_distance"]))
             delta_time = self.time - self.eta_data["start_time"]
             self.eta = delta_time / delta_dist * distance
 
