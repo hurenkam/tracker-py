@@ -1107,6 +1107,7 @@ class AltitudeGauge(TwoHandGauge):
                 s += i
             return s
 
+        value = 0
         if self.type == "alt":
             value = self.altitude
         if self.type == "asc":
@@ -1117,8 +1118,6 @@ class AltitudeGauge(TwoHandGauge):
             l = len(self.avglist)
             if l > 0:
                 value = sum(self.avglist)/l
-            else:
-                value = 0
 
         if self.units == "m":
             self.value = value
@@ -1128,6 +1127,8 @@ class AltitudeGauge(TwoHandGauge):
         TwoHandGauge.Draw(self)
 
     def UpdateValue(self,value):
+        self.altitude = value
+        
         delta = value -self.base
         if delta > self.tolerance:
             self.ascent += delta
