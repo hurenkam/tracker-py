@@ -34,13 +34,16 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
 == Known Bugs (v0.20.4) ==
   * Some gauges sometimes show 'NaN' value
   * (fixed in svn) Due to a PyS60 limitation in the menu code, some menu items may not work depending on available options.
+  * Waypoints don't work properly when landmarks.sis is not installed
 
 == Todo before 1st beta ==
   * (in svn) Gauge options in dashview
   * (in svn) Implement ascent/descent/average altitude
-  * Implement average speed
+  * (in svn) Implement average speed
   * (in svn) Implement ETA in wpt gauge
   * (in svn) Implement total distance
+  * Fix Waypoint selection in option form
+  * Fix Waypoint ETA calculation
   * Make sure Sis file works on E: as well
 
 == Other Todo ==
