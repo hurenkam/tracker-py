@@ -433,10 +433,11 @@ class DataStorage(AlarmResponder):
 
     def InitWaypointList(self,dir='.'):
         filename = self.GetWaypointsFilename()
-        try:
-            self.waypoints = self.osal.OpenDbmFile(filename,"w")
-        except:
-            self.waypoints = self.osal.OpenDbmFile(filename,"n")
+        #try:
+        #    self.waypoints = self.osal.OpenDbmFile(filename,"w")
+        #except:
+        #    self.waypoints = self.osal.OpenDbmFile(filename,"n")
+        self.waypoints={}
 
     def CreateWaypoint(self,name='',lat=0,lon=0,alt=0):
         self.waypoints[name] = Waypoint(name,lat,lon,alt)
