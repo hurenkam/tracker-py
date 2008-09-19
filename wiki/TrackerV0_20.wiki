@@ -3,7 +3,7 @@
 [http://code.google.com/p/tracker-py/wiki/TrackerV0_20 v0.20] |
 WishList | RoadMap | CodeArchitecture
 
-=== Version 0.20.4 (alpha) has been released! ===
+=== Version 0.20.5 (alpha) has been released! ===
 === [http://code.google.com/p/tracker-py/wiki/UserGuideV0_20 User guide for v0.20] ===
 
 http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0014.jpg
@@ -14,7 +14,7 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
   * Dashview with gauges (speed, distance, altitude, heading, signal, time)
   * Mapview showing current position on map (press select to autoselect map)
   * Waypoint proximity alarm
-  * Persistent storage of several settings
+  * Persistent storage of most settings
   * Integrated with landmarks database (anything in category 'Waypoints' shows up in tracker
   * Track recording
   * Track & route display
@@ -31,19 +31,15 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
   * pkg_tracker.sh script created to package tracker.py into a sis file
   * can work without e: drive
 
-== Known Bugs (v0.20.4) ==
+== Known Bugs (v0.20.5) ==
   * Some gauges sometimes show 'NaN' value
-  * (fixed in svn) Due to a PyS60 limitation in the menu code, some menu items may not work depending on available options.
   * Waypoints don't work properly when landmarks.sis is not installed
 
 == Todo before 1st beta ==
-  * (in svn) Gauge options in dashview
-  * (in svn) Implement ascent/descent/average altitude
-  * (in svn) Implement average speed
-  * (in svn) Implement ETA in wpt gauge
-  * (in svn) Implement total distance
+  * Clock/Time gauge options
   * Fix Waypoint selection in option form
   * Fix Waypoint ETA calculation
+  * Fix persistent waypoints when no landmarks module present
   * Make sure Sis file works on E: as well
 
 == Other Todo ==
