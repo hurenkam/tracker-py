@@ -111,11 +111,11 @@ class S60Course(Course):
         self.heading = data['course']['heading']
         self.speed = data['course']['speed']
         self.distance, b = last.DistanceAndBearing(current)
-        if str(self.heading) is 'NaN':
+        if str(self.heading) == 'NaN':
             self.heading = 0
-        if str(self.speed) is 'NaN':
+        if str(self.speed) == 'NaN':
             self.speed = 0
-        if str(self.distance) is 'NaN':
+        if str(self.distance) == 'NaN':
             self.distance = 0
 
 class S60Signal(Signal):
