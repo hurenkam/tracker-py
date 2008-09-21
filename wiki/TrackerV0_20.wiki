@@ -32,7 +32,8 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
   * can work without e: drive
 
 == Known Bugs (v0.20.5) ==
-  * Some gauges sometimes show 'NaN' value
+  * Speed gauge sometimes show 'NaN' value/heading sometimes missing
+  * Sometimes when exiting gauge options, tracker exits as well
   * Waypoints don't work properly when landmarks.sis is not installed
 
 == Todo before 1st beta ==

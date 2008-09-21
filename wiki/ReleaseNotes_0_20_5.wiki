@@ -9,7 +9,8 @@
   * total distance
 
 == Known Bugs ==
-  * Some gauges sometimes show 'NaN' value
+  * Speed gauge sometimes show 'NaN' value/heading sometimes missing
+  * Sometimes when exiting gauge options, tracker exits as well
   * OSX/wxpython implementation needs a proper locking mechanism
 
 == Notes ==
