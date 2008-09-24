@@ -1506,6 +1506,7 @@ class WaypointForm(object):
         return None
 
     def Run( self ):
+        app = S60Application.GetInstance()
         self._IsSaved = False
         self._Form = appuifw.Form(self._Fields, appuifw.FFormEditModeOnly)
         self._Form.save_hook = self.MarkSaved
@@ -1519,10 +1520,13 @@ class WaypointForm(object):
         if self.IsSaved():
             self.gauge.type = self.GetType()
             self.gauge.distunits = self.GetDistanceUnits()
-            self.gauge.tolerance = self.GetDistanceTolerance()
-            #print "Saving: ", self.gauge.type, self.gauge.units, self.gauge.tolerance, self.gauge.interval
+
+            tolerance = self.GetDistanceTolerance()
+            waypoint = self.GetWaypoint()
+            app._MonitorWaypoint(waypoint,tolerance)
+
+            self.gauge.tag = u"%s" % waypoint.name
             self.gauge.SaveOptions()
-            self.gauge.tag = u"%s" % self.gauge.waypoint
             return True
         return False
 
@@ -1531,6 +1535,15 @@ class WaypointForm(object):
 
     def IsSaved( self ):
         return self._IsSaved
+
+    def GetWaypoint( self ):
+        storage = DataStorage.GetInstance()
+        field = self.GetField(u'Monitor waypoint')
+        if field != None:
+            waypointname = self._Waypoints[field[2][1]].encode( "utf-8" )
+            waypoints = storage.GetWaypoints()
+            if waypointname in waypoints.keys():
+                return waypoints[waypointname]
 
     def GetType( self ):
         field = self.GetField(u'Type')
@@ -1708,9 +1721,10 @@ class S60DashView(View):
 
     def GaugeOptions(self,event):
         print "GaugeOptions: ", self.zoomedgauge
-        self.norepaint = True
+        #self.norepaint = True
         self.gauges[self.zoomedgauge].SelectOptions()
-        self.norepaint = False
+        #self.norepaint = False
+        self.update = True
         self.Blit()
 
     def Resize(self,rect=None):
@@ -2437,6 +2451,7 @@ class S60Application(Application, AlarmResponder):
         self.provider.SetAlarm(self.timealarm)
         self.provider.SetAlarm(self.positionalarm)
 
+        self.monitorwaypoint = None
         wpt = self.storage.GetValue("wpt_monitor")
         self.eta = None
         self.eta_data = None
@@ -2446,6 +2461,7 @@ class S60Application(Application, AlarmResponder):
             if name in waypoints.keys():
                 self.proximityalarm=ProximityAlarm(waypoints[name],distance,self)
                 self.provider.SetAlarm(self.proximityalarm)
+                self.monitorwaypoint = waypoints[name]
 
         self.provider.StartGPS()
         self.view.Show()
@@ -2518,6 +2534,7 @@ class S60Application(Application, AlarmResponder):
             osal.Sleep(0.2)
 
     def Exit(self):
+        self.StopRecording()
         self.view.Hide()
         appuifw.note(u"Exiting...", "info")
         self.provider.StopGPS()
@@ -2727,27 +2744,25 @@ class S60Application(Application, AlarmResponder):
 
         return result
 
+    def _MonitorWaypoint(self,waypoint,tolerance):
+        print "_MonitorWaypoint"
+        if waypoint != self.monitorwaypoint:
+            self.monitorwaypoint = waypoint
+            self.eta = None
+            self.eta_data = None
+
+        self.proximityalarm = ProximityAlarm(self.monitorwaypoint,tolerance,self)
+        self.provider.SetAlarm(self.proximityalarm)
+        self.storage.SetValue("wpt_monitor",(waypoint.name,tolerance))
+
     def MonitorWaypoint(self):
         waypoints = self.storage.GetWaypoints()
         waypoint = self.SelectWaypoint(waypoints)
         if waypoint is not None:
-            self.monitorwaypoint = waypoint
             distance = self.QueryAndStore(u"Notify distance in meters:","float","wpt_tolerance")
             if distance is not None:
-                self.proximityalarm = ProximityAlarm(self.monitorwaypoint,distance,self)
-                self.provider.SetAlarm(self.proximityalarm)
+                self._MonitorWaypoint(waypoint,distance)
                 appuifw.note(u"Monitoring waypoint %s, notify when within %8.0f meters." % (waypoint.name, distance), "info")
-                self.storage.SetValue("wpt_monitor",(waypoint.name,distance))
-                self.eta = None
-                self.eta_data = None
-
-    def _MonitorWaypoint(self,waypoint,tolerance):
-        self.monitorwaypoint = waypoint
-        self.proximityalarm = ProximityAlarm(self.monitorwaypoint,distance,self)
-        self.provider.SetAlarm(self.proximityalarm)
-        self.storage.SetValue("wpt_monitor",(waypoint.name,distance))
-        self.eta = None
-        self.eta_data = None
 
     def WaypointOptions(self):
         appuifw.note(u"Not yet implemented.", "info")
@@ -2766,6 +2781,7 @@ class S60Application(Application, AlarmResponder):
                     track = self.storage.tracks[trackname]
                 else:
                     track = Track(self.storage.GetTrackFilename(trackname))
+                    self.storage.tracks[trackname]=track
 
                 track.Open()
 
@@ -2781,7 +2797,9 @@ class S60Application(Application, AlarmResponder):
 
 
     def StopRecording(self):
-        self.storage.tracks[self.trackname]=self.track
+        if self.track == None:
+            return
+
         DataProvider.GetInstance().DeleteAlarm(self.trackalarm)
         self.trackalarm = None
         self.track = None
