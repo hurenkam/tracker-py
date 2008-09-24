@@ -1129,7 +1129,7 @@ class AltitudeGauge(TwoHandGauge):
 
     def UpdateValue(self,value):
         self.altitude = value
-        
+
         delta = value -self.base
         if delta > self.tolerance:
             self.ascent += delta
@@ -1326,8 +1326,16 @@ class SpeedGauge(TwoHandGauge):
         TwoHandGauge.Draw(self)
 
     def UpdateValue(self,value):
+        if str(value) == "NaN":
+            return
+
+        if value < 0:
+            value = 0
+        if value > 9999:
+            value = 9999
+
         self.speed = value
-        
+
         if self.step == None:
             self.avglist.append(value)
             if len(self.avglist)>self.interval:
@@ -1580,19 +1588,21 @@ class WaypointGauge(Gauge):
         self.bearing = bearing
         self.distance = distance
         if eta != None:
+            if eta >= 360000:
+                eta = 359999
             self.eta = int(eta/60)
         else:
             self.eta = 0
         self.Draw()
 
     def _sanevalues(self):
-        if self.heading is None or str(self.heading) == 'NaN':
+        if self.heading == None or str(self.heading) == 'NaN':
             self.heading = 0
-        if self.bearing is None or str(self.bearing) == 'NaN':
+        if self.bearing == None or str(self.bearing) == 'NaN':
             self.bearing = 0
-        if self.distance is None or str(self.distance) =='NaN':
+        if self.distance == None or str(self.distance) =='NaN':
             self.distance = 0
-        if self.eta is None or str(self.eta) == 'NaN':
+        if self.eta == None or str(self.eta) == 'NaN':
             self.eta = 0
 
         north = 0 - self.heading
@@ -2451,6 +2461,9 @@ class S60Application(Application, AlarmResponder):
             delta_dist = float(abs(distance - self.eta_data["start_distance"]))
             delta_time = self.time - self.eta_data["start_time"]
             self.eta = delta_time / delta_dist * distance
+
+            if self.eta > 360000:
+                self.eta = 360000
 
     def AlarmTriggered(self,alarm):
         if alarm == self.timealarm:
