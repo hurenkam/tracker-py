@@ -28,6 +28,9 @@ class Osal:
     def GetDbmExt(self):
         pass
 
+    def ExecuteScript(self,script,globals={},locals={}):
+        pass
+
     GetInstance = staticmethod(GetInstance)
 
 
@@ -96,9 +99,11 @@ class S60Osal(Osal):
         global appuifw
         global e32
         global db
+        global sys
         import appuifw
         import e32
         import e32dbm as db
+        import sys
         Osal.instance = self
 
     def ShowInfo(self,text):
@@ -123,3 +128,12 @@ class S60Osal(Osal):
 
     def GetDbmExt(self):
         return ".e32dbm"
+
+    def ExecuteScript(self,script,globals={},locals={}):
+        modules = sys.modules.keys()
+        try:
+            execfile(script, globals, locals)
+        finally:
+            for m in sys.modules.keys():
+                if m not in modules:
+                    del sys.modules[m]
