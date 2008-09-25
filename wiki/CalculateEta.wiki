@@ -12,7 +12,7 @@ Tnow = current time
 Dnow = current distance to waypoint
 ETA = estimated remaining time before arrival
 
-ETA = (Tnow - Tstart)/abs(Dnow - Dstart) ** Dnow
+ETA = (Tnow - Tstart)/abs(Dnow - Dstart) x Dnow
 
 == Problems ==
   * How to get to the waypoint is not known by Tracker, therefore any estimation can only be done
