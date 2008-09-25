@@ -2511,8 +2511,20 @@ class S60Application(Application, AlarmResponder):
         if alarm == self.proximityalarm:
             appuifw.note(u"Waypoint reached!", "info")
             for i in range(0,5):
-                 Vibrate(500,100)
-                 self.osal.Sleep(0.5)
+                if alarm.action == None:
+                    Vibrate(500,100)
+                    self.osal.Sleep(0.5)
+                else:
+                    try:
+                        lat = alarm.point.latitude
+                        lon = alarm.point.longitude
+                        alt = alarm.point.altitude
+                        osal.ExecuteScript(alarm.action,{},{
+                            "position":"(%f,%f,%f)" % (lat,lon,alt),
+                            })
+                    except:
+                        XStore()
+
             self.proximityalarm = None
             self.storage.SetValue("wpt_monitor",None)
 
