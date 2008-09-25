@@ -118,6 +118,14 @@ When in monitor track/route mode, an algorithm can be used to determine
 at which moments the GPS should be powered up/down, depending on the
 form of the current speed and distance to next corner/route point.
 
+=== Run external script when specified location is reached ===
+Current waypoint monitoring code only allows for an alarm to be set upon
+reaching a specified waypoint within a set tolerance distance.
+It would be nice if an external event could be triggered when a certain
+location is reached, and it would be especially nice if a user-defined
+python script could be executed so that anyone can customize the actions
+according to their wishes.
+
 === Others? Please let me know! ===
 If something is holding you back from using this software, please let me
 know what it is. I can add it to this wishlist, and who knows maybe it will
@@ -125,4 +133,4 @@ end up on the RoadMap as well.
 (contact me at mark.hurenkamp <at> xs4all.nl or post on the general discussion
 list)
 
-Thanks to 
+Thanks to
