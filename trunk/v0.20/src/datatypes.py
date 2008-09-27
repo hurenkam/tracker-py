@@ -33,7 +33,7 @@ class ProximityAlarm(Alarm):
         self.tolerance = tolerance
         self.bearing = 0
         self.distance = 0
-        self.action = "e:\\python\\action.py"
+        self.action = "e:\\data\\tracker\\events\\proximityalarm.py"
 
     def Update(self,point,course,signal,time):
         self.distance, self.bearing = point.DistanceAndBearing(self.point)
