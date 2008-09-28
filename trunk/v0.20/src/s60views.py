@@ -2471,12 +2471,19 @@ class S60Application(Application, AlarmResponder):
 
     def UpdateETA(self,heading,bearing,distance):
         if self.eta_data == None:
-            self.eta_data = { "start_time": self.time, "start_distance": distance, "eta" : None }
+            self.eta_data = { "start_time": self.time, "max_time": self.time, "start_distance": distance, "max_distance": distance, "eta" : None }
             self.eta = 0
         else:
-            delta_dist = float(abs(distance - self.eta_data["start_distance"]))
-            delta_time = self.time - self.eta_data["start_time"]
-            self.eta = delta_time / delta_dist * distance
+            if distance > self.eta_data["max_distance"]:
+                self.eta_data["max_distance"] = distance
+                self.eta_data["max_time"] = self.time
+                delta_dist = float(abs(distance - self.eta_data["start_distance"]))
+                delta_time = self.time - self.eta_data["start_time"]
+                self.eta = delta_time / delta_dist * distance
+            else:
+                delta_dist = float(self.eta_data["max_distance"] - distance)
+                delta_time = self.time - self.eta_data["max_time"]
+                self.eta = delta_time / delta_dist * distance
 
             if self.eta > 360000:
                 self.eta = 360000
