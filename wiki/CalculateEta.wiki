@@ -7,12 +7,36 @@ with the following very simple algorithm. This works fine for A->B trips where t
 monitored waypoint can be modelled as a straight line.
 
 Tstart = time at start of measurement
+
 Dstart = distance to waypoint at start of measurement
+
 Tnow = current time
+
 Dnow = current distance to waypoint
+
 ETA = estimated remaining time before arrival
 
+
 ETA = (Tnow - Tstart)/abs(Dnow - Dstart) x Dnow
+
+== Improvement for A->A trips: keep track of max distance ==
+Add the following defenitions:
+
+Dmax = max distance to waypoint until now
+
+Tmax = time at wich Dmax was reached
+
+
+Now ETA is calculated as such:
+
+if Dnow == Dmax:		# Moving away from the waypoint
+
+    ETA = (Tnow - Tstart) / (Dnow - Dstart) x Dnow
+
+else:					# Heading towards the waypoint
+
+    ETA = (Tnow - Tmax) / (Dmax - Dnow) x Dnow
+
 
 == Problems ==
   * How to get to the waypoint is not known by Tracker, therefore any estimation can only be done
