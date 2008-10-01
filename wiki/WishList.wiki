@@ -3,6 +3,9 @@
 [http://code.google.com/p/tracker-py/wiki/TrackerV0_20 v0.20] |
 WishList | RoadMap | CodeArchitecture
 
+[http://hoth.xs4all.nl/~hurenkam/home/modules.php?op=modload&name=NS-Polls&file=index&pollID=4 Poll]
+
+
 === Multiple resolutions ===
 Current [http://code.google.com/p/tracker-py/wiki/TrackerV0_20 v0.20]
 implementation for S60 is aimed at N95 in portrait
