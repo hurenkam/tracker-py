@@ -78,7 +78,7 @@ class MapFile(file):
         refpoints = []
         for refpoint in self.parser.root.childnodes['refpoint']:
             if "name" in refpoint.properties:
-                name = eval(refpoint.properties['name'])
+                name = refpoint.properties['name']
             else:
                 name = ""
             lat = eval(refpoint.properties['lat'])
