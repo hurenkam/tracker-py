@@ -931,6 +931,8 @@ s60defaults = {
         "alt_units":"u\"m\"",
         "alt_showmax":"True",
         "alt_showmin":"True",
+
+        "time_type":"u\"clock\"",
     }
 
 class S60Waypoint(Waypoint):

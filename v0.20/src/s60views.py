@@ -1395,25 +1395,118 @@ class ClockGauge(Gauge):
                     self.DrawTriangleHand (minuteshand, 0.7  * self.radius, 0, 4)
                     self.DrawTriangleHand (hourshand,   0.5  * self.radius, 0, 4)
 
+
+
+class TimeForm(object):
+#        "time_type":\"trip\",
+
+    def __init__(self,gauge):
+        self.gauge = gauge
+        self._IsSaved = False
+
+        self._Types = [u'Clock', u'Trip', u'Remaining',u'ETA']
+        self._ShortTypes = [u'clock', u'trip',u'left',u'eta']
+
+        self.gauge.LoadOptions()
+        if self.gauge.type in self._ShortTypes:
+            itype = self._ShortTypes.index(self.gauge.type)
+        else:
+            itype = 0
+
+        self._Fields = [
+                         ( u'Type', 'combo', ( self._Types, itype ) ),
+        ]
+
+    def GetField(self,name):
+        for f in self._Form:
+            if f[0] == name:
+                return f
+        return None
+
+    def Run( self ):
+        self._IsSaved = False
+        self._Form = appuifw.Form(self._Fields, appuifw.FFormEditModeOnly)
+        self._Form.save_hook = self.MarkSaved
+        self._Form.flags = appuifw.FFormEditModeOnly
+
+        appuifw.app.title = u'Time Options'
+        appuifw.app.screen = 'normal'
+        self._Form.execute( )
+        appuifw.app.screen = 'full'
+        appuifw.app.title = u'Tracker'
+        if self.IsSaved():
+            self.gauge.type = self.GetType()
+            self.gauge.SaveOptions()
+            self.gauge.tag = "%s" % self.gauge.type
+            return True
+        return False
+
+    def MarkSaved( self, bool ):
+        self._IsSaved = bool
+
+    def IsSaved( self ):
+        return self._IsSaved
+
+    def GetType( self ):
+        field = self.GetField(u'Type')
+        if field != None:
+            return self._ShortTypes[field[2][1]].encode( "utf-8" )
+
+
 class TimeGauge(Gauge):
 
     def __init__(self,radius=None):
-        self.hours = 0
-        self.minutes = 0
-        self.seconds = 0
+        self.time = 0
+        self.trip = 0
+        self.remaining = 0
+        self.eta = 0
+        self.type = "clock"
         Gauge.__init__(self,radius)
-        self.tag = "time"
+        self.tag = "clock"
 
-    def UpdateValue(self,value):
+    def SetOptions(self,type="clock"):
+        self.type = type
+        self.tag = "%s" % self.type
+
+    def LoadOptions(self):
+        s = DataStorage.GetInstance()
+        self.SetOptions(
+            s.GetValue("time_type")
+        )
+
+
+    def SaveOptions(self):
+        s = DataStorage.GetInstance()
+        s.SetValue("time_type",self.type)
+
+    def SelectOptions(self):
+        form = TimeForm(self)
+        if form.Run():
+            self.Draw()
+
+    def GetHMS(self,value):
         h = int(value/3600)
         m = int((value - h * 3600) / 60)
         s = int(value - h * 3600 - m * 60)
-        self.hours = h
-        self.minutes = m
-        self.seconds = s
+        return h,m,s
+
+    def UpdateValues(self,time,trip,remaining,eta):
+        self.time = time
+        self.trip = trip
+        self.remaining = remaining
+        self.eta = eta
         self.Draw()
 
     def Draw(self):
+        if self.type == "clock":
+            y,m,d,hours,minutes,seconds,d1,d2,d3 = time.localtime(self.time)
+        if self.type == "eta":
+            y,m,d,hours,minutes,seconds,d1,d2,d3 = time.localtime(self.eta)
+        if self.type == "trip":
+            hours,minutes,seconds = self.GetHMS(self.trip)
+        if self.type == "remaining":
+            hours,minutes,seconds = self.GetHMS(self.remaining)
+
         if self.radius is None:
             return
 
@@ -1422,22 +1515,22 @@ class TimeGauge(Gauge):
         if self.radius >= 30:
             self.DrawText(((self.radius,0.6*self.radius)),u'%s' % self.tag)
         if ((self.radius != None) and
-            (self.hours != None) and
-            (self.minutes != None)):
+            (hours != None) and
+            (minutes != None)):
 
-                hourshand =    self.hours   * 360/12  + self.minutes * 360/12/60
-                if self.seconds != None:
-                    minuteshand =  self.minutes * 360/60  + self.seconds * 360/60/60
-                    secondshand =  self.seconds * 360/60
+                hourshand =    hours   * 360/12  + minutes * 360/12/60
+                if seconds != None:
+                    minuteshand =  minutes * 360/60  + seconds * 360/60/60
+                    secondshand =  seconds * 360/60
                     if self.radius >= 30:
-                        self.DrawText(((self.radius,1.6*self.radius)),u'%2i:%02i:%02i' % (self.hours,self.minutes,self.seconds),size=1.3)
+                        self.DrawText(((self.radius,1.6*self.radius)),u'%2i:%02i:%02i' % (hours,minutes,seconds),size=1.3)
                     self.DrawLineHand     (secondshand, 0.75 * self.radius, 0, 1)
                     self.DrawTriangleHand (minuteshand, 0.7  * self.radius, 0, 4)
                     self.DrawTriangleHand (hourshand,   0.5  * self.radius, 0, 4)
                 else:
-                    minuteshand =  self.minutes * 360/60
+                    minuteshand =  minutes * 360/60
                     if self.radius >= 30:
-                        self.DrawText(((self.radius,1.6*self.radius)),u'%2i:%02i' % (self.hours,self.minutes),size=1.5)
+                        self.DrawText(((self.radius,1.6*self.radius)),u'%2i:%02i' % (hours,minutes),size=1.5)
                     self.DrawTriangleHand (minuteshand, 0.7  * self.radius, 0, 4)
                     self.DrawTriangleHand (hourshand,   0.5  * self.radius, 0, 4)
 
@@ -1759,12 +1852,12 @@ class S60DashView(View):
             self.satwidget.UpdateValues(signal.used,0)
         self.update = True
 
-    def UpdateTime(self,time):
+    def UpdateTime(self,time,eta):
         if self.time is None:
             self.time = time
 
         self.clockgauge.UpdateValue(time)
-        self.timegauge.UpdateValue(time-self.time)
+        self.timegauge.UpdateValues(time,time-self.time,eta,time+eta)
         bat = sysinfo.battery()
         if bat <50:
             self.batwidget.UpdateValues(0,bat)
@@ -2072,7 +2165,7 @@ class S60MapView(View):
             self.satwidget.UpdateValues(signal.used,0)
         self.update = True
 
-    def UpdateTime(self,time):
+    def UpdateTime(self,time,eta):
         bat = sysinfo.battery()
         if bat <50:
             self.batwidget.UpdateValues(0,bat)
@@ -2453,7 +2546,7 @@ class S60Application(Application, AlarmResponder):
 
         self.monitorwaypoint = None
         wpt = self.storage.GetValue("wpt_monitor")
-        self.eta = None
+        self.eta = 0
         self.eta_data = None
         if wpt != None:
             name, distance = wpt
@@ -2492,7 +2585,7 @@ class S60Application(Application, AlarmResponder):
         if alarm == self.timealarm:
             for view in self.views:
                 view.UpdateSignal(alarm.signal)
-                view.UpdateTime(alarm.time)
+                view.UpdateTime(alarm.time,self.eta)
                 self.UpdateTime(alarm.time)
 
         if alarm == self.positionalarm:
