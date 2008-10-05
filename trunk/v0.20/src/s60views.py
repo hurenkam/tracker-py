@@ -792,8 +792,8 @@ class DistanceForm(object):
         self.gauge = gauge
         self._IsSaved = False
 
-        self._Types = [u'Total', u'Trip']
-        self._ShortTypes = [u'total', u'trip']
+        self._Types = [u'Total', u'Trip', u'Waypoint']
+        self._ShortTypes = [u'total', u'trip', u'wpt']
         self._Units = [u'Kilometers', u'Miles']
         self._ShortUnits = [u'km',u'miles']
         self._Bool = [u'No',u'Yes']
@@ -878,13 +878,16 @@ class DistanceGauge(TwoHandGauge):
         self.value = 0
         self.total = 0
         self.trip = 0
+        self.distance = 0
         self.GetOptions()
 
     def Draw(self):
         if self.type == "total":
             distance = self.total
-        else: # self.type == "trip"
+        if self.type == "trip":
             distance = self.trip
+        if self.type == "wpt":
+            distance = self.distance
 
         if self.units == "km":
             self.value = distance / 1000
@@ -893,9 +896,10 @@ class DistanceGauge(TwoHandGauge):
 
     	TwoHandGauge.Draw(self)
 
-    def UpdateValues(self,total,trip):
+    def UpdateValues(self,total,trip,distance):
         self.total = total
         self.trip = trip
+        self.distance = distance
         self.Draw()
 
     def GetOptions(self):
@@ -1790,6 +1794,7 @@ class S60DashView(View):
         #self.distance = 0
         self.dist_total = self.storage.GetValue("distance_total")
         self.dist_trip = self.storage.GetValue("distance_trip")
+        self.wptdistance = 0
         self.longitude = 0
         self.latitude = 0
         self.time = None
@@ -1879,10 +1884,11 @@ class S60DashView(View):
             self.storage.SetValue("distance_total",self.dist_total)
             #self.storage.SetValue("distance_trip",self.dist_trip)
 
-        self.distancegauge.UpdateValues(self.dist_total,self.dist_trip)
+        self.distancegauge.UpdateValues(self.dist_total,self.dist_trip,self.wptdistance)
         self.update = True
 
     def UpdateWaypoint(self,heading,bearing,distance,eta):
+        self.wptdistance = distance
         self.waypointgauge.UpdateValues(heading,bearing,distance,eta)
         self.update = True
 
