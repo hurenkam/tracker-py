@@ -1357,6 +1357,37 @@ class SpeedGauge(TwoHandGauge):
         self.Draw()
 
 
+class SateliteGauge(Gauge):
+
+    def __init__(self,radius=None):
+        self.satlist = []
+        Gauge.__init__(self,radius)
+
+    def SelectOptions(self):
+        appuifw.note(u"No options available.", "info")
+
+
+    def UpdateSatInfo(self,satlist):
+        self.satlist = satlist
+        self.Draw()
+
+    def Draw(self):
+        if self.radius is None:
+            return
+
+        Gauge.Draw(self)
+        self.DrawText(((self.radius,0.6*self.radius)),u'satelites')
+        self.DrawInnerCircle(self.radius*0.4)
+        self.DrawInnerCross()
+
+        if len(self.satlist) > 0:
+            for info in self.satlist:
+                angle = info['azimuth']
+                pos = self.radius * ((90.0 - info['elevation'])/100)
+                color = 0x40c040 * info['inuse']
+                self.DrawDotHand(angle,pos,color,handwidth=self.radius/10)
+
+
 class ClockGauge(Gauge):
 
     def __init__(self,radius=None):
@@ -1758,7 +1789,8 @@ class S60DashView(View):
         self.osal = Osal.GetInstance()
 
         #self.signalgauge = SignalGauge(None)
-        self.clockgauge = ClockGauge(None)
+        #self.clockgauge = ClockGauge(None)
+        self.satgauge = SateliteGauge(None)
         self.waypointgauge = WaypointGauge(None)
         self.speedgauge = SpeedGauge(None)
         self.distancegauge = DistanceGauge(None)
@@ -1774,7 +1806,7 @@ class S60DashView(View):
         self.exitwidget = TextWidget("Exit",fgcolor=0xffffff,bgcolor=0x0000ff)
 
         self.gauges = [
-                self.clockgauge,
+                self.satgauge,
                 self.timegauge,
                 self.distancegauge,
                 self.speedgauge,
@@ -1857,11 +1889,14 @@ class S60DashView(View):
             self.satwidget.UpdateValues(signal.used,0)
         self.update = True
 
+    def UpdateSatInfo(self,satlist):
+        self.satgauge.UpdateSatInfo(satlist)
+
     def UpdateTime(self,time,eta):
         if self.time is None:
             self.time = time
 
-        self.clockgauge.UpdateValue(time)
+        #self.clockgauge.UpdateValue(time)
         self.timegauge.UpdateValues(time,time-self.time,eta,time+eta)
         bat = sysinfo.battery()
         if bat <50:
