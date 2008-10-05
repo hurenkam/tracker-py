@@ -1409,7 +1409,7 @@ class TimeForm(object):
         self._IsSaved = False
 
         self._Types = [u'Clock', u'Trip', u'Remaining',u'ETA']
-        self._ShortTypes = [u'clock', u'trip',u'left',u'eta']
+        self._ShortTypes = [u'clock', u'trip',u'remaining',u'eta']
 
         self.gauge.LoadOptions()
         if self.gauge.type in self._ShortTypes:
