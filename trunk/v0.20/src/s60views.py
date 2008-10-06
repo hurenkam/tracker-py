@@ -72,6 +72,7 @@ class Widget:
         self.Resize(size)
 
     def Resize(self,size=None):
+        print "Widget.Resize(",size,")"
         self.size = size
         if self.size == None:
             return
@@ -115,6 +116,9 @@ class Widget:
     def DrawDot(self,point,color=0,width=1):
         self.image.point(point,outline=color,width=width)
 
+    def DrawLine(self,point1,point2,color,width=1):
+        self.image.line((point1,point2),color,width=width)
+
     def DrawEllipse(self,rect,color,width=1,fill=None):
         self.image.ellipse(rect,outline=color,width=width,fill=fill)
 
@@ -146,7 +150,7 @@ class TextWidget(Widget):
 
 
 
-class BarWidget(Widget):
+class _BarWidget(Widget):
     def __init__(self,size=None,c1=Color["bar_c1"],c2=Color["bar_c2"],range=100,bars=7):
         Widget.__init__(self)
         self.bgcolor = Color["bar_bg"]
@@ -168,6 +172,7 @@ class BarWidget(Widget):
         self.Draw()
 
     def Resize(self,size):
+        print "BarWidget.Resize(",size,")"
         if size == None:
             Widget.Resize(self,size)
             return
@@ -191,6 +196,140 @@ class BarWidget(Widget):
 
         Widget.Draw(self)
 
+        if self.v1 == None:
+            v1=0
+        else:
+            v1 = int(0.5 + float(self.v1) * float(self.bars) / float(self.range))
+        if self.v2 == None:
+            v2 = v1
+        else:
+            v2 = int(0.5 + float(self.v2) * float(self.bars) / float(self.range))
+        if v2 < v1:
+            v2=v1
+
+        if v1 > self.bars:
+            v1 = self.bars
+        if v2 > self.bars:
+            v2 = self.bars
+        if v1 < 0:
+            v1 = 0
+        if v2 < 0:
+            v2 = 0
+
+        #print 0,v2,v2,self.bars,self.x,self.y,self.dy
+        for i in range (0,v1):
+            y = self.y+(self.bars-(i+1))*self.dy
+            self.DrawDot((self.x,y),self.c1,self.width)
+        for i in range (v1,v2):
+            y = self.y+(self.bars-(i+1))*self.dy
+            self.DrawDot((self.x,y),self.c2,self.width)
+        for i in range (v2,self.bars):
+            y = self.y+(self.bars-(i+1))*self.dy
+            self.DrawDot((self.x,y),Color["black"],self.width)
+
+
+class BarWidget(Widget):
+
+    def __init__(self,size=None,c1=Color["bar_c1"],c2=Color["bar_c2"],range=100,bars=7):
+        Widget.__init__(self)
+        self.bgcolor = Color["bar_bg"]
+        self.v1=40
+        self.v2=80
+        self.SetParams(c1,c2,range,bars)
+        self.Resize(size)
+
+    def SetParams(self,c1=Color["bar_c1"],c2=Color["bar_c2"],range=100,bars=7):
+        self.c1=c1
+        self.c2=c2
+        self.bars = bars
+        self.range = range
+        self.Resize(self.size)
+
+    def UpdateValues(self,v1,v2):
+        self.v1 = v1
+        self.v2 = v2
+        self.Draw()
+
+    def Resize(self,size):
+        print "BarWidget.Resize(",size,")"
+        #if size == None:
+        #    Widget.Resize(self,size)
+        #    return
+        Widget.Resize(self,size)
+
+    def _Resize(self):
+        self.x = w / 2.0
+        self.y = 2
+        self.dy = (h-2*self.y)/float(self.bars)
+        #self.y -= self.dy/2
+        if self.dy > 4:
+            self.width = (self.dy - 2)
+        else:
+            self.width = 2
+
+        self.y += int(self.width/2.0+0.5)
+        Widget.Resize(self,size)
+
+    def CalcValues(self):
+        if self.v1 == None:
+            v1=0
+        else:
+            v1 = int(0.5 + float(self.v1) * float(self.bars) / float(self.range))
+        if self.v2 == None:
+            v2 = v1
+        else:
+            v2 = int(0.5 + float(self.v2) * float(self.bars) / float(self.range))
+        if v2 < v1:
+            v2=v1
+
+        if v1 > self.bars:
+            v1 = self.bars
+        if v2 > self.bars:
+            v2 = self.bars
+        if v1 < 0:
+            v1 = 0
+        if v2 < 0:
+            v2 = 0
+
+        return v1,v2
+
+    def Draw(self):
+        if self.size == None:
+            return
+
+        Widget.Draw(self)
+
+        w,h = self.size
+        if w > h:
+            self.bars = (w-3)/2
+            x1,y1 = 2,2
+            x2,y2 = 2,h-4
+            dx = 2
+            dy = 0
+        else:
+            self.bars = (h-3)/2
+            x1,y1 = 2,h-2
+            x2,y2 = w-4,h-2
+            dx = 0
+            dy = 2
+
+        v1,v2 = self.CalcValues()
+
+        for i in range (0,v1):
+            self.DrawLine((x1,y1),(x2,y2),self.c1)
+            x1 += dx; x2 += dx
+            y1 -= dy; y2 -= dy
+        for i in range (v1,v2):
+            self.DrawLine((x1,y1),(x2,y2),self.c2)
+            x1 += dx; x2 += dx
+            y1 -= dy; y2 -= dy
+        for i in range (v2,self.bars):
+            self.DrawLine((x1,y1),(x2,y2),Color["black"])
+            x1 += dx; x2 += dx
+            y1 -= dy; y2 -= dy
+
+
+    def _Draw(self):
         if self.v1 == None:
             v1=0
         else:
@@ -280,11 +419,15 @@ class PositionWidget(Widget):
         if self.point:
             texts = self.GetPositionTexts()
             x,y = 5,5
+            text = u""
             for t in texts:
-                w,h = self.DrawText((x,y),t)
-                x = x+w+7
+                text = text + t + u" "
+            #    w,h = self.DrawText((x,y),t)
+            #    x = x+w+7
+
+            self.DrawText( (5,1), text)
         else:
-            self.DrawText( (5,5), u"Position unknown")
+            self.DrawText( (5,1), u"Position unknown")
 
 GPS = 0
 UP = 1
@@ -1497,7 +1640,7 @@ class TimeGauge(Gauge):
         self.eta = 0
         self.type = "clock"
         Gauge.__init__(self,radius)
-        self.tag = "clock"
+        self.LoadOptions()
 
     def SetOptions(self,type="clock"):
         self.type = type
@@ -1581,8 +1724,8 @@ class WaypointForm(object):
         self._Waypoints = storage.GetWaypoints().keys()
         self._Waypoints.sort()
 
-        self._Types = [u'Distance', u'ETA']
-        self._ShortTypes = [u'wpt-dist', u'wpt-eta']
+        self._Types = [u'Heading', u'Waypoint']
+        self._ShortTypes = [u'heading', u'waypoint']
         self._DistanceUnits = [u'Meters', u'Feet']
         self._ShortDistanceUnits = [u'm',u'ft']
         #self._BearingUnits = [u'Degrees', u'Radians']
@@ -1765,11 +1908,14 @@ class WaypointGauge(Gauge):
     def DrawInfo(self):
         if (self.radius >= 40):
             self.DrawText(((self.radius,0.5*self.radius+7)),u'%s' %self.tag)
-            if self.type == "wpt-dist":
-                self.DrawText(((self.radius,1.5*self.radius   )),u'%8.0fm' % self.distance)
-            else:
-                self.DrawText(((self.radius,1.5*self.radius   )),u'%02i:%02i' % (int(self.eta/60),self.eta % 60))
-            self.DrawText(((self.radius,1.5*self.radius+14)),u'%05.1f' % self.bearing)
+            #if self.type == "wpt-dist":
+            #    self.DrawText(((self.radius,1.5*self.radius   )),u'%8.0fm' % self.distance)
+            #else:
+            #    self.DrawText(((self.radius,1.5*self.radius   )),u'%02i:%02i' % (int(self.eta/60),self.eta % 60))
+            if self.type == "waypoint":
+                self.DrawText(((self.radius,1.5*self.radius+14)),u'%05.1f' % self.bearing)
+            else: # self.type == "heading"
+                self.DrawText(((self.radius,1.5*self.radius+14)),u'%05.1f' % self.heading)
 
     def Draw(self):
         if self.radius is None:
@@ -1799,19 +1945,19 @@ class S60DashView(View):
 
         self.satwidget = BarWidget((15,50),bars=5,range=10)
         self.batwidget = BarWidget((15,50),bars=5,range=100)
-        self.positionwidget = PositionWidget((200,25))
+        self.positionwidget = PositionWidget((200,15))
         #self.positionwidget = PositionWidget((156,45))
         self.menuwidget = TextWidget("Menu",fgcolor=0xffffff,bgcolor=0x0000ff)
         self.optionswidget = TextWidget("Options",fgcolor=0xffffff,bgcolor=0x0000ff)
         self.exitwidget = TextWidget("Exit",fgcolor=0xffffff,bgcolor=0x0000ff)
 
         self.gauges = [
-                self.satgauge,
+                self.waypointgauge,
                 self.timegauge,
                 self.distancegauge,
-                self.speedgauge,
+                self.satgauge,
                 self.altitudegauge,
-                self.waypointgauge
+                self.speedgauge,
             ]
         self.spots = [
                 ((0,80),    (160,160)),
@@ -1859,8 +2005,32 @@ class S60DashView(View):
 
     def Resize(self,rect=None):
         size = appuifw.app.body.size
+        print "S60MapView.Resize(",size,")"
         self.image = Image.new(size)
         self.image.clear(0xc0c0c0)
+
+        if size == (320,240):
+            self.spots = [
+                    ((98,40),   (160,160)),
+                    ((0,20),    (100,100)),
+                    ((0,120),   (100,100)),
+                    ((250,20),  (70,70)),
+                    ((260,90),  (60,60)),
+                    ((250,150), (70,70)),
+                    ]
+            self.satwidget.Resize((50,15))
+            self.batwidget.Resize((50,15))
+        else:
+            self.spots = [
+                    ((0,80),    (160,160)),
+                    ((0,0),     (80,80)),
+                    ((80,0),    (80,80)),
+                    ((160,0),   (80,80)),
+                    ((160,80),  (80,80)),
+                    ((160,160), (80,80)),
+                    ]
+            self.satwidget.Resize((15,50))
+            self.batwidget.Resize((15,50))
 
         for i in range(0,len(self.spots)):
             j = (i-self.zoomedgauge) % (len(self.spots))
@@ -1950,53 +2120,101 @@ class S60DashView(View):
                     mask = g.GetMask(),
                     scale = 0 )
 
-        self.image.rectangle((0,270,self.image.size[0],self.image.size[1]),fill=0x0000ff)
+        size = appuifw.app.body.size
+        if size == (320,240):
+            self.image.rectangle((0,0,self.image.size[0],20),fill=0x0000ff)
+            self.image.rectangle((0,220,self.image.size[0],self.image.size[1]),fill=0x0000ff)
 
-        w = self.satwidget
-        s = w.GetImage().size
-        self.image.blit(
-            image = w.GetImage(),
-            target = (0,270),
-            source = ((0,0),s),
-            scale = 0 )
+            w = self.positionwidget
+            #w.UpdatePosition(self.mapwidget.GetPosition())
+            s = w.GetImage().size
+            self.image.blit(
+                image = w.GetImage(),
+                target = (70,222),
+                source = ((0,0),s),
+                scale = 0 )
 
-        w = self.batwidget
-        s = w.GetImage().size
-        self.image.blit(
-            image = w.GetImage(),
-            target = (225,270),
-            source = ((0,0),s),
-            scale = 0 )
+            w = self.menuwidget
+            s = w.GetImage().size
+            self.image.blit(
+                image = w.GetImage(),
+                target = (320-s[0],240-s[1]),
+                source = ((0,0),s),
+                scale = 0 )
 
-        w = self.positionwidget
-        s = w.GetImage().size
-        self.image.blit(
-            image = w.GetImage(),
-            target = (20,275),
-            source = ((0,0),s),
-            scale = 0 )
+            w = self.exitwidget
+            s = w.GetImage().size
+            self.image.blit(
+                image = w.GetImage(),
+                target = (320-s[0],0),
+                source = ((0,0),s),
+                scale = 0 )
 
-        w = self.menuwidget
-        s = w.GetImage().size
-        self.image.blit(
-            image = w.GetImage(),
-            target = (20,320-s[1]),
-            source = ((0,0),s),
-            scale = 0 )
+            w = self.satwidget
+            s = w.GetImage().size
+            self.image.blit(
+                image = w.GetImage(),
+                target = (5,4),
+                source = ((0,0),s),
+                scale = 0 )
+
+            w = self.batwidget
+            s = w.GetImage().size
+            self.image.blit(
+                image = w.GetImage(),
+                target = (5,224),
+                source = ((0,0),s),
+                scale = 0 )
+
+        else:
+            self.image.rectangle((0,270,self.image.size[0],self.image.size[1]),fill=0x0000ff)
+
+            w = self.positionwidget
+            #w.UpdatePosition(self.mapwidget.GetPosition())
+            s = w.GetImage().size
+            self.image.blit(
+                image = w.GetImage(),
+                target = (20,275),
+                source = ((0,0),s),
+                scale = 0 )
+
+            w = self.menuwidget
+            s = w.GetImage().size
+            self.image.blit(
+                image = w.GetImage(),
+                target = (20,320-s[1]),
+                source = ((0,0),s),
+                scale = 0 )
+
+            w = self.exitwidget
+            s = w.GetImage().size
+            self.image.blit(
+                image = w.GetImage(),
+                target = (220-s[0],320-s[1]),
+                source = ((0,0),s),
+                scale = 0 )
+
+            w = self.satwidget
+            s = w.GetImage().size
+            self.image.blit(
+                image = w.GetImage(),
+                target = (0,270),
+                source = ((0,0),s),
+                scale = 0 )
+
+            w = self.batwidget
+            s = w.GetImage().size
+            self.image.blit(
+                image = w.GetImage(),
+                target = (225,270),
+                source = ((0,0),s),
+                scale = 0 )
 
         w = self.optionswidget
         s = w.GetImage().size
         self.image.blit(
             image = w.GetImage(),
             target = (120-s[0]/2,320-s[1]),
-            source = ((0,0),s),
-            scale = 0 )
-
-        w = self.exitwidget
-        s = w.GetImage().size
-        self.image.blit(
-            image = w.GetImage(),
-            target = (220-s[0],320-s[1]),
             source = ((0,0),s),
             scale = 0 )
 
@@ -2038,7 +2256,7 @@ class S60MapView(View):
         self.menuwidget = TextWidget("Menu",fgcolor=0xffffff,bgcolor=0x0000ff)
         self.editwidget = TextWidget("Find map",fgcolor=0xffffff,bgcolor=0x0000ff)
         self.exitwidget = TextWidget("Exit",fgcolor=0xffffff,bgcolor=0x0000ff)
-        self.positionwidget = PositionWidget((200,25))
+        self.positionwidget = PositionWidget((200,15))
 
         self.distance = 0
         self.longitude = 0
@@ -2190,9 +2408,20 @@ class S60MapView(View):
 
     def Resize(self,rect=None):
         size = appuifw.app.body.size
+        print "S60MapView.Resize(",size,")"
         self.image = Image.new(size)
         self.image.clear(0xc0c0c0)
         self.update = True
+
+        if size==(240,320):
+            self.mapwidget.Resize((230,260))
+            self.satwidget.Resize((15,50))
+            self.batwidget.Resize((15,50))
+        if size==(320,240):
+            self.mapwidget.Resize((310,190))
+            self.satwidget.Resize((50,15))
+            self.batwidget.Resize((50,15))
+
         self.Draw()
 
     def UpdateDatum(self):
@@ -2245,62 +2474,116 @@ class S60MapView(View):
         if self.image !=None:
             self.update = False
 
-            self.image.rectangle((0,270,self.image.size[0],self.image.size[1]),fill=0x0000ff)
 
-            w = self.mapwidget
-            s = w.GetImage().size
-            self.image.blit(
-                image = w.GetImage(),
-                target = (5,5),
-                source = ((0,0),s),
-                scale = 0 )
+            size = appuifw.app.body.size
+            if size == (320,240):
+                self.image.rectangle((0,0,self.image.size[0],20),fill=0x0000ff)
+                self.image.rectangle((0,220,self.image.size[0],self.image.size[1]),fill=0x0000ff)
+                w = self.mapwidget
+                s = w.GetImage().size
+                self.image.blit(
+                    image = w.GetImage(),
+                    target = (5,25),
+                    source = ((0,0),s),
+                    scale = 0 )
 
-            w = self.satwidget
-            s = w.GetImage().size
-            self.image.blit(
-                image = w.GetImage(),
-                target = (0,270),
-                source = ((0,0),s),
-                scale = 0 )
+                w = self.positionwidget
+                w.UpdatePosition(self.mapwidget.GetPosition())
+                s = w.GetImage().size
+                self.image.blit(
+                    image = w.GetImage(),
+                    target = (70,222),
+                    source = ((0,0),s),
+                    scale = 0 )
 
-            w = self.batwidget
-            s = w.GetImage().size
-            self.image.blit(
-                image = w.GetImage(),
-                target = (225,270),
-                source = ((0,0),s),
-                scale = 0 )
+                w = self.menuwidget
+                s = w.GetImage().size
+                self.image.blit(
+                    image = w.GetImage(),
+                    target = (320-s[0],240-s[1]),
+                    source = ((0,0),s),
+                    scale = 0 )
 
-            w = self.positionwidget
-            w.UpdatePosition(self.mapwidget.GetPosition())
-            s = w.GetImage().size
-            self.image.blit(
-                image = w.GetImage(),
-                target = (20,275),
-                source = ((0,0),s),
-                scale = 0 )
+                w = self.exitwidget
+                s = w.GetImage().size
+                self.image.blit(
+                    image = w.GetImage(),
+                    target = (320-s[0],0),
+                    source = ((0,0),s),
+                    scale = 0 )
 
-            w = self.menuwidget
-            s = w.GetImage().size
-            self.image.blit(
-                image = w.GetImage(),
-                target = (20,320-s[1]),
-                source = ((0,0),s),
-                scale = 0 )
+                w = self.satwidget
+                s = w.GetImage().size
+                self.image.blit(
+                    image = w.GetImage(),
+                    target = (5,4),
+                    source = ((0,0),s),
+                    scale = 0 )
+
+                w = self.batwidget
+                s = w.GetImage().size
+                self.image.blit(
+                    image = w.GetImage(),
+                    target = (5,224),
+                    source = ((0,0),s),
+                    scale = 0 )
+
+            else:
+                self.image.rectangle((0,270,self.image.size[0],self.image.size[1]),fill=0x0000ff)
+                w = self.mapwidget
+                s = w.GetImage().size
+                self.image.blit(
+                    image = w.GetImage(),
+                    target = (5,5),
+                    source = ((0,0),s),
+                    scale = 0 )
+
+                w = self.positionwidget
+                w.UpdatePosition(self.mapwidget.GetPosition())
+                s = w.GetImage().size
+                self.image.blit(
+                    image = w.GetImage(),
+                    target = (20,275),
+                    source = ((0,0),s),
+                    scale = 0 )
+
+                w = self.menuwidget
+                s = w.GetImage().size
+                self.image.blit(
+                    image = w.GetImage(),
+                    target = (20,320-s[1]),
+                    source = ((0,0),s),
+                    scale = 0 )
+
+                w = self.exitwidget
+                s = w.GetImage().size
+                self.image.blit(
+                    image = w.GetImage(),
+                    target = (220-s[0],320-s[1]),
+                    source = ((0,0),s),
+                    scale = 0 )
+
+                w = self.satwidget
+                s = w.GetImage().size
+                self.image.blit(
+                    image = w.GetImage(),
+                    target = (0,270),
+                    source = ((0,0),s),
+                    scale = 0 )
+
+                w = self.batwidget
+                s = w.GetImage().size
+                self.image.blit(
+                    image = w.GetImage(),
+                    target = (225,270),
+                    source = ((0,0),s),
+                    scale = 0 )
 
             w = self.editwidget
             s = w.GetImage().size
             self.image.blit(
                 image = w.GetImage(),
                 target = (120-s[0]/2,320-s[1]),
-                source = ((0,0),s),
-                scale = 0 )
-
-            w = self.exitwidget
-            s = w.GetImage().size
-            self.image.blit(
-                image = w.GetImage(),
-                target = (220-s[0],320-s[1]),
                 source = ((0,0),s),
                 scale = 0 )
 
