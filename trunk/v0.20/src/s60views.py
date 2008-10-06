@@ -1698,7 +1698,7 @@ class WaypointGauge(Gauge):
         self.heading = None
         self.bearing = None
         self.distance = None
-        self.eta = None
+        self.eta = 0
         self.GetOptions()
 
     def GetOptions(self):
@@ -2897,7 +2897,7 @@ class S60Application(Application, AlarmResponder):
         print "_MonitorWaypoint"
         if waypoint != self.monitorwaypoint:
             self.monitorwaypoint = waypoint
-            self.eta = None
+            self.eta = 0
             self.eta_data = None
 
         self.proximityalarm = ProximityAlarm(self.monitorwaypoint,tolerance,self)
