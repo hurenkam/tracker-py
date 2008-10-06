@@ -45,6 +45,7 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
 
 == Other Todo ==
   * (in svn) Get debug/error logging system in place
+  * (in svn) Landscape view (320x240)
   * Create config dialog for map/track/waypoint dirs
   * OSX/wxpython implementation needs a proper locking mechanism
 
