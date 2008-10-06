@@ -37,7 +37,7 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
   * Waypoints don't work properly when landmarks.sis is not installed
 
 == Todo before 1st beta ==
-  * Clock/Time gauge options
+  * (in SVN) Clock/Time gauge options
   * (in SVN) Fix Waypoint selection in option form
   * (in SVN) Fix Waypoint ETA calculation. See CalculateEta
   * Fix persistent waypoints when no landmarks module present
