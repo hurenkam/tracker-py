@@ -2640,7 +2640,7 @@ class S60Application(Application, AlarmResponder):
             else:
                 bearing = 0
                 distance = 0
-                self.eta = None
+                self.eta = 0
                 self.eta_data = None
 
             for view in self.views:
