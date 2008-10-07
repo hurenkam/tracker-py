@@ -37,17 +37,16 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
   * Waypoints don't work properly when landmarks.sis is not installed
 
 == Todo before 1st beta ==
-  * (in SVN) Clock/Time gauge options
-  * (in SVN) Fix Waypoint selection in option form
-  * (in SVN) Fix Waypoint ETA calculation. See CalculateEta
+  * (in svn) Clock/Time gauge options
+  * (in svn) Fix Waypoint selection in option form
+  * (in svn) Fix Waypoint ETA calculation. See CalculateEta
   * Fix persistent waypoints when no landmarks module present
-  * Make sure Sis file works on E: as well
+  * Fix Satellite gauge
 
 == Other Todo ==
   * (in svn) Get debug/error logging system in place
   * (in svn) Landscape view (320x240)
-  * Create config dialog for map/track/waypoint dirs
-  * OSX/wxpython implementation needs a proper locking mechanism
+  * OSX/wxpython implementation needs to be updated
 
 == Dependencies ==
   * [http://sourceforge.net/project/showfiles.php?group_id=154155 pyS60] 1.4.x (mandatory)
