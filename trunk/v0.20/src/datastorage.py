@@ -908,6 +908,9 @@ s60defaults = {
         "gpx_dir":"u\"\\\\data\\\\tracker\\\\gpx\"",
         "gpx_name":"u\"Tracker-\"",
 
+        # Event settings
+        "event_dir":"u\"\\\\data\\\\tracker\\\\events\"",
+
         # View settings
         "dashview_zoom":"0",
         "mapview_zoom":"0",
@@ -1028,6 +1031,10 @@ class S60DataStorage(DataStorage):
 
     def GetGPXFilename(self,name):
         filename = os.path.join(self.GetDefaultDrive()+self.GetValue("gpx_dir"),name+'.gpx')
+        return filename
+
+    def GetEventFilename(self,name):
+        filename = os.path.join(self.GetDefaultDrive()+self.GetValue("event_dir"),name+'.py')
         return filename
 
     def GetDefaultCategoryId(self):
