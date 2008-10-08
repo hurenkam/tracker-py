@@ -11,7 +11,10 @@ def Main():
     # well as the main program loop
     from osal import S60Osal as Osal
     from datastorage import S60DataStorage as Storage
-    from dataprovider import S60DataProvider as Gps
+    try: # LocationRequestor API
+        from dataprovider import LRDataProvider as Gps
+    except: # PyS60 API
+        from dataprovider import S60DataProvider as Gps
     from s60views import S60Application as Application
 
     # Instantiate singletons
