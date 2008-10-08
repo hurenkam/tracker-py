@@ -161,13 +161,14 @@ class Course:
         return "Course(%f,%f,%f)" % (self.heading, self.speed, self.distance)
 
 class Signal:
-    def __init__(self,used,found):
+    def __init__(self,used,found,list=[]):
         self.total = 24
         self.found = found
         self.used = used
+        self.list = []
 
     def __repr__(self):
-        return "Signal(%d,%d,%d)" % (self.used, self.found, self.total)
+        return "Signal(",self.used,self.found,self.total,self.list,")"
 
 class Waypoint(Point):
     def __init__(self,name='',lat=0,lon=0,alt=0):
