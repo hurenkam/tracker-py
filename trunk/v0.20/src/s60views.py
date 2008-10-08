@@ -1509,9 +1509,8 @@ class SateliteGauge(Gauge):
     def SelectOptions(self):
         appuifw.note(u"No options available.", "info")
 
-
-    def UpdateSatInfo(self,satlist):
-        self.satlist = satlist
+    def UpdateSignal(self,signal):
+        self.satlist = signal.list
         self.Draw()
 
     def Draw(self):
@@ -2057,10 +2056,8 @@ class S60DashView(View):
             self.satwidget.UpdateValues(signal.used,signal.found)
         else:
             self.satwidget.UpdateValues(signal.used,0)
+        self.satgauge.UpdateSignal(signal)
         self.update = True
-
-    def UpdateSatInfo(self,satlist):
-        self.satgauge.UpdateSatInfo(satlist)
 
     def UpdateTime(self,time,eta):
         if self.time is None:
