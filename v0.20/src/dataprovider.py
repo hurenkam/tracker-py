@@ -191,7 +191,7 @@ class LRDataProvider(DataProvider):
             p1 = p2
 
         c = LRCourse(self.current,p1,p2)
-        s = LRSignal(self.current)
+        s = LRSignal(self.current,self.requestor)
         DataProvider.CallBack(p2,c,s,time.time())
 
 
@@ -221,12 +221,24 @@ class LRCourse(Course):
         self.distance, b = last.DistanceAndBearing(current)
 
 class LRSignal(Signal):
-    def __init__(self,data):
+    def __init__(self,data,requestor=None):
+        self.list = []
         if len(data) > 8:
-            Signal.__init__(self,data[13],data[14])
+            Signal.__init__(self,data[14],data[13])
+            if requestor != None:
+                self.GetSatelliteList(requestor)
         else:
             Signal.__init__(self,0,0)
 
+    def GetSatelliteList(self,requestor):
+        for index in range(self.found):
+            try:
+                satinfo = requestor.GetSatelliteData(index)
+                satdict = dict(zip(['prn', 'azimuth', 'elevation', 'strength', 'inuse'],satinfo))
+                self.list.append(satdict)
+            except Exception, reason:
+                #print "%d - %s" % (index,reason)
+                pass
 
 
 
