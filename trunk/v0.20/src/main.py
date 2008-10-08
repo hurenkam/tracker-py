@@ -12,6 +12,7 @@ def Main():
     from osal import S60Osal as Osal
     from datastorage import S60DataStorage as Storage
     try: # LocationRequestor API
+        import locationrequestor
         from dataprovider import LRDataProvider as Gps
     except: # PyS60 API
         from dataprovider import S60DataProvider as Gps
