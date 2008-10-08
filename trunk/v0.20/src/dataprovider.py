@@ -125,6 +125,112 @@ class S60Signal(Signal):
 
 
 
+class LRDataProvider(DataProvider):
+
+    def __init__(self):
+        global locationrequestor
+        import locationrequestor
+        DataProvider.instance = self
+        self.current = None
+        self.previous = None
+
+    def GetId(self,moduledata):
+        return moduledata[0]
+
+    def IsInternal(self,moduledata):
+        if ( (moduledata[3] == locationrequestor.EDeviceInternal) and
+             ((moduledata[2] & locationrequestor.ETechnologyNetwork) == 0) ):
+            return True
+        else:
+            return False
+
+    def IsAvailable(self,moduledata):
+        try:
+            self.requestor.Open(self.GetId(moduledata))
+            self.requestor.Close()
+            return True
+        except Exception, reason:
+            return False
+
+    def Connect(self,callback,moduledata):
+        self.requestor.SetUpdateOptions(1,45,0,1)
+        self.requestor.Open(self.GetId(moduledata))
+
+        try:
+            self.requestor.InstallPositionCallback(callback)
+            self.connected = 1
+            return True
+        except:
+            self.connected = 0
+            return False
+
+    def StartGPS(self):
+        self.requestor = locationrequestor.LocationRequestor()
+        self.default_id = self.requestor.GetDefaultModuleId()
+
+        modulecount = self.requestor.GetNumModules()
+        for index in range(modulecount):
+            moduledata = self.requestor.GetModuleInfoByIndex(index)
+            if self.IsInternal(moduledata):
+                if self.IsAvailable(moduledata):
+                    return self.Connect(self.CallBack,moduledata)
+
+    def StopGPS(self):
+        provider = DataProvider.GetInstance()
+        if self.connected != None:
+            self.requestor.Close()
+
+
+    def CallBack(self,data):
+        self.previous = self.current
+        self.current = data
+        p2 = LRPoint(self.current)
+        if self.previous != None:
+            p1 = LRPoint(self.previous)
+        else:
+            p1 = p2
+
+        c = LRCourse(self.current,p1,p2)
+        s = LRSignal(self.current)
+        DataProvider.CallBack(p2,c,s,time.time())
+
+
+class LRPoint(Point):
+    def __init__(self,data):
+        osal = Osal.GetInstance()
+        time = osal.GetIsoTime(osal.GetTime())
+        lat = 0; lon = 0; alt = 0
+        if len(data) > 2:
+            if str(data[1]) != 'NaN' and str(data[2]) != 'NaN':
+                lat = data[1]
+                lon = data[2]
+                alt = data[3]
+
+        Point.__init__(self,time,lat,lon,alt)
+
+
+
+class LRCourse(Course):
+    def __init__(self,data,last,current):
+        course = None
+
+        if len(data) > 8:
+            self.speed = data[8]
+            self.heading = data[10]
+            self.time = data[12]
+        self.distance, b = last.DistanceAndBearing(current)
+
+class LRSignal(Signal):
+    def __init__(self,data):
+        if len(data) > 8:
+            Signal.__init__(self,data[13],data[14])
+        else:
+            Signal.__init__(self,0,0)
+
+
+
+
+
 park = [
 #        (42.6261231,0.76392452,0),                # Hospital de vielha
 #        (42.633805208519,0.78642003284,2287.0),   # Break
