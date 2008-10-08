@@ -144,17 +144,17 @@ class LRDataProvider(DataProvider):
         else:
             return False
 
-    def IsAvailable(self,moduledata):
+    def IsAvailable(self,id):
         try:
-            self.requestor.Open(self.GetId(moduledata))
+            self.requestor.Open(id)
             self.requestor.Close()
             return True
         except Exception, reason:
             return False
 
-    def Connect(self,callback,moduledata):
+    def Connect(self,callback,id):
         self.requestor.SetUpdateOptions(1,45,0,1)
-        self.requestor.Open(self.GetId(moduledata))
+        self.requestor.Open(id)
 
         try:
             self.requestor.InstallPositionCallback(callback)
@@ -166,14 +166,7 @@ class LRDataProvider(DataProvider):
 
     def StartGPS(self):
         self.requestor = locationrequestor.LocationRequestor()
-        self.default_id = self.requestor.GetDefaultModuleId()
-
-        modulecount = self.requestor.GetNumModules()
-        for index in range(modulecount):
-            moduledata = self.requestor.GetModuleInfoByIndex(index)
-            if self.IsInternal(moduledata):
-                if self.IsAvailable(moduledata):
-                    return self.Connect(self.CallBack,moduledata)
+        self.Connect(self.CallBack,-1)
 
     def StopGPS(self):
         provider = DataProvider.GetInstance()

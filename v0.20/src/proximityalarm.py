@@ -6,9 +6,8 @@ except:
     def vibrate(time,volume):
         pass
 
-note(u"Waypoint reached!", "info")
+print "Waypoint %s at %f meters!" % (waypoint,distance)
+note(u"Waypoint %s at %f meters!" % (waypoint,distance), "info")
 for i in range(0,5):
     vibrate(500,100)
     sleep(0.5)
-
-print "ProximityAlarm!"

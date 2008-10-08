@@ -72,7 +72,7 @@ class Widget:
         self.Resize(size)
 
     def Resize(self,size=None):
-        print "Widget.Resize(",size,")"
+        #print "Widget.Resize(",size,")"
         self.size = size
         if self.size == None:
             return
@@ -150,84 +150,6 @@ class TextWidget(Widget):
 
 
 
-class _BarWidget(Widget):
-    def __init__(self,size=None,c1=Color["bar_c1"],c2=Color["bar_c2"],range=100,bars=7):
-        Widget.__init__(self)
-        self.bgcolor = Color["bar_bg"]
-        self.v1=40
-        self.v2=80
-        self.SetParams(c1,c2,range,bars)
-        self.Resize(size)
-
-    def SetParams(self,c1=Color["bar_c1"],c2=Color["bar_c2"],range=100,bars=7):
-        self.c1=c1
-        self.c2=c2
-        self.bars = bars
-        self.range = range
-        self.Resize(self.size)
-
-    def UpdateValues(self,v1,v2):
-        self.v1 = v1
-        self.v2 = v2
-        self.Draw()
-
-    def Resize(self,size):
-        print "BarWidget.Resize(",size,")"
-        if size == None:
-            Widget.Resize(self,size)
-            return
-
-        w,h = size
-        self.x = w / 2.0
-        self.y = 2
-        self.dy = (h-2*self.y)/float(self.bars)
-        #self.y -= self.dy/2
-        if self.dy > 4:
-            self.width = (self.dy - 2)
-        else:
-            self.width = 2
-
-        self.y += int(self.width/2.0+0.5)
-        Widget.Resize(self,size)
-
-    def Draw(self):
-        if self.size == None:
-            return
-
-        Widget.Draw(self)
-
-        if self.v1 == None:
-            v1=0
-        else:
-            v1 = int(0.5 + float(self.v1) * float(self.bars) / float(self.range))
-        if self.v2 == None:
-            v2 = v1
-        else:
-            v2 = int(0.5 + float(self.v2) * float(self.bars) / float(self.range))
-        if v2 < v1:
-            v2=v1
-
-        if v1 > self.bars:
-            v1 = self.bars
-        if v2 > self.bars:
-            v2 = self.bars
-        if v1 < 0:
-            v1 = 0
-        if v2 < 0:
-            v2 = 0
-
-        #print 0,v2,v2,self.bars,self.x,self.y,self.dy
-        for i in range (0,v1):
-            y = self.y+(self.bars-(i+1))*self.dy
-            self.DrawDot((self.x,y),self.c1,self.width)
-        for i in range (v1,v2):
-            y = self.y+(self.bars-(i+1))*self.dy
-            self.DrawDot((self.x,y),self.c2,self.width)
-        for i in range (v2,self.bars):
-            y = self.y+(self.bars-(i+1))*self.dy
-            self.DrawDot((self.x,y),Color["black"],self.width)
-
-
 class BarWidget(Widget):
 
     def __init__(self,size=None,c1=Color["bar_c1"],c2=Color["bar_c2"],range=100,bars=7):
@@ -249,26 +171,6 @@ class BarWidget(Widget):
         self.v1 = v1
         self.v2 = v2
         self.Draw()
-
-    def Resize(self,size):
-        print "BarWidget.Resize(",size,")"
-        #if size == None:
-        #    Widget.Resize(self,size)
-        #    return
-        Widget.Resize(self,size)
-
-    def _Resize(self):
-        self.x = w / 2.0
-        self.y = 2
-        self.dy = (h-2*self.y)/float(self.bars)
-        #self.y -= self.dy/2
-        if self.dy > 4:
-            self.width = (self.dy - 2)
-        else:
-            self.width = 2
-
-        self.y += int(self.width/2.0+0.5)
-        Widget.Resize(self,size)
 
     def CalcValues(self):
         if self.v1 == None:
@@ -1504,6 +1406,7 @@ class SateliteGauge(Gauge):
 
     def __init__(self,radius=None):
         self.satlist = []
+        self.maxstrength = 0
         Gauge.__init__(self,radius)
 
     def SelectOptions(self):
@@ -1524,10 +1427,21 @@ class SateliteGauge(Gauge):
 
         if len(self.satlist) > 0:
             for info in self.satlist:
+                s = info['strength']
+                if s > self.maxstrength:
+                    self.maxstrength = s
+                    print "strength: ", s
+
                 angle = info['azimuth']
                 pos = self.radius * ((90.0 - info['elevation'])/100)
-                color = 0x40c040 * info['inuse']
-                self.DrawDotHand(angle,pos,color,handwidth=self.radius/10)
+                c = int(info['strength']/64.0 * 0x7f) % 256
+                if info['inuse']:
+                    #color = c * 0x10000 + 2 * c * 0x100 + c
+                    color = 0x40c040
+                else:
+                    color = 2 * c * 0x10000 + 2 * c * 0x100
+                    #color = 0
+                self.DrawDotHand(angle,pos,color,handwidth=self.radius/8)
 
 
 class ClockGauge(Gauge):
@@ -2897,7 +2811,10 @@ class S60Application(Application, AlarmResponder):
             else:
                 delta_dist = float(self.eta_data["max_distance"] - distance)
                 delta_time = self.time - self.eta_data["max_time"]
-                self.eta = delta_time / delta_dist * distance
+                if delta_dist > 0:
+                    self.eta = delta_time / delta_dist * distance
+                else:
+                    self.eta = 0
 
             if self.eta > 360000:
                 self.eta = 360000
@@ -2936,8 +2853,10 @@ class S60Application(Application, AlarmResponder):
                     lat = alarm.point.latitude
                     lon = alarm.point.longitude
                     alt = alarm.point.altitude
-                    osal.ExecuteScript(alarm.action,{},{
-                        "position":"(%f,%f,%f)" % (lat,lon,alt),
+                    osal.ExecuteScript(self.storage.GetEventFilename(alarm.action),{},{
+                        "position": (lat,lon,alt),
+                        "waypoint": self.storage.GetValue("wpt_monitor"),
+                        "distance": alarm.distance,
                         })
                 except:
                     XStore()
