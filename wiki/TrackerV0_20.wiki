@@ -37,7 +37,7 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
 
 == Todo before 1st beta ==
   * Fix persistent waypoints when no landmarks module present
-  * Fix Satellite gauge
+  * (in svn) Fix Satellite gauge
 
 == Other Todo ==
   * OSX/wxpython implementation needs to be updated
