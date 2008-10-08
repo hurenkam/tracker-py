@@ -379,6 +379,7 @@ class DataStorage(AlarmResponder):
 
         if self.waypoints != None:
             self.waypoints.close()
+            self.waypoints = None
 
 
 
@@ -433,23 +434,33 @@ class DataStorage(AlarmResponder):
 
     def InitWaypointList(self,dir='.'):
         filename = self.GetWaypointsFilename()
-        #try:
-        #    self.waypoints = self.osal.OpenDbmFile(filename,"w")
-        #except:
-        #    self.waypoints = self.osal.OpenDbmFile(filename,"n")
-        self.waypoints={}
+        try:
+            self.waypoints = self.osal.OpenDbmFile(filename,"w")
+        except:
+            self.waypoints = self.osal.OpenDbmFile(filename,"n")
+        #self.waypoints={}
 
     def CreateWaypoint(self,name='',lat=0,lon=0,alt=0):
-        self.waypoints[name] = Waypoint(name,lat,lon,alt)
+        self.waypoints[u"%s" % name] = "(%f,%f,%f)" % (lat,lon,alt)
 
     def SaveWaypoint(self,waypoint):
-        self.waypoints[waypoint.name] = waypoint
+        name = waypoint.name
+        lat = waypoint.latitude
+        lon = waypoint.longitude
+        alt = waypoint.altitude
+        self.waypoints[u"%s" % name] = "(%f,%f,%f)" % (lat,lon,alt)
 
     def DeleteWaypoint(self,waypoint):
         del self.waypoints[waypoint.name]
 
     def GetWaypoints(self):
-        return self.waypoints
+        waypoints = {}
+        for name in self.waypoints.keys():
+            lat,lon,alt = eval(self.waypoints[name])
+            w = Waypoint(name,lat,lon,alt)
+            waypoints[u"%s" % name]=w
+
+        return waypoints
 
 
 
@@ -1121,5 +1132,6 @@ class S60DataStorage(DataStorage):
         return dict
 
     def CloseAll(self):
-        self.waypoints=None
+        if self.lmdb != None:
+            self.waypoints=None
         DataStorage.CloseAll(self)
