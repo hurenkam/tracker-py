@@ -31,21 +31,15 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
   * pkg_tracker.sh script created to package tracker.py into a sis file
   * can work without e: drive
 
-== Known Bugs (v0.20.5) ==
-  * Speed gauge sometimes show 'NaN' value/heading sometimes missing
+== Known Bugs (v0.20.6) ==
   * Sometimes when exiting gauge options, tracker exits as well
   * Waypoints don't work properly when landmarks.sis is not installed
 
 == Todo before 1st beta ==
-  * (in svn) Clock/Time gauge options
-  * (in svn) Fix Waypoint selection in option form
-  * (in svn) Fix Waypoint ETA calculation. See CalculateEta
   * Fix persistent waypoints when no landmarks module present
   * Fix Satellite gauge
 
 == Other Todo ==
-  * (in svn) Get debug/error logging system in place
-  * (in svn) Landscape view (320x240)
   * OSX/wxpython implementation needs to be updated
 
 == Dependencies ==
@@ -63,6 +57,11 @@ is used to interface with symbians internal landmarks database (as used by a.o.
 Nokia Maps). Tracker creates a 'waypoint' category, and places all waypoints there.
 Also, when you use the landmarks editor to assign this category to existing landmarks,
 they will show up in tracker.
+
+The [https://www.iyouit.eu/portal/software.aspx Locationrequestor module]
+is used to provide tracker with satellite info. Tracker works fine without
+this module (using PyS60 positioning module), but can't display the satview
+then.
 
 The [http://sourceforge.net/project/showfiles.php?group_id=132176 Envy module]
 is used to make tracker a system application, thus preventing it from being 'killed'
