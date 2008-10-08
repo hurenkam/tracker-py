@@ -1636,6 +1636,8 @@ class WaypointForm(object):
         storage = DataStorage.GetInstance()
         self._Waypoints = storage.GetWaypoints().keys()
         self._Waypoints.sort()
+        if len(self._Waypoints) == 0:
+            self._Waypoints.append(u"None")
 
         self._Types = [u'Heading', u'Waypoint']
         self._ShortTypes = [u'heading', u'waypoint']
