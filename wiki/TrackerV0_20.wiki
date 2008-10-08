@@ -33,10 +33,10 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
 
 == Known Bugs (v0.20.6) ==
   * Sometimes when exiting gauge options, tracker exits as well
-  * Waypoints don't work properly when landmarks.sis is not installed
+  * (fixed in svn) Waypoints don't work properly when landmarks.sis is not installed
 
 == Todo before 1st beta ==
-  * Fix persistent waypoints when no landmarks module present
+  * (in svn) Fix persistent waypoints when no landmarks module present
   * (in svn) Fix Satellite gauge
 
 == Other Todo ==
