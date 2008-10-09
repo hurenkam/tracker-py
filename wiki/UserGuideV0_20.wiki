@@ -3,14 +3,16 @@
 [http://code.google.com/p/tracker-py/wiki/TrackerV0_20 v0.20] |
 WishList | RoadMap | CodeArchitecture
 
-Tracker has two main views, uses the left softkey for a menu, the righ softkey as exit,
-and the D-Pad center key (ok/select) as a context dependent softkey.
+Tracker has two main views, uses the left softkey for a menu, the right softkey as exit,
+and the D-Pad center key (ok/select) as a context dependent softkey. Switching between
+the views can be done by navigating left/right.
 
 == Installation ==
 
 Install the dependencies:
   * [http://sourceforge.net/project/showfiles.php?group_id=154155 pyS60] 1.4.x (mandatory)
   * [https://www.iyouit.eu/portal/software.aspx Landmarks module] (recommended)
+  * [https://www.iyouit.eu/portal/software.aspx LocationRequestor module] (recommended)
   * [http://sourceforge.net/project/showfiles.php?group_id=132176 Envy module] (recommended)
   * [http://cyke64.googlepages.com Misty module] (recommended)
 
@@ -104,7 +106,97 @@ http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0038.jpg
 
 In this view you'll see 6 gauges, one of which is double width & height. You can select
 a different 'zoomed' gauge, by selecting up/down.
-Gauges present are: Waypoint, Signal (Battery/GSM/GPS), time & distance traveled since
-startup, speed and altitude.
+Gauges present are: Monitor (waypoint/route/heading), Satellite (currently works only
+with LocationRequestor), time (Clock/Trip/Remaining/ETA) & Distance (Total/Trip/Waypoint),
+speed (Actual/Average) and altitude (Actual/Average/Ascension/Descension).
 Heading & Speed gauges have some form of 'history/cache', meaning that when you travel
 slow, they will use the data of several position events to average out heading/speed.
+
+==== Time gauge options ====
+
+The only option to be selected in this gauge is the type,
+  * Clock: shows the current local time
+  * Trip: shows elapsed time since start of Tracker
+  * Remaining: shows estimated time to go before next waypoint is reached
+  * ETA: shows estimated time of arrival in local time (essentially Clock+Remaining)
+
+==== Distance gauge options ====
+
+Selectable options are:
+  * Type
+  * Units
+
+Type can be:
+  * Trip: Distance sinse start of Tracker
+  * Total: Cummulated total of all trips since installation of Tracker
+  * Waypoint: Distance to waypoint
+
+Units can be:
+  * Kilometers
+  * Miles
+
+==== Monitor gauge options ====
+
+Selectable options are:
+  * Type
+  * Monitor
+  * Units
+  * Distance
+
+Type can be:
+  * Waypoint: Show direction (degrees) to waypoint
+  * Heading: Show current heading (degrees)
+
+Units can be:
+  * Meters: Distance will be specified in meters
+  * Feet: Distance will be specified in feet
+
+Distance:
+  * How close to the waypoint/routepoint will the alarm be triggered/next routepoint selected
+
+==== Speed gauge options ====
+
+Selectable options are:
+  * Type
+  * Units
+  * Interval
+
+Type can be:
+  * Actual: Last reported speed
+  * Average: Average speed during the last interval
+
+Units can be:
+  * Km/h
+  * MPH
+
+Interval:
+  * In case of average type: Over what interval should the average be taken
+
+
+==== Altitude gauge options ====
+
+Selectable options are:
+  * Type
+  * Units
+  * Tolerance
+  * Interval
+
+Type can be:
+  * Actual: Last reported height
+  * Average: Average height during the last interval
+  * Ascent: Total ascension since start of Tracker
+  * Descent: Total descension since start of Tracker
+
+Units can be:
+  * Meters
+  * Feet
+
+Tolerance:
+  * Delta in height before it is taken into account for ascent/descent changes
+
+Interval:
+  * In case of average: Over what interval should the average be taken
+
+==== Satellite gauge options ====
+
+Currently no options are foreseen for this gauge. Do let me know if you have suggestions!
