@@ -5,6 +5,16 @@ WishList | RoadMap | CodeArchitecture
 
 [http://hoth.xs4all.nl/~hurenkam/poll/DRBPoll/tracker.php Poll]
 
+=== Split UI & Data processes ===
+Currently the UI and the Data model are designed as seperate
+components, yet they run together in a single process.
+It would be nice to be able to run the dataprovider/datastorage
+parts of Tracker in seperation as a daemon.
+That way, the resource hungry Mapview ui does not always need to
+be running while the positioning part is running (to record a track
+or monitor a waypoint).
+On certain events, a ui process can be started automatically.
+
 === Weasley Family clock ===
 See [http://en.wikipedia.org/wiki/Magical_Objects_in_Harry_Potter#Weasley_Family_Clock Wikipedia]
 When several phones exchange location data, you could use that data to
