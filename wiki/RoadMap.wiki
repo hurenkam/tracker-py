@@ -4,7 +4,7 @@
 WishList | RoadMap | CodeArchitecture
 
 For a more detailed description of the features, please
-see the WishList. If you want to influence the choices I made,
+see the WishList. If you want to influence the schedule,
 you can try voting for your favourite feature here:
 [http://hoth.xs4all.nl/~hurenkam/poll/DRBPoll/tracker.php Poll]
 
