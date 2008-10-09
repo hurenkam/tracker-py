@@ -6,7 +6,7 @@ WishList | RoadMap | CodeArchitecture
 For a more detailed description of the features, please
 see the WishList
 
-== ReDesign (v0.20.x) ==
+== Current release (v0.20.x) ==
 New versions will be focussed on bugfixing, but some small
 features may get implemented here.
   * Monitor route
