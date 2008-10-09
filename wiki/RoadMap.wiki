@@ -6,7 +6,7 @@ WishList | RoadMap | CodeArchitecture
 For a more detailed description of the features, please
 see the WishList. If you want to influence the choices I made,
 you can try voting for your favourite feature here:
-http://hoth.xs4all.nl/~hurenkam/poll/DRBPoll/tracker.php
+[http://hoth.xs4all.nl/~hurenkam/poll/DRBPoll/tracker.php Poll]
 
 == Current release (v0.20.x) ==
 New versions will be focussed on bugfixing, but some small
