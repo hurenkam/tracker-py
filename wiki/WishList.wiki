@@ -5,6 +5,11 @@ WishList | RoadMap | CodeArchitecture
 
 [http://hoth.xs4all.nl/~hurenkam/poll/DRBPoll/tracker.php Poll]
 
+=== Weasley Family clock ===
+See [http://en.wikipedia.org/wiki/Magical_Objects_in_Harry_Potter#Weasley_Family_Clock Wikipedia]
+When several phones exchange location data, you could use that data to
+implement a weasly family clock in the dash view, thus family members
+can show each-other where they are.
 
 === Multiple resolutions ===
 Current [http://code.google.com/p/tracker-py/wiki/TrackerV0_20 v0.20]
