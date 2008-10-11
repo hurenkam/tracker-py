@@ -208,7 +208,7 @@ class LRCourse(Course):
         course = None
 
         if len(data) > 8:
-            self.speed = data[8]
+            self.speed = data[8] / 3.6
             self.heading = data[10]
             self.time = data[12]
         self.distance, b = last.DistanceAndBearing(current)
