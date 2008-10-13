@@ -6,9 +6,9 @@ WishList | RoadMap | CodeArchitecture
 === Version 0.20.6 (alpha) has been released! ===
 === [http://code.google.com/p/tracker-py/wiki/UserGuideV0_20 User guide for v0.20] ===
 
-http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0014.jpg
-http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0017.jpg
-http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0062.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0072.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0074.jpg
 
 == Working features ==
   * Dashview with gauges (speed, distance, altitude, heading, signal, time)
