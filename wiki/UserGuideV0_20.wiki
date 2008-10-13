@@ -80,9 +80,9 @@ Open tracks will be shown on the map, and exported if you choose an export funct
 
 == Mapview ==
 
-http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0023.jpg
-http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0027.jpg
-http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0017.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0075.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0076.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0072.jpg
 
 When in mapview, the keypad is used for browsing the map, keys 2,4,6 and 8 are used as
 scrollkeys, when pressed, the Mapview will go into scrollmode, and show a black position
@@ -100,9 +100,9 @@ current position.
 
 == Dashview ==
 
-http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0029.jpg
-http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0039.jpg
-http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0038.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0060.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0061.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0062.jpg
 
 In this view you'll see 6 gauges, one of which is double width & height. You can select
 a different 'zoomed' gauge, by selecting up/down.
@@ -155,6 +155,10 @@ Distance:
   * How close to the waypoint/routepoint will the alarm be triggered/next routepoint selected
 
 ==== Speed gauge options ====
+
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0067.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0066.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.20/screenshots/Screenshot0068.jpg
 
 Selectable options are:
   * Type
