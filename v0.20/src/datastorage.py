@@ -939,7 +939,7 @@ s60defaults = {
         "distance_trip":"0",
         "distance_total":"0",
 
-        "alt_type":"u\"actual\"",
+        "alt_type":"u\"alt\"",
         "alt_interval":"15",
         "alt_tolerance":"100",
         "alt_units":"u\"m\"",
