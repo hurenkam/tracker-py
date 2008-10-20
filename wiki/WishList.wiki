@@ -5,7 +5,7 @@ WishList | RoadMap | CodeArchitecture
 
 [http://hoth.xs4all.nl/~hurenkam/poll/DRBPoll/tracker.php Poll]
 
-=== Lambert (others?) projection support ===
+=== Non-cylindrical (Lambert, others?) projection support ===
 A lot of topographic maps use Lambert conic projection, but the current
 version of tracker-py doesn't know any projection but cylindrical one.
 
