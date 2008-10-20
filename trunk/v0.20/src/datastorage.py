@@ -908,6 +908,7 @@ s60defaults = {
         # Route settings
         "rte_dir":"u\"\\\\data\\\\tracker\\\\routes\"",
         "rte_name":"u\"Tracker-\"",
+        "rte_monitor":"None",
 
         # Track settings
         "trk_dir":"u\"\\\\data\\\\tracker\\\\tracks\"",
