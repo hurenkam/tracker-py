@@ -14,21 +14,22 @@ features may get implemented here.
   * Monitor route
   * Adjust position for known deviations (false northing/easting, altitude offset)
   * Auto-save on Low-power
-
-== Next release (v0.21.x) ==
-  * Exchange of Landmarks via SMS/Bluetooth/Network
-  * Extend framework for running external scripts/apps (plugins?)
   * Use Accelerometer to scroll the map
 
-== Short term (v0.2x) ==
+== Short term (v0.2x/v0.3x) ==
   * Multiple resolutions
   * Advanced use of Landmarks and Categories
-  * Integrate s60views and wxviews
   * Route symbol signaling (e.g. turn-right at next route point)
   * Create & Edit routes
 
-== Long term (v0.3x) ==
+== Next redesign (v0.30.x) ==
+  * Redesigned data storage framework (to enable plugins/external scripts)
+  * Exchange of Landmarks via SMS/Bluetooth/Network (using plugins/external scripts)
+
+== Long term (v0.xx) ==
+  * Multi tiled maps?
   * Direction up map display?
+  * Integrate s60views and wxviews?
   * Stable wxPython version?
   * Port to pocket pc?
   * Localization?
