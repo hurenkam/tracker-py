@@ -78,4 +78,10 @@ class Application:
     def Exit(self):
         pass
 
+    def _MonitorWaypoint(self,waypoint,tolerance):
+        pass
+
+    def _MonitorRoute(self,route,routepoint,tolerance):
+        pass
+
     GetInstance = staticmethod(GetInstance)
