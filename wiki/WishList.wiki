@@ -5,6 +5,17 @@ WishList | RoadMap | CodeArchitecture
 
 [http://hoth.xs4all.nl/~hurenkam/poll/DRBPoll/tracker.php Poll]
 
+=== Lampbert (others?) projection support ===
+A lot of topographic maps use Lambert conic projection, but the current
+version of tracker-py doesn't know any projection but cylindrical one.
+
+=== Better map calibration ===
+Tracker can use only two calibration points at the moment, and
+the current algorithm assumes that the maps are aligned with the
+WGS84 north.
+A better algorithm should be possible, using more of the calibration
+points, and taking rotation into account.
+
 === Split UI & Data processes ===
 Currently the UI and the Data model are designed as seperate
 components, yet they run together in a single process.
