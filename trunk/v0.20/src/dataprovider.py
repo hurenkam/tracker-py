@@ -207,11 +207,15 @@ class LRCourse(Course):
     def __init__(self,data,last,current):
         course = None
 
+        self.speed = data[8] / 3.6
         if len(data) > 8:
-            self.speed = data[8] / 3.6
             self.heading = data[10]
             self.time = data[12]
-        self.distance, b = last.DistanceAndBearing(current)
+        else:
+            print "not enough data for heading/time"
+
+        if last != current:
+            self.distance, b = last.DistanceAndBearing(current)
 
 class LRSignal(Signal):
     def __init__(self,data,requestor=None):
