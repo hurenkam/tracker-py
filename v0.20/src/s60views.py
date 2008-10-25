@@ -107,7 +107,7 @@ class S60DashView(View):
 
     def Resize(self,rect=None):
         size = appuifw.app.body.size
-        print "S60MapView.Resize(",size,")"
+        #print "S60MapView.Resize(",size,")"
         self.image = Image.new(size)
         self.image.clear(0xc0c0c0)
 
@@ -508,7 +508,7 @@ class S60MapView(View):
 
     def Resize(self,rect=None):
         size = appuifw.app.body.size
-        print "S60MapView.Resize(",size,")"
+        #print "S60MapView.Resize(",size,")"
         self.image = Image.new(size)
         self.image.clear(0xc0c0c0)
         self.update = True
@@ -739,6 +739,10 @@ class S60Application(Application, AlarmResponder):
         self.trackalarm = None
         self.track = None
         self.trackname = None
+
+        self.route = None
+        self.monitorroute = None
+        self.monitorroutetime = None
 
         self.running = True
         self.dashview = S60DashView()
@@ -971,15 +975,30 @@ class S60Application(Application, AlarmResponder):
 
         self.monitorwaypoint = None
         wpt = self.storage.GetValue("wpt_monitor")
+        rte = self.storage.GetValue("rte_monitor")
         self.eta = 0
         self.eta_data = None
-        if wpt != None:
-            name, distance = wpt
-            waypoints = self.storage.GetWaypoints()
-            if name in waypoints.keys():
-                self.proximityalarm=ProximityAlarm(waypoints[name],distance,self)
-                self.provider.SetAlarm(self.proximityalarm)
-                self.monitorwaypoint = waypoints[name]
+
+        if rte != None:
+            name,time,tolerance = rte
+            routes = self.storage.GetRoutes()
+            if name in routes.keys():
+                self.storage.OpenRoute(name)
+                route = routes[name]
+                if time in route.date.keys():
+                    routepoint = route.GetPoint(time)
+                    self.proximityalarm=ProximityAlarm(routepoint,distance,self)
+                    self.provider.SetAlarm(self.proximityalarm)
+                    self.monitorroute = route
+                    self.monitorroutetime = time
+        else:
+            if wpt != None:
+                name, distance = wpt
+                waypoints = self.storage.GetWaypoints()
+                if name in waypoints.keys():
+                    self.proximityalarm=ProximityAlarm(waypoints[name],distance,self)
+                    self.provider.SetAlarm(self.proximityalarm)
+                    self.monitorwaypoint = waypoints[name]
 
         self.provider.StartGPS()
         self.view.Show()
@@ -1046,6 +1065,7 @@ class S60Application(Application, AlarmResponder):
                     osal.ExecuteScript(self.storage.GetEventFilename(alarm.action),{},{
                         "position": (lat,lon,alt),
                         "waypoint": self.storage.GetValue("wpt_monitor"),
+                        "route": self.storage.GetValue("rte_monitor"),
                         "distance": alarm.distance,
                         })
                 except:
@@ -1101,6 +1121,20 @@ class S60Application(Application, AlarmResponder):
         index = appuifw.selection_list(items)
         if index != None:
             return self.storage.GetRoutes()[items[index]]
+        else:
+            return None
+
+    def SelectRoutepoint(self,route):
+        items = []
+        keys = route.data.keys()
+        keys.sort()
+        for item in keys:
+            items.append(u"%s" % str(item))
+
+        index = appuifw.selection_list(items)
+        if index != None:
+            lat,lon,alt = eval(route.data[items[index]])
+            return Point(items[index],lat,lon,alt)
         else:
             return None
 
@@ -1422,14 +1456,21 @@ class S60Application(Application, AlarmResponder):
 
     def MonitorRoute(self):
         routes = self.storage.GetOpenRoutes()
-        route = self.SelectRoute(routes)
+        if len(routes) == 0:
+            appuifw.note(u"No open routes.", "info")
+            return
+
+        if len(routes) == 1:
+            route = self.storage.GetRoutes()[routes[0]]
+        else:
+            route = self.SelectRoute(routes)
+
         if route is not None:
-            routepoints = route.GetPoints()
-            routepoint = self.SelectWaypoint(routepoints)
+            routepoint = self.SelectRoutepoint(route)
             if routepoint is not None:
                 distance = self.QueryAndStore(u"Notify distance in meters:","float","wpt_tolerance")
                 if distance is not None:
-                    self._MonitorRoute(route,distance)
+                    self._MonitorRoute(route,routepoint,distance)
                     appuifw.note(u"Monitoring route %s, notify when within %8.0f meters." % (route.name, distance), "info")
 
     def OpenRoute(self):

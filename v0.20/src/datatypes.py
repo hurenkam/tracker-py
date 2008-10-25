@@ -398,7 +398,6 @@ class Route:
         self.isrecording = False
         if open:
             self.Open()
-            self.data["name"]="%s" % self.name
 
     def Open(self):
         if self.isopen:
@@ -409,6 +408,11 @@ class Route:
         except:
             self.data = self.osal.OpenDbmFile(self.filename,"n")
         self.isopen = True
+
+        # The following is to support older routes that contained 'name'
+        # this key is no longer used
+        if "name" in self.data:
+            del self.data["name"]
 
     def AddPoint(self,point):
         self.data[str(point.time)] = u"(%s,%s,%s)" % (point.latitude,point.longitude,point.altitude)
@@ -441,10 +445,6 @@ class Route:
             return []
 
         keys =  self.data.keys()
-        try:
-            keys.remove("name")
-        except:
-            pass
 
         lat1,lon1,lat2,lon2 = map.WgsArea()
         list = []
@@ -476,6 +476,9 @@ class Route:
 
         return list
 
+    def GetPoint(self,time):
+        lat,lon,alt = eval(self.data[time])
+        return Point(time,lat,lon,alt)
 
     def PrintInfo(self,area=None):
         print "Track %s" % self.name
