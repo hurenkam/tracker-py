@@ -1620,18 +1620,9 @@ class WaypointForm(object):
         self._IsSaved = False
 
         storage = DataStorage.GetInstance()
-        self._Waypoints = storage.GetWaypoints().keys()
-        self._Waypoints.sort()
-        if len(self._Waypoints) == 0:
-            self._Waypoints.append(u"None")
 
-        self._Routes = storage.GetOpenRoutes()
-        self._Routes.sort()
-        if len(self._Routes) == 0:
-            self._Routes.append(u"None")
-
-        self._Types = [u'Heading', u'Waypoint', u'Route']
-        self._ShortTypes = [u'heading', u'waypoint', u'route']
+        self._Types = [u'Heading', u'Waypoint']
+        self._ShortTypes = [u'heading', u'waypoint']
         self._DistanceUnits = [u'Meters', u'Feet']
         self._ShortDistanceUnits = [u'm',u'ft']
         self._ToleranceMeters = [u'5 meters', u'10 meters', u'25 meters', u'50 meters', u'100 meters', u'250 meters' ]
@@ -1645,15 +1636,10 @@ class WaypointForm(object):
         else:
             itype = 0
 
-        if self.gauge.waypoint in self._Waypoints:
-            iwaypoints = self._Waypoints.index(self.gauge.waypoint)
+        if self.gauge.location in self.gauge.names:
+            ilocation = self.gauge.names.index(self.gauge.location)
         else:
-            iwaypoints = 0
-
-        if self.gauge.route in self._Routes:
-            iroutes = self._Routes.index(self.gauge.route)
-        else:
-            iroutes = 0
+            ilocation = 0
 
         if self.gauge.distunits in self._ShortDistanceUnits:
             idunits = self._ShortDistanceUnits.index(self.gauge.distunits)
@@ -1672,8 +1658,7 @@ class WaypointForm(object):
 
         self._Fields = [
                          ( u'Type', 'combo', ( self._Types, itype ) ),
-                         ( u'Monitor waypoint', 'combo', ( self._Waypoints, iwaypoints ) ),
-                         ( u'Monitor route', 'combo', ( self._Routes, iroutes ) ),
+                         ( u'Monitor waypoint', 'combo', ( self.gauge.names, ilocation ) ),
                          ( u'Distance Units', 'combo', ( self._DistanceUnits, idunits ) ),
                          ( u'Distance Tolerance', 'combo', ( tolerance, itolerance ) ),
         ]
@@ -1702,14 +1687,9 @@ class WaypointForm(object):
 
             tolerance = self.GetDistanceTolerance()
             if self.GetType() == "waypoint":
-                waypoint = self.GetWaypoint()
-                app._MonitorWaypoint(waypoint,tolerance)
+                name = self.GetName()
+                self.gauge.SetMonitor(name,tolerance)
 
-            if self.GetType() == "route":
-                route = self.GetRoute()
-                app._MonitorRoute(route,None,tolerance)
-
-            self.gauge.tag = u"%s" % waypoint.name
             self.gauge.SaveOptions()
             return True
         return False
@@ -1720,23 +1700,12 @@ class WaypointForm(object):
     def IsSaved( self ):
         return self._IsSaved
 
-    def GetWaypoint( self ):
+    def GetName(self):
         storage = DataStorage.GetInstance()
         field = self.GetField(u'Monitor waypoint')
         if field != None:
-            waypointname = self._Waypoints[field[2][1]].encode( "utf-8" )
-            waypoints = storage.GetWaypoints()
-            if waypointname in waypoints.keys():
-                return waypoints[waypointname]
-
-    def GetRoute( self ):
-        storage = DataStorage.GetInstance()
-        field = self.GetField(u'Monitor route')
-        if field != None:
-            routename = self._Routes[field[2][1]].encode( "utf-8" )
-            routes = storage.GetRoutes()
-            if routename in routes.keys():
-                return routes[routename]
+            name = self.gauge.names[field[2][1]].encode( "utf-8" )
+            return name
 
     def GetType( self ):
         field = self.GetField(u'Type')
@@ -1766,18 +1735,57 @@ class WaypointGauge(Gauge):
         self.eta = 0
         self.GetOptions()
 
+    def SetMonitor(self,name,tolerance):
+        app = Application.GetInstance()
+        storage = DataStorage.GetInstance()
+        if self.route == None:
+            waypoints = storage.GetWaypoints()
+            if name in waypoints.keys():
+                waypoint = waypoints[waypointname]
+                app._MonitorWaypoint(waypoint,tolerance)
+        else:
+            r = storage.GetRoutes()[self.route]
+            storage.OpenRoute(route=r)
+            routepoint = r.GetPoint(name)
+            if routepoint != None:
+                app._MonitorRoute(r,routepoint,tolerance)
+            else:
+                print "Routepoint %s not found" % name
+
+    def GetNames(self):
+        s = DataStorage.GetInstance()
+        r = s.GetValue("rte_monitor")
+        w = s.GetValue("wpt_monitor")
+
+        if r == None:
+            if w == None:
+                self.location = "None"
+                self.tolerance = 10
+            else:
+                self.route = None
+                self.location, self.tolerance = w
+
+                waypoints = s.GetWaypoints().keys()
+                waypoints.sort()
+                if len(waypoints) == 0:
+                    waypoints.append(u"None")
+                self.names = waypoints
+
+        else:
+            self.route, self.location, self.tolerance = r
+            r = s.GetRoutes()[self.route]
+            s.OpenRoute(route=r)
+            self.names = []
+            for k in r.data.keys():
+                self.names.append(u"%s" % k)
+            self.names.sort()
+
+
     def GetOptions(self):
         s = DataStorage.GetInstance()
-        t = s.GetValue("wpt_monitor")
-        if t == None:
-            self.waypoint = "None"
-            self.tolerance = 10
-        else:
-            self.waypoint, self.tolerance = t
+        self.GetNames()
         self.distunits = s.GetValue("wpt_distunits")
         self.type = s.GetValue("wpt_type")
-        self.tag = u"%s" % self.waypoint
-        self.route = "None"
 
     def SaveOptions(self):
         s = DataStorage.GetInstance()
@@ -1830,7 +1838,11 @@ class WaypointGauge(Gauge):
 
     def DrawInfo(self):
         if (self.radius >= 40):
-            self.DrawText(((self.radius,0.5*self.radius+7)),u'%s' %self.tag)
+            if self.route != None:
+                self.DrawText(((self.radius,0.5*self.radius+6)),u'%s' %self.route)
+                self.DrawText(((self.radius,0.5*self.radius+20)),u'%s' %self.location)
+            else:
+                self.DrawText(((self.radius,0.5*self.radius+7)),u'%s' %self.location)
             #if self.type == "wpt-dist":
             #    self.DrawText(((self.radius,1.5*self.radius   )),u'%8.0fm' % self.distance)
             #else:
