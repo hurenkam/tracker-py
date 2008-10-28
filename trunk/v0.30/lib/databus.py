@@ -68,6 +68,7 @@ class DataBus:
 
 
 def Main():
+    from time import sleep
     Log("databus","Main()")
 
     b = DataBus()
