@@ -65,18 +65,3 @@ class DataBus:
         while len(self.plugins) > 0:
             self.UnloadPlugin(-1)
         self.subscriptions={}
-
-
-def Main():
-    from time import sleep
-    Log("databus","Main()")
-
-    b = DataBus()
-    for name in ["timer","clock"]:
-        b.LoadPlugin(name)
-
-    sleep(20)
-
-    b.Quit()
-
-Main()
