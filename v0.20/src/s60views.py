@@ -974,6 +974,8 @@ class S60Application(Application, AlarmResponder):
         self.provider.SetAlarm(self.positionalarm)
 
         self.monitorwaypoint = None
+	self.monitorroute = None
+	self.monitorroutetime = None
         wpt = self.storage.GetValue("wpt_monitor")
         rte = self.storage.GetValue("rte_monitor")
         self.eta = 0
@@ -1073,7 +1075,19 @@ class S60Application(Application, AlarmResponder):
 
             self.proximityalarm = None
             self.storage.SetValue("wpt_monitor",None)
-            self.storage.SetValue("rte_monitor",None)
+            if self.monitorroute != None:
+                keys = self.monitorroute.data.keys()
+		keys.sort()
+		pos = keys.index(time)
+		if len(keys) > pos:
+		    time = keys[pos+1]
+                    routepoint = route.GetPoint(time)
+                    self.proximityalarm=ProximityAlarm(routepoint,alarm.distance,self)
+                    self.provider.SetAlarm(self.proximityalarm)
+                    self.monitorroutetime = time
+                    self.storage.SetValue("rte_monitor",(self.monitorroute.name,time,alarm.distance))
+            else:
+                self.storage.SetValue("rte_monitor",None)
 
         if alarm == self.trackalarm:
             if self.track is not None:
