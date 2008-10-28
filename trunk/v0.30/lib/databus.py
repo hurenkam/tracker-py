@@ -29,10 +29,6 @@ class DataBus:
     def Signal(self,signal):
         Log("databus*","DataBus::DeliverSignal(",signal,")")
         t = signal["type"]
-        if "id" in signal.keys():
-            id = signal["id"]
-        else:
-            id = None
 
         # handle connect & disconnect signals
         if t == "connect":
