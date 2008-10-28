@@ -1,12 +1,5 @@
-try:
-    from e32 import ao_sleep as sleep
-except:
-    from time import sleep
-
 from helpers import *
 loglevels += [ "databus!", "databus", "databus#", "databus*" ]
-
-
 
 class DataBus:
     def __init__(self):
