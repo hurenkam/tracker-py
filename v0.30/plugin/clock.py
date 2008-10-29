@@ -1,25 +1,28 @@
 from helpers import *
+#loglevels += ["clock","clock*"]
+loglevels += []
 
 class Clock:
     def __init__(self,databus):
-        Log("databus","Clock::__init__()")
+        Log("clock","Clock::__init__()")
         from time import time
         self.bus = databus
         self.bus.Signal( { "type":"connect",   "id":"clock", "signal":"clock", "handler":self.OnSignal } )
-        self.bus.Signal( { "type":"req_timer", "id":"clock", "interval":4, "start":time() } )
+        self.bus.Signal( { "type":"req_timer", "id":"clock", "interval":1, "start":time() } )
 
     def OnSignal(self,signal):
-        Log("databus*","Clock::OnSignal(",signal,")")
-        print signal["time"]
+        from time import ctime
+        Log("clock*","Clock::OnSignal(",signal,")")
+        print "\r %s    " % ctime(signal["time"]) 
 
     def Quit(self):
-        Log("databus","Clock::Quit()")
+        Log("clock","Clock::Quit()")
         self.bus.Signal( { "type":"disconnect",   "id":"clock", "signal":"clock" } )
         self.bus.Signal( { "type":"del_timer",    "id":"clock" } )
         self.bus = None
 
     def __del__(self):
-        Log("databus","Clock::__del__()")
+        Log("clock","Clock::__del__()")
 
 
 def Init(databus):

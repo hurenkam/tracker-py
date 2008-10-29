@@ -1,8 +1,10 @@
 from helpers import *
+#loglevels += ["timer"]
+loglevels += []
 
 class Timer:
     def __init__(self,databus):
-        Log("databus","Timer::__init__()")
+        Log("timer","Timer::__init__()")
         self.bus = databus
         self.requests = {}
         self.running = True
@@ -12,11 +14,11 @@ class Timer:
         thread.start_new_thread(self.Run,())
 
     def OnRequest(self,signal):
-        Log("databus","Timer::OnRequest(",signal,")")
+        Log("timer","Timer::OnRequest(",signal,")")
         self.requests[signal["id"]]={"interval":signal["interval"], "start":signal["start"]}
 
     def OnDelete(self,signal):
-        Log("databus","Timer::OnRequest(",signal,")")
+        Log("timer","Timer::OnRequest(",signal,")")
         del self.requests[signal["id"]]
 
     def CheckForExpiredTimers(self):
@@ -30,14 +32,14 @@ class Timer:
                 self.bus.Signal( { "type":k, "time":t } )
 
     def Run(self):
-        Log("databus","Timer::Run()")
+        Log("timer","Timer::Run()")
         from time import sleep
         while self.running:
             self.CheckForExpiredTimers()
             sleep(1)
 
     def Quit(self):
-        Log("databus","Timer::Quit()")
+        Log("timer","Timer::Quit()")
         from time import sleep
         self.running = False
         sleep(1)
@@ -47,8 +49,8 @@ class Timer:
         self.bus = None
 
     def __del__(self):
-        Log("databus","Timer::__del__()")
-
+        #Log("timer","Timer::__del__()")
+	pass
 
 def Init(databus):
     global t
