@@ -2,6 +2,15 @@ from helpers import *
 #loglevels += ["timer"]
 loglevels += []
 
+def Init(databus):
+    global t
+    t = Timer(databus)
+
+def Done():
+    global t
+    t.Quit()
+
+
 class Timer:
     def __init__(self,databus):
         Log("timer","Timer::__init__()")
@@ -47,15 +56,3 @@ class Timer:
         self.bus.Signal( { "type":"disconnect", "id":"timer", "signal":"del_timer" } )
         self.requests = {}
         self.bus = None
-
-    def __del__(self):
-        #Log("timer","Timer::__del__()")
-	pass
-
-def Init(databus):
-    global t
-    t = Timer(databus)
-
-def Done():
-    global t
-    t.Quit()

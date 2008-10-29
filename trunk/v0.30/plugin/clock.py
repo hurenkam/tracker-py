@@ -2,6 +2,15 @@ from helpers import *
 #loglevels += ["clock","clock*"]
 loglevels += []
 
+def Init(databus):
+    global c
+    c = Clock(databus)
+
+def Done():
+    global c
+    c.Quit()
+
+
 class Clock:
     def __init__(self,databus):
         Log("clock","Clock::__init__()")
@@ -13,22 +22,10 @@ class Clock:
     def OnSignal(self,signal):
         from time import ctime
         Log("clock*","Clock::OnSignal(",signal,")")
-        print "\r %s    " % ctime(signal["time"]) 
+        print "\r %s    " % ctime(signal["time"])
 
     def Quit(self):
         Log("clock","Clock::Quit()")
         self.bus.Signal( { "type":"disconnect",   "id":"clock", "signal":"clock" } )
         self.bus.Signal( { "type":"del_timer",    "id":"clock" } )
         self.bus = None
-
-    def __del__(self):
-        Log("clock","Clock::__del__()")
-
-
-def Init(databus):
-    global c
-    c = Clock(databus)
-
-def Done():
-    global c
-    c.Quit()
