@@ -17,17 +17,17 @@ class Timer:
         self.bus = databus
         self.requests = {}
         self.running = True
-        self.bus.Signal( { "type":"connect", "id":"timer", "signal":"req_timer", "handler":self.OnRequest } )
-        self.bus.Signal( { "type":"connect", "id":"timer", "signal":"del_timer", "handler":self.OnDelete } )
+        self.bus.Signal( { "type":"connect", "id":"timer", "signal":"timer_start", "handler":self.OnStart } )
+        self.bus.Signal( { "type":"connect", "id":"timer", "signal":"timer_stop",  "handler":self.OnStop } )
         import thread
         thread.start_new_thread(self.Run,())
 
-    def OnRequest(self,signal):
-        Log("timer","Timer::OnRequest(",signal,")")
+    def OnStart(self,signal):
+        Log("timer","Timer::OnStart(",signal,")")
         self.requests[signal["id"]]={"interval":signal["interval"], "start":signal["start"]}
 
-    def OnDelete(self,signal):
-        Log("timer","Timer::OnRequest(",signal,")")
+    def OnStop(self,signal):
+        Log("timer","Timer::OnStop(",signal,")")
         del self.requests[signal["id"]]
 
     def CheckForExpiredTimers(self):
@@ -52,7 +52,7 @@ class Timer:
         from time import sleep
         self.running = False
         sleep(1)
-        self.bus.Signal( { "type":"disconnect", "id":"timer", "signal":"req_timer" } )
-        self.bus.Signal( { "type":"disconnect", "id":"timer", "signal":"del_timer" } )
+        self.bus.Signal( { "type":"disconnect", "id":"timer", "signal":"timer_start" } )
+        self.bus.Signal( { "type":"disconnect", "id":"timer", "signal":"timer_stop" } )
         self.requests = {}
         self.bus = None

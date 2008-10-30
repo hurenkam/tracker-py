@@ -25,29 +25,40 @@ class Recorder:
 
 
     def RegisterSignals(self):
-        self.bus.Signal( { "type":"connect",   "id":"recorder", "signal":"start", "handler":self.OnStart } )
-        self.bus.Signal( { "type":"connect",   "id":"recorder", "signal":"stop", "handler":self.OnStop } )
+        self.bus.Signal( { "type":"connect", "id":"recorder", "signal":"trk_start", "handler":self.OnStart } )
+        self.bus.Signal( { "type":"connect", "id":"recorder", "signal":"trk_stop", "handler":self.OnStop } )
 
     def UnregisterSignals(self):
-        self.bus.Signal( { "type":"disconnect",   "id":"recorder", "signal":"start" } )
-        self.bus.Signal( { "type":"disconnect",   "id":"recorder", "signal":"stop" } )
+        self.bus.Signal( { "type":"disconnect", "id":"recorder", "signal":"trk_start" } )
+        self.bus.Signal( { "type":"disconnect", "id":"recorder", "signal":"trk_stop" } )
 
     def SubscribePositionSignals(self):
         self.bus.Signal( { "type":"connect",   "id":"recorder", "signal":"position", "handler":self.OnPosition } )
-        self.bus.Signal( { "type":"req_gps", "id":"recorder", "tolerance":10 } )
+        self.bus.Signal( { "type":"gps_start", "id":"recorder", "tolerance":10 } )
 
     def UnsubscribePositionSignals(self):
-        self.bus.Signal( { "type":"disconnect",   "id":"recorder", "signal":"position" } )
-        self.bus.Signal( { "type":"del_gps", "id":"recorder" } )
+        self.bus.Signal( { "type":"disconnect", "id":"recorder", "signal":"position" } )
+        self.bus.Signal( { "type":"gps_stop",   "id":"recorder" } )
 
+    def OpenTrack(self,name):
+        self.name = name
+
+    def CloseTrack(self):
+        pass
+
+    def AppendTrack(self,positionsignal):
+        pass
 
     def OnStart(self,signal):
         Log("recorder*","Recorder::OnStart(",signal,")")
         self.SubscribePositionSignals()
+        self.OpenTrack(signal["name"])
 
     def OnStop(self,signal):
         Log("recorder*","Recorder::OnStop(",signal,")")
         self.UnsubscribePositionSignals()
+        self.CloseTrack()
 
     def OnPosition(self,signal):
         Log("recorder*","Recorder::OnSignal(",signal,")")
+        self.AppendTrack(signal)

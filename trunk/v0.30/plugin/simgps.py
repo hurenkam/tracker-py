@@ -60,20 +60,20 @@ class SimGps:
 
 
     def RegisterSignals(self):
-        self.bus.Signal( { "type":"connect", "id":"gps", "signal":"req_gps", "handler":self.OnRequest } )
-        self.bus.Signal( { "type":"connect", "id":"gps", "signal":"del_gps", "handler":self.OnDelete } )
+        self.bus.Signal( { "type":"connect", "id":"simgps", "signal":"gps_start", "handler":self.OnStart } )
+        self.bus.Signal( { "type":"connect", "id":"simgps", "signal":"gps_stop", "handler":self.OnStop } )
 
     def UnregisterSignals(self):
-        self.bus.Signal( { "type":"disconnect", "id":"gps", "signal":"req_gps" } )
-        self.bus.Signal( { "type":"disconnect", "id":"gps", "signal":"del_gps" } )
+        self.bus.Signal( { "type":"disconnect", "id":"simgps", "signal":"gps_start" } )
+        self.bus.Signal( { "type":"disconnect", "id":"simgps", "signal":"gps_stop" } )
 
 
-    def OnRequest(self,signal):
-        Log("simgps","SimGps::OnRequest(",signal,")")
+    def OnStart(self,signal):
+        Log("simgps","SimGps::OnStart(",signal,")")
         self.requests[signal["id"]]={"tolerance":signal["tolerance"]}
 
-    def OnDelete(self,signal):
-        Log("simgps","SimGps::OnRequest(",signal,")")
+    def OnStop(self,signal):
+        Log("simgps","SimGps::OnStop(",signal,")")
         del self.requests[signal["id"]]
 
     def CheckForExpiredRequests(self):
