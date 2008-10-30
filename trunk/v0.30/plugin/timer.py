@@ -1,4 +1,10 @@
 from helpers import *
+import thread
+try:
+    from e32 import ao_sleep as sleep
+except:
+    from time import sleep
+
 #loglevels += ["timer"]
 loglevels += []
 
@@ -19,7 +25,6 @@ class Timer:
         self.running = True
         self.bus.Signal( { "type":"connect", "id":"timer", "signal":"timer_start", "handler":self.OnStart } )
         self.bus.Signal( { "type":"connect", "id":"timer", "signal":"timer_stop",  "handler":self.OnStop } )
-        import thread
         thread.start_new_thread(self.Run,())
 
     def OnStart(self,signal):
@@ -42,14 +47,12 @@ class Timer:
 
     def Run(self):
         Log("timer","Timer::Run()")
-        from time import sleep
         while self.running:
             self.CheckForExpiredTimers()
             sleep(1)
 
     def Quit(self):
         Log("timer","Timer::Quit()")
-        from time import sleep
         self.running = False
         sleep(1)
         self.bus.Signal( { "type":"disconnect", "id":"timer", "signal":"timer_start" } )
