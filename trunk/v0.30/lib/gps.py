@@ -1,4 +1,5 @@
 from helpers import *
+import datums
 #loglevels += ["gps","gps*"]
 
 posevent = {
@@ -39,20 +40,34 @@ class Gps:
     def CalculateDistance(self):
         Log("gps*","Gps::CalculateDistance()")
         distance = 0
+	bearing = 0
+	#print self.previous
+	
         if self.previous != None:
-            import datums
             lat1,lon1 = (self.position["latitude"],self.position["longitude"])
             lat2,lon2 = (self.previous["latitude"],self.previous["longitude"])
             distance,bearing = datums.CalculateDistanceAndBearing( (lat1,lon1), (lat2,lon2) )
+	    
         self.position["distance"] = distance
+        self.previous = self.position.copy()
 
     def SignalExpiredRequests(self):
         Log("gps*","Gps::SignalExpiredRequests()")
         self.CalculateDistance()
         for k in self.requests.keys():
             r = self.requests[k]
-            if r["tolerance"] <= self.position["distance"]:
+	    if "previous" in r.keys():
+                lat1,lon1 = (self.position["latitude"],self.position["longitude"])
+                lat2,lon2 = (r["previous"]["latitude"],r["previous"]["longitude"])
+                distance,bearing = datums.CalculateDistanceAndBearing( (lat1,lon1), (lat2,lon2) )
+                if r["tolerance"] <= distance:
+		    p = self.position.copy()
+		    p["distance"] = distance
+                    self.bus.Signal( p )
+		    r["previous"] = p
+	    else:
                 self.bus.Signal( self.position )
+		r["previous"] = self.position.copy()
 
     def StopGps(self):
         Log("gps","Gps::StopGps()")
@@ -67,13 +82,13 @@ class Gps:
 
     def RegisterSignals(self):
         Log("gps","Gps::RegisterSignals()")
-        self.bus.Signal( { "type":"connect", "id":"gps", "signal":"gps_start", "handler":self.OnStart } )
-        self.bus.Signal( { "type":"connect", "id":"gps", "signal":"gps_stop",  "handler":self.OnStop } )
+        self.bus.Signal( { "type":"db_connect", "id":"gps", "signal":"gps_start", "handler":self.OnStart } )
+        self.bus.Signal( { "type":"db_connect", "id":"gps", "signal":"gps_stop",  "handler":self.OnStop } )
 
     def UnregisterSignals(self):
         Log("gps","Gps::UnregisterSignals()")
-        self.bus.Signal( { "type":"disconnect", "id":"gps", "signal":"gps_start" } )
-        self.bus.Signal( { "type":"disconnect", "id":"gps", "signal":"gps_stop" } )
+        self.bus.Signal( { "type":"db_disconnect", "id":"gps", "signal":"gps_start" } )
+        self.bus.Signal( { "type":"db_disconnect", "id":"gps", "signal":"gps_stop" } )
 
 
     def OnStart(self,signal):
