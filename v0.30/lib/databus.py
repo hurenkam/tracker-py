@@ -32,11 +32,11 @@ class DataBus:
         t = signal["type"]
 
         # handle connect & disconnect signals
-        if t == "connect":
+        if t == "db_connect":
             self.Connect(signal)
             return
 
-        if t == "disconnect":
+        if t == "db_disconnect":
             self.Disconnect(signal)
             return
 

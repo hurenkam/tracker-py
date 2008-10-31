@@ -16,7 +16,7 @@ class Clock:
         Log("clock","Clock::__init__()")
         from time import time
         self.bus = databus
-        self.bus.Signal( { "type":"connect",     "id":"clock", "signal":"clock", "handler":self.OnSignal } )
+        self.bus.Signal( { "type":"db_connect",  "id":"clock", "signal":"clock", "handler":self.OnSignal } )
         self.bus.Signal( { "type":"timer_start", "id":"clock", "interval":1, "start":time() } )
 
     def OnSignal(self,signal):
@@ -26,6 +26,6 @@ class Clock:
 
     def Quit(self):
         Log("clock","Clock::Quit()")
-        self.bus.Signal( { "type":"disconnect", "id":"clock", "signal":"clock" } )
-        self.bus.Signal( { "type":"timer_stop", "id":"clock" } )
+        self.bus.Signal( { "type":"db_disconnect", "id":"clock", "signal":"clock" } )
+        self.bus.Signal( { "type":"timer_stop",    "id":"clock" } )
         self.bus = None

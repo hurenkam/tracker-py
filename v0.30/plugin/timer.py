@@ -23,8 +23,8 @@ class Timer:
         self.bus = databus
         self.requests = {}
         self.running = True
-        self.bus.Signal( { "type":"connect", "id":"timer", "signal":"timer_start", "handler":self.OnStart } )
-        self.bus.Signal( { "type":"connect", "id":"timer", "signal":"timer_stop",  "handler":self.OnStop } )
+        self.bus.Signal( { "type":"db_connect", "id":"timer", "signal":"timer_start", "handler":self.OnStart } )
+        self.bus.Signal( { "type":"db_connect", "id":"timer", "signal":"timer_stop",  "handler":self.OnStop } )
         thread.start_new_thread(self.Run,())
 
     def OnStart(self,signal):
@@ -55,7 +55,7 @@ class Timer:
         Log("timer","Timer::Quit()")
         self.running = False
         sleep(1)
-        self.bus.Signal( { "type":"disconnect", "id":"timer", "signal":"timer_start" } )
-        self.bus.Signal( { "type":"disconnect", "id":"timer", "signal":"timer_stop" } )
+        self.bus.Signal( { "type":"db_disconnect", "id":"timer", "signal":"timer_start" } )
+        self.bus.Signal( { "type":"db_disconnect", "id":"timer", "signal":"timer_stop" } )
         self.requests = {}
         self.bus = None
