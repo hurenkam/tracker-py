@@ -42,61 +42,61 @@ class SimGps(Gps):
         Gps.__init__(self,databus)
         Log("simgps","SimGps::__init__()")
         self.running = False
-	self.index = -1
-	self.heading = None
-	self.steps = None
-	self.count = None
-	self.route = campina
-	self.speed = 5
+        self.index = -1
+        self.heading = None
+        self.steps = None
+        self.count = None
+        self.route = campina
+        self.speed = 150
         thread.start_new_thread(self.Run,())
 
     def NextSegment(self):
         Log("simgps*","SimGps::NextSegment()")
         p1 = self.index + 1
-	if p1 > len(self.route):
-	    p1 = 0
-	self.index = p1
-	    
-	p2 = self.index + 1
-	if p2 > len(self.route):
-	    p2 = 0
-	    
-	kmPerHour = self.speed
-	metersPerSecond = kmPerHour * 1000/3600
+        if p1 >= len(self.route):
+            p1 = 0
+        self.index = p1
+
+        p2 = p1 + 1
+        if p2 >= len(self.route):
+            p2 = 0
+
+        kmPerHour = self.speed
+        metersPerSecond = kmPerHour * 1000/3600
         distance,heading = datums.CalculateDistanceAndBearing( self.route[p1], self.route[p2] )
 
-	lat1,lon1,alt1 = self.route[p1]
-	lat2,lon2,alt2 = self.route[p2]
-	print "From:     ",lat1,lon1
-	print "To:       ",lat2,lon2
-	print "Distance: ",distance
-	print "Heading:  ",heading
+        lat1,lon1,alt1 = self.route[p1]
+        lat2,lon2,alt2 = self.route[p2]
+        print "From:     ",lat1,lon1
+        print "To:       ",lat2,lon2
+        print "Distance: ",distance
+        print "Heading:  ",heading
 
         self.steps = int(distance/metersPerSecond)
-	self.count = 0
+        self.count = 0
         self.dlat = (lat2 - lat1)/float(self.steps)
         self.dlon = (lon2 - lon1)/float(self.steps)
         self.dalt = (alt2 - alt1)/float(self.steps)
-	
-	self.position["heading"] = heading
-	self.position["speed"] = kmPerHour
-	
+
+        self.position["heading"] = heading
+        self.position["speed"] = kmPerHour
+
     def NextPosition(self):
         Log("simgps*","SimGps::NextPosition()")
         lat,lon,alt = self.route[self.index]
         self.position["longitude"] = lon + self.count * self.dlon
         self.position["latitude"]  = lat + self.count * self.dlat
         self.position["altitude"]  = alt + self.count * self.dalt
-	self.position["time"] = time.time()
-	self.count += 1
-	
+        self.position["time"] = time.time()
+        self.count += 1
+
     def CalculatePosition(self):
         Log("simgps&","SimGps::CalculatePosition()")
-	if self.count == self.steps:
-	    self.NextSegment()
-	    
-	self.NextPosition()
-	
+        if self.count == self.steps:
+            self.NextSegment()
+
+        self.NextPosition()
+
     def Run(self):
         Log("simgps","SimGps::Run()")
         self.running = True

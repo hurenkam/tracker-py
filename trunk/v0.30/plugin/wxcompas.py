@@ -6,7 +6,7 @@ loglevels += []
 
 def Init(databus):
     global c
-    c = Clock(databus)
+    c = Compas(databus)
 
 def Done():
     global c
@@ -59,7 +59,7 @@ Color = {
 
 class WXAppFrame(wx.Frame):
     def __init__(self):
-        wx.Frame.__init__(self,None,wx.ID_ANY, "Clock", size = (210,235))
+        wx.Frame.__init__(self,None,wx.ID_ANY, "Compas", size = (210,235))
 
         # A Statusbar in the bottom of the window
         self.CreateStatusBar()
@@ -251,77 +251,65 @@ class Gauge:
         self.DrawPolygon((p1,p2,p3),color,1,wx.SOLID,color)
 
 
-class TwoHandGauge(Gauge):
+class WaypointGauge(Gauge):
 
-    def __init__(self,radius=None,name='',units=u'%8.0f',divider=(1,10),scale=(10,50)):
-        Gauge.__init__(self,radius)                   #   100 1000
-        self.name = name
-        self.units = units
-        self.longdivider = divider[0]
-        self.shortdivider = divider[1]
-        self.factor = divider[1]/divider[0]
-        self.scale = scale
-        self.value = None
-
-    def Draw(self):
-        if self.radius is None:
-            return
-
-        Gauge.Draw(self)
-        self.DrawScale(self.scale[0],self.scale[1])
-        self.DrawText(((self.radius,0.6*self.radius)),u'%s' % self.name)
-        if (self.value != None):
-            longhand =  (self.value % self.shortdivider) / self.longdivider * 360/self.factor
-            shorthand = (self.value / self.shortdivider)                    * 360/self.factor
-            self.DrawText(((self.radius,1.6*self.radius)), self.units % self.value, size=1.5)
-            self.DrawTriangleHand (longhand,  0.7 * self.radius, Color['black'], 4)
-            self.DrawTriangleHand (shorthand, 0.5 * self.radius, Color['black'], 4)
-
-
-class ClockGauge(Gauge):
-
-    def __init__(self,radius=None,tag="clock"):
-        self.hours = 0
-        self.minutes = 0
-        self.seconds = 0
-        self.tag = tag
+    def __init__(self,radius=None,tag="wpt"):
         Gauge.__init__(self,radius)
+        self.tag = tag
+        self.heading = None
+        self.bearing = None
+        self.distance = None
 
-    def UpdateValue(self,value):
-        import time
-        y,m,d, self.hours, self.minutes, self.seconds, a,b,c = time.localtime(value)
+    def UpdateValues(self,heading,bearing,distance):
+        self.heading = heading
+        self.bearing = bearing
+        self.distance = distance
         self.Draw()
 
+    def _sanevalues(self):
+        if self.heading is None or str(self.heading) is 'NaN':
+            self.heading = 0
+        if self.bearing is None or str(self.bearing) is 'NaN':
+            self.bearing = 0
+        if self.distance is None or str(self.distance) is'NaN':
+            self.distance = 0
+
+        north = 0 - self.heading
+        bearing = north + self.bearing
+        return north,bearing
+
+    def DrawCompas(self, north):
+        self.DrawScale(12,60,north)
+        self.DrawDotHand(north      ,self.radius-5,Color['north'],handwidth=7)
+        self.DrawDotHand(north +  90,self.radius-5,Color['black'],handwidth=5)
+        self.DrawDotHand(north + 180,self.radius-5,Color['black'],handwidth=5)
+        self.DrawDotHand(north + 270,self.radius-5,Color['black'],handwidth=7)
+
+    def DrawBearing(self, bearing):
+        if (self.radius >= 10):
+            self.DrawTriangleHand(bearing,     self.radius-10, Color['waypoint'], 8)
+            self.DrawTriangleHand(bearing+180, self.radius-10, Color['black'], 8)
+
+    def DrawInfo(self):
+        if (self.radius >= 40):
+            self.DrawText(((self.radius,0.5*self.radius+7)),u'%s' %self.tag)
+            self.DrawText(((self.radius,1.5*self.radius   )),u'%8.0f' % self.distance)
+            self.DrawText(((self.radius,1.5*self.radius+30)),u'%05.1f' % self.bearing)
+
     def Draw(self):
         if self.radius is None:
             return
 
         Gauge.Draw(self)
-        self.DrawScale(12,60)
-        if self.radius >= 30:
-            self.DrawText(((self.radius,0.6*self.radius)),u'%s' % self.tag)
-        if ((self.radius != None) and
-            (self.hours != None) and
-            (self.minutes != None)):
-
-                hourshand =    self.hours   * 360/12  + self.minutes * 360/12/60
-                if self.seconds != None:
-                    minuteshand =  self.minutes * 360/60  + self.seconds * 360/60/60
-                    secondshand =  self.seconds * 360/60
-                    if self.radius >= 30:
-                        self.DrawText(((self.radius,1.6*self.radius)),u'%2i:%02i:%02i' % (self.hours,self.minutes,self.seconds),size=1.3)
-                    self.DrawLineHand     (secondshand, 0.75 * self.radius, Color['black'], 1)
-                    self.DrawTriangleHand (minuteshand, 0.7  * self.radius, Color['black'], 4)
-                    self.DrawTriangleHand (hourshand,   0.5  * self.radius, Color['black'], 4)
-                else:
-                    minuteshand =  self.minutes * 360/60
-                    if self.radius >= 30:
-                        self.DrawText(((self.radius,1.6*self.radius)),u'%2i:%02i' % (self.hours,self.minutes),size=1.5)
-                    self.DrawTriangleHand (minuteshand, 0.7  * self.radius, Color['black'], 4)
-                    self.DrawTriangleHand (hourshand,   0.5  * self.radius, Color['black'], 4)
+        north, bearing = self._sanevalues()
+        self.DrawCompas(north)
+        self.DrawInfo()
+        self.DrawBearing(bearing)
 
 
-class Clock:
+
+
+class Compas:
     def __init__(self,databus):
         Log("clock","Clock::__init__()")
         from time import time
@@ -334,11 +322,10 @@ class Clock:
         self.dc = wx.MemoryDC()
         self.dc.SelectObject(self.bitmap)
 
-        self.timegauge = ClockGauge(None,"time")
-        self.timegauge.Resize(100)
+        self.compasgauge = WaypointGauge(None)
+        self.compasgauge.Resize(100)
         self.bus = databus
-        self.bus.Signal( { "type":"db_connect",  "id":"clock", "signal":"clock", "handler":self.OnSignal } )
-        self.bus.Signal( { "type":"timer_start", "id":"clock", "interval":1, "start":time() } )
+        self.bus.Signal( { "type":"db_connect", "id":"compas", "signal":"position", "handler":self.OnPosition } )
 
     def Draw(self,rect=None):
         self.dc.Clear()
@@ -349,13 +336,13 @@ class Clock:
 
         self.dc.Blit(
             5,5,210,210,
-            self.timegauge.dc,0,0 )
+            self.compasgauge.dc,0,0 )
 
-    def OnSignal(self,signal):
+    def OnPosition(self,position):
         from time import ctime
-        Log("clock*","Clock::OnSignal(",signal,")")
-        #print "\r %s    " % ctime(signal["time"])
-        self.timegauge.UpdateValue(signal["time"])
+        Log("clock*","Clock::OnPosition(",position,")")
+        heading = position["heading"]
+        self.compasgauge.UpdateValues(heading,0,0)
 
         try:
             self.Draw()
@@ -372,6 +359,5 @@ class Clock:
 
     def Quit(self):
         Log("clock","Clock::Quit()")
-        self.bus.Signal( { "type":"db_disconnect", "id":"clock", "signal":"clock" } )
-        self.bus.Signal( { "type":"timer_stop",    "id":"clock" } )
+        self.bus.Signal( { "type":"db_disconnect", "id":"compas", "signal":"position" } )
         self.bus = None

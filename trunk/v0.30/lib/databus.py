@@ -43,7 +43,10 @@ class DataBus:
         # distribute other signals
         if t in self.subscriptions.keys():
             for s in self.subscriptions[t].keys():
-                self.subscriptions[t][s](signal)
+                try:
+                    self.subscriptions[t][s](signal)
+                except:
+                    DumpExceptionInfo()
 
 
     def LoadPlugin(self,name):
