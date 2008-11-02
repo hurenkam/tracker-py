@@ -85,6 +85,116 @@ class WXAppFrame(wx.Frame):
         self.SetMenuBar(menuBar)  # Adding the MenuBar to the Frame content.
         self.Show(True)
 
+class Widget:
+    def __init__(self,size=None):
+        self.fontsize=14
+        self.font = wx.Font(22, wx.SWISS, wx.NORMAL, wx.NORMAL)
+        self.fgcolor = Color["black"]
+        self.bgcolor = Color["white"]
+        self.dc = None
+        self.Resize(size)
+
+    def Resize(self,size=None):
+        self.size = size
+        if self.size == None:
+            return
+
+        self.bitmap = wx.EmptyBitmap(size[0],size[1])
+        self.dc = wx.MemoryDC()
+        self.dc.SelectObject(self.bitmap)
+
+        self.Draw()
+
+    def GetImage(self):
+        return self.dc
+
+    def GetMask(self):
+        pass
+        #return self.mask
+
+    def Draw(self):
+        if self.dc != None:
+            self.dc.Clear()
+            self.dc.SetPen(wx.Pen(self.bgcolor,1))
+            self.dc.SetBrush(wx.Brush(self.bgcolor,wx.SOLID))
+            self.dc.DrawRectangleRect((0,0,self.size[0],self.size[1]))
+            self.dc.SetPen(wx.Pen(self.fgcolor,1))
+
+
+    def GetSize(self):
+        return self.size
+
+    def GetTextSize(self,text):
+        w,h = self.dc.GetTextExtent(u"%s" % text)
+        return (w,h)
+
+    def GetImage(self):
+        return self.dc
+
+    def GetMask(self):
+        return self.mask
+
+    def DrawText(self,coords,text):
+        if self.size == None:
+            return
+
+        self.dc.SetFont(self.font)
+        self.dc.SetBrush(wx.Brush(self.bgcolor,wx.SOLID))
+        self.dc.SetTextForeground(self.fgcolor)
+        w,h = self.GetTextSize(u'%s' % text)
+        x,y = coords
+        #y += h
+        if x < 0:
+           x = size[0] + x - w
+        if y < 0:
+           y = size[1] + y - h
+
+        self.dc.DrawText(u"%s" % text,x,y)
+        return (w,h)
+
+    def DrawRectangle(self,(x,y,w,h),linecolor,fillcolor=None,width=1,dc=None):
+        if dc == None:
+            dc = self.dc
+
+        if linecolor is not None:
+            dc.SetPen(wx.Pen(linecolor,width))
+        if fillcolor is not None:
+            dc.SetBrush(wx.Brush(fillcolor,wx.SOLID))
+        dc.DrawRectangleRect((0,0,self.size[0],self.size[1]))
+
+    def DrawPoint(self,x,y,linecolor=None,width=1,dc=None):
+        if dc == None:
+            dc = self.dc
+
+        if linecolor is not None:
+            dc.SetPen(wx.Pen(linecolor,width))
+        dc.DrawPoint(x,y)
+
+    def DrawLine(self,x1,y1,x2,y2,linecolor=None,width=1,dc=None):
+        if dc == None:
+            dc = self.dc
+
+        if linecolor is not None:
+            dc.SetPen(wx.Pen(linecolor,width))
+        dc.DrawLine(x1,y1,x2,y2)
+
+    def Blit(self,dc,target,source,scale):
+        x1,y1,x2,y2 = target
+        x3,y3,x4,y4 = source
+        w = x2-x1
+        h = y2-y1
+
+        if x3 < 0:
+            x1 -= x3
+            x3 -= x3
+        if y3 < 0:
+            y1 -= y3
+            y3 -= y3
+        print x1,y1,w,h,x3,y3
+
+        self.dc.Blit(x1,y1,w,h,dc,x3,y3)
+        #self.dc.Blit(0,0,w,h,dc,0,0)
+
 class Gauge:
     def __init__(self,radius=None):
         self.Resize(radius)

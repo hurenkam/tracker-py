@@ -11,12 +11,12 @@ def OnTrackPoint(position):
         position["time"], position["latitude"],position["longitude"],position["altitude"],position["distance"] )
 
 def StartRecording(b,name):
-    b.Signal( { "type":"db_connect", "id":"tracker", "signal":"trk_point", "handler":OnTrackPoint } )
+    #b.Signal( { "type":"db_connect", "id":"tracker", "signal":"trk_point", "handler":OnTrackPoint } )
     b.Signal( { "type":"trk_start", "interval":1, "name":name } )
 
 def StopRecording(b):
     b.Signal( { "type":"trk_stop" } )
-    b.Signal( { "type":"db_disconnect", "id":"tracker", "signal":"trk_point"} )
+    #b.Signal( { "type":"db_disconnect", "id":"tracker", "signal":"trk_point"} )
 
 
 def Main():
@@ -25,7 +25,7 @@ def Main():
     Log("tracker","Main()")
 
     b = DataBus()
-    for name in ["timer","simgps","recorder","wxclock","wxcompas"]:
+    for name in ["timer","simgps","recorder","wxmap"]:
         b.LoadPlugin(name)
 
     StartRecording(b,"default")
