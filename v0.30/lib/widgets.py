@@ -190,7 +190,7 @@ class Widget:
         if y3 < 0:
             y1 -= y3
             y3 -= y3
-        print x1,y1,w,h,x3,y3
+        #print x1,y1,w,h,x3,y3
 
         self.dc.Blit(x1,y1,w,h,dc,x3,y3)
         #self.dc.Blit(0,0,w,h,dc,0,0)
