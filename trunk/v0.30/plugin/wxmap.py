@@ -3,8 +3,7 @@ from widgets import *
 from datatypes import *
 from xmlparser import *
 
-#loglevels += ["clock","clock*"]
-loglevels += []
+#loglevels += ["map","map*"]
 
 def Init(databus):
     global m
@@ -23,6 +22,7 @@ class MapFile(file):
 #</map>
 
     def __init__(self,name,mode):
+        Log("map","MapFile::__init__()")
         b,e = os.path.splitext(name)
         if mode == "w":
             file.__init__(self,b+'.xml',mode)
@@ -36,14 +36,17 @@ class MapFile(file):
             raise "Unknown mode"
 
     def close(self):
+        Log("map","MapFile::close()")
         if self.parser == None:
             self.write("</map>")
             file.close(self)
 
     def writeResolution(self,size):
+        Log("map","MapFile::writeResolution()")
         self.write("   <resolution width=\"%s\" height=\"%s\"/>\n" % (str(size[0]),str(size[1])) )
 
     def writeRefpoint(self,refpoint):
+        Log("map","MapFile::writeRefpoint()")
         if refpoint.name != None and refpoint.name != "":
             self.write("   <refpoint name=\"%s\" lat=\"%f\" lon=\"%f\" x=\"%i\" y=\"%i\"/>\n" %
                   (refpoint.name, refpoint.latitude, refpoint.longitude, refpoint.x, refpoint.y) )
@@ -52,17 +55,19 @@ class MapFile(file):
                   (refpoint.latitude, refpoint.longitude, refpoint.x, refpoint.y) )
 
     def writeRefpoints(self,refpoints):
+        Log("map","MapFile::writeRefpoints()")
         for r in refpoints:
             self.writeRefpoint(r)
 
     def readResolution(self):
+        Log("map","MapFile::readResolution()")
         if self.parser.root is None:
-            print "parser.root not found"
+            Log("map!","MapFile::readResolution: parser.root not found")
             return None
 
         keys = self.parser.root.childnodes.keys()
         if 'resolution' not in keys:
-            print "no resolution found"
+            Log("map!","MapFile::readResolution: no resolution found")
             return None
 
         resolution = self.parser.root.childnodes['resolution'][0]
@@ -72,13 +77,14 @@ class MapFile(file):
         return (w,h)
 
     def readRefpoints(self):
+        Log("map","MapFile::readRefpoints()")
         if self.parser.root is None:
-            print "parser.root not found"
+            Log("map!","MapFile::readRefpoints: parser.root not found")
             return
 
         keys = self.parser.root.childnodes.keys()
         if 'refpoint' not in keys:
-            print "no refpoints found"
+            Log("map!","MapFile::readRefpoints: no refpoints found")
             return
 
         refpoints = []
@@ -97,6 +103,7 @@ class MapFile(file):
 
 class MapWidget(Widget):
     def __init__(self,size = None):
+        Log("map","MapWidget::__init__()")
         Widget.__init__(self,None)
         #self.storage = DataStorage.GetInstance()
         self.position = None
@@ -109,23 +116,28 @@ class MapWidget(Widget):
         self.Resize(size)
 
     def SetRecordingTrack(self,track):
+        Log("map","MapWidget::SetRecordingTrack(",track,")")
         self.track = track
 
     def SetMap(self,map):
+        Log("map","MapWidget::SetMap(",map,")")
         self.map = map
         self.mapimage = None
         self.LoadMap()
 
     def DrawTrackPoint(self,point,color):
+        Log("map*","MapWidget::DrawTrackPoint()")
         cur = self.map.PointOnMap(point)
         if cur != None:
             self.DrawPoint(cur[0],cur[1],color,width=5,dc=self.mapimage)
 
     def DrawTrack(self,points,color=Color["darkblue"]):
+        Log("map","MapWidget::DrawTrack()")
         for p in points:
             self.DrawTrackPoint(p, color)
 
     def DrawOpenTracks(self):
+        Log("map","MapWidget::DrawOpenTracks()")
         if False:
           for track in self.storage.tracks.values():
             if track.isopen:
@@ -138,10 +150,10 @@ class MapWidget(Widget):
                 if points != None and len(points) > 1:
                     self.DrawTrack(points,color)
                 else:
-                    print "No trackpoints"
+                    Log("map!","MapFile::DrawOpenTracks: no trackpoints found")
 
     def LoadMap(self):
-        print "loading map %s " % self.map.filename
+        Log("map","MapWidget::LoadMap() ", self.map.filename)
         image = wx.Image(u"%s" % self.map.filename,wx.BITMAP_TYPE_JPEG)
         #image.LoadFile(u"%s" % self.map.filename)
         bitmap = wx.BitmapFromImage(image)
@@ -156,13 +168,16 @@ class MapWidget(Widget):
         self.DrawOpenTracks()
 
     def ClearMap(self):
+        Log("map","MapWidget::ClearMap()")
         self.mapimage = None
 
     def ScreenArea(self):
+        Log("map*","MapWidget::ScreenArea()")
         w,h = self.size
         return (2,2,w-2,h-2)
 
     def UpdatePosition(self,point):
+        Log("map*","MapWidget::UpdatePosition(",point,")")
         self.position = point
         if self.map != None:
             self.onmap = self.map.PointOnMap(self.position)
@@ -172,9 +187,10 @@ class MapWidget(Widget):
         self.Draw()
 
     def MapArea(self):
+        Log("map*","MapWidget::MapArea()")
         p = self.onmap
         if p == None:
-            print "not on map"
+            Log("map!","MapFile::MapArea: not on map")
             if self.lastarea != None:
                 return self.lastarea
             return self.ScreenArea()
@@ -184,10 +200,10 @@ class MapWidget(Widget):
         w -= 4
         h -= 4
         self.lastarea = (int(x-w/2),int(y-h/2),int(x+w/2),int(y+h/2))
-        print p,self.lastarea
         return self.lastarea
 
     def DrawCursor(self,coords,color=Color["black"]):
+        Log("map*","MapWidget::DrawCursor()")
         x,y = coords
         w,h = self.size
         if x <0 or x>=w or y <0 or y>=h:
@@ -200,6 +216,7 @@ class MapWidget(Widget):
         self.DrawLine(x,y+10,x,y+5,linecolor=color,width=3)
 
     def Draw(self):
+        Log("map*","MapWidget::Draw()")
         Widget.Draw(self)
         if self.size != None:
             w,h = self.size
@@ -218,7 +235,7 @@ class MapWidget(Widget):
 
 class MapControl:
     def __init__(self,databus):
-        Log("clock","Clock::__init__()")
+        Log("map","MapControl::__init__()")
         from time import time
         self.frame = WXAppFrame("Map",(488,706))
         self.control = wx.PyControl(self.frame)
@@ -234,15 +251,21 @@ class MapControl:
         self.bus = databus
         self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"position", "handler":self.OnPosition } )
         self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"trk_point", "handler":self.OnTrackPoint } )
+        self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"map_open", "handler":self.OnMapOpen } )
         self.InitMapList()
-        self.mapwidget.SetMap(self.maps.values()[0])
+
+    def OnMapOpen(self,map):
+        Log("map","MapControl::OnMapOpen(",map,")")
+        name = map["name"]
+        if name in self.maps.keys():
+            self.mapwidget.SetMap(self.maps[map["name"]])
 
     def InitMapList(self,dir='.'):
-        print "InitMapList using directory: ", dir
+        Log("map","MapControl::InitMapList(",dir,")")
         selector = FileSelector(dir,".xml")
         self.maps = {}
         for key in selector.files.keys():
-            #try:
+            try:
                 filename = selector.files[key]
                 base,ext = os.path.splitext(filename)
                 f = MapFile(filename,"r")
@@ -253,9 +276,8 @@ class MapControl:
                 else:
                     m = Map(key,base+'.jpg',refpoints,resolution)
                 self.maps[m.name]=m
-            #except:
-            #    XStore()
-            #    print "Unable to parse calibration file ", filename
+            except:
+                DumpExceptionInfo()
 
         selector = FileSelector(dir,".mcx")
         for key in selector.files.keys():
@@ -271,8 +293,7 @@ class MapControl:
                     m = Map(key,base+'.jpg',refpoints,resolution)
                 self.maps[m.name]=m
             except:
-                XStore()
-                print "Unable to parse calibration file ", filename
+                DumpExceptionInfo()
 
         selector = FileSelector(dir,".map")
         for key in selector.files.keys():
@@ -288,8 +309,7 @@ class MapControl:
                     m = Map(key,base+'.jpg',refpoints,resolution)
                 self.maps[m.name]=m
             except:
-                XStore()
-                print "Unable to parse calibration file ", filename
+                DumpExceptionInfo()
 
         selector = FileSelector(dir,".jpg")
         for key in selector.files.keys():
@@ -299,9 +319,8 @@ class MapControl:
                 m = Map(key,base+'.jpg',[])
                 self.maps[m.name]=m
 
-        print "Maps: ", self.maps.keys()
-
     def Draw(self,rect=None):
+        Log("map*","MapControl::Draw()")
         self.dc.Clear()
         self.dc.SetPen(wx.Pen(Color['dashbg'],1))
         self.dc.SetBrush(wx.Brush(Color['dashbg'],wx.SOLID))
@@ -313,14 +332,12 @@ class MapControl:
             self.mapwidget.dc,0,0 )
 
     def OnTrackPoint(self,position):
+        Log("map*","MapControl::OnTrackPoint(",position,")")
         point = Point(0,position["latitude"],position["longitude"])
         self.mapwidget.DrawTrackPoint(point,Color["darkred"])
 
     def OnPosition(self,position):
-        #return
-
-        from time import ctime
-        Log("clock*","Clock::OnPosition(",position,")")
+        Log("map*","MapControl::OnPosition(",position,")")
         heading = position["heading"]
         self.mapwidget.UpdatePosition(Point(0,position["latitude"],position["longitude"]))
 
@@ -333,12 +350,13 @@ class MapControl:
             DumpExceptionInfo()
 
     def OnPaint(self,event):
+        Log("map*","MapControl::OnPaint()")
         dc = wx.PaintDC(self.panel)
         w,h = self.dc.GetSize()
         dc.Blit(0,0,w,h,self.dc,0,0)
 
     def Quit(self):
-        Log("clock","Clock::Quit()")
+        Log("map","MapControl::Quit()")
         self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"position" } )
         self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"trk_point"} )
         self.bus = None

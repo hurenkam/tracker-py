@@ -67,10 +67,6 @@ class SimGps(Gps):
 
         lat1,lon1,alt1 = self.route[p1]
         lat2,lon2,alt2 = self.route[p2]
-        print "From:     ",lat1,lon1
-        print "To:       ",lat2,lon2
-        print "Distance: ",distance
-        print "Heading:  ",heading
 
         self.steps = int(distance/metersPerSecond)
         self.count = 0
