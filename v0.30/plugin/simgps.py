@@ -47,7 +47,7 @@ class SimGps(Gps):
         self.steps = None
         self.count = None
         self.route = campina
-        self.speed = 150
+        self.speed = 50
         thread.start_new_thread(self.Run,())
 
     def NextSegment(self):
