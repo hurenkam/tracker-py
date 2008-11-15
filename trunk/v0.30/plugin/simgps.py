@@ -9,7 +9,7 @@ except:
     from time import sleep
 #loglevels += ["simgps","simgps*"]
 
-def Init(databus):
+def Init(databus,datastorage):
     global g
     g = SimGps(databus)
 

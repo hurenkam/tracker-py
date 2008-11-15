@@ -1,8 +1,8 @@
 from helpers import *
-#loglevels += ["rd","rd*"]
+loglevels += ["rd","rd*"]
 
 
-def Init(databus):
+def Init(databus,datastorage):
     global r
     r = DatumRD(databus)
 
@@ -17,18 +17,20 @@ class DatumRD:
         self.bus = databus
         self.data = None
         self.meta = None
-        self.RegisterSignals()
+        self.Register()
 
     def Quit(self):
         Log("rd","DatumRD::Quit()")
-        self.UnregisterSignals()
+        self.Unregister()
         self.bus = None
 
-    def RegisterSignals(self):
-        self.bus.Signal( { "type":"datum_register", "id":"rd", "short":"RD", "description":"Rijksdriehoek (NL)", 
+    def Register(self):
+        Log("rd","DatumRD::Register()")
+        self.bus.Signal( { "type":"datum_register", "id":"rd", "short":"RD", "description":"Rijksdriehoek (NL)",
             "query":self.QueryRD, "format":self.FormatRD } )
 
-    def UnregisterSignals(self):
+    def Unregister(self):
+        Log("rd","DatumRD::Unregister()")
         self.bus.Signal( { "type":"datum_unregister", "id":"rd", "short":"RD"   } )
 
     def Wgs2RD(self,latitude,longitude):
@@ -40,6 +42,7 @@ class DatumRD:
         return datums.GetWgs84FromRD(rdx,rdy)
 
     def QueryRD(self,latitude,longitude):
+        Log("rd","DatumRD::QueryRD()")
         import appuifw
 
         rdx,rdy = self.Wgs2RD(latitude,longitude)
@@ -56,6 +59,7 @@ class DatumRD:
         return self.RD2Wgs(self,rdx,rdy)
 
     def FormatRD(self,latitude,longitude):
+        Log("rd*","DatumRD::FormatRD()")
         rdx,rdy = self.Wgs2RD(latitude,longitude)
         return (u"RD", u"X: %s" % rdx, u"Y: %s" % rdy )
 

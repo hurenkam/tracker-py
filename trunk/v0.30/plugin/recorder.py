@@ -2,7 +2,7 @@ from helpers import *
 #loglevels += ["recorder","recorder*"]
 
 
-def Init(databus):
+def Init(databus,datastorage):
     global r
     r = Recorder(databus)
 
