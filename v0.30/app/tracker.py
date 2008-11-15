@@ -24,7 +24,7 @@ def Main():
     Log("tracker","Main()")
 
     b = DataBus()
-    for name in ["timer","simgps","recorder","wxmap"]:
+    for name in ["timer","simgps","recorder","rd","wxmap"]:
         b.LoadPlugin(name)
 
     StartRecording(b,"default")
