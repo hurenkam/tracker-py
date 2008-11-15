@@ -8,7 +8,7 @@ except:
 #loglevels += ["timer"]
 loglevels += []
 
-def Init(databus):
+def Init(databus,datastorage):
     global t
     t = Timer(databus)
 

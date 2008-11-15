@@ -5,7 +5,7 @@ from xmlparser import *
 
 loglevels += ["map!"]
 
-def Init(databus):
+def Init(databus,datastorage):
     global m
     m = MapControl(databus)
 
@@ -124,35 +124,35 @@ class MapWidget(Widget):
         points = track.FindPointsOnMap(self.map)
         if points != None and len(points) > 0:
             self.DrawTrack(points,color)
-	
+
     def HideTrack(self,track):
         Log("map","MapWidget::HideTrack(",track,")")
         if track.name in self.tracks.keys():
             del self.tracks[track.name]
             self.LoadMap()
-	
+
     def ShowRoute(self,route):
         Log("map","MapWidget::ShowRoute(",route,")")
         self.routes[route.name] = route
 	self.Draw()
-	
+
     def HideRoute(self,route):
         Log("map","MapWidget::HideRoute(",route,")")
         if route.name in self.routes.keys():
             del self.routes[route.name]
             self.Draw()
-	
+
     def ShowWaypoint(self,waypoint):
         Log("map","MapWidget::ShowWaypoint(",waypoint,")")
         self.waypoints[waypoint.name] = waypoint
 	self.Draw()
-	
+
     def HideWaypoint(self,waypoint):
         Log("map","MapWidget::HideWaypoint(",waypoint,")")
         if waypoint.name in self.waypoints.keys():
             del self.waypoints[waypoint.name]
             self.Draw()
-	
+
     def SetRecordingTrack(self,track):
         Log("map","MapWidget::SetRecordingTrack(",track,")")
         self.track = track
@@ -323,7 +323,7 @@ class MapControl:
 
         self.mapwidget = MapWidget(None)
         self.mapwidget.Resize((240,320))
-	
+
         self.bus = databus
         self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"position",  "handler":self.OnPosition } )
         self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"trk_point", "handler":self.OnTrackPoint } )

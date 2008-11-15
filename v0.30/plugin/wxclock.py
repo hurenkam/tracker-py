@@ -5,7 +5,7 @@ from widgets import *
 #loglevels += ["clock","clock*"]
 loglevels += []
 
-def Init(databus):
+def Init(databus,datastorage):
     global c
     c = Clock(databus)
 

@@ -14,7 +14,7 @@ def StopRecording(b):
 
 def OpenMap(b,name):
     b.Signal( { "type":"map_show", "name":name } )
-    
+
 def ShowWaypoint(b):
     b.Signal( { "type":"wpt_show", "name":"Kampina", "latitude":51.5431429, "longitude":5.26938448, "altitude":0 } )
 
@@ -24,7 +24,7 @@ def Main():
     Log("tracker","Main()")
 
     b = DataBus()
-    for name in ["timer","simgps","recorder","rd","wxmap"]:
+    for name in ["timer","simgps","recorder","rd","utm","wxmap"]:
         b.LoadPlugin(name)
 
     StartRecording(b,"default")
