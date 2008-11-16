@@ -3,6 +3,7 @@ from widgets import *
 from datatypes import *
 from xmlparser import *
 
+#loglevels += ["map","map*","map!"]
 loglevels += ["map!"]
 
 def Init(databus,datastorage):
@@ -106,9 +107,9 @@ class MapWidget(Widget):
         Log("map","MapWidget::__init__()")
         Widget.__init__(self,None)
         #self.storage = DataStorage.GetInstance()
-	self.waypoints = {}
-	self.tracks = {}
-	self.routes = {}
+        self.waypoints = {}
+        self.tracks = {}
+        self.routes = {}
         self.position = None
         self.map = None
         self.mapimage = None
@@ -134,7 +135,7 @@ class MapWidget(Widget):
     def ShowRoute(self,route):
         Log("map","MapWidget::ShowRoute(",route,")")
         self.routes[route.name] = route
-	self.Draw()
+        self.Draw()
 
     def HideRoute(self,route):
         Log("map","MapWidget::HideRoute(",route,")")
@@ -145,7 +146,7 @@ class MapWidget(Widget):
     def ShowWaypoint(self,waypoint):
         Log("map","MapWidget::ShowWaypoint(",waypoint,")")
         self.waypoints[waypoint.name] = waypoint
-	self.Draw()
+        self.Draw()
 
     def HideWaypoint(self,waypoint):
         Log("map","MapWidget::HideWaypoint(",waypoint,")")
@@ -312,17 +313,12 @@ class MapControl:
     def __init__(self,databus):
         Log("map","MapControl::__init__()")
         from time import time
-        self.frame = WXAppFrame("Map",(248,386))
-        self.control = wx.PyControl(self.frame)
-        self.panel = wx.Panel(self.frame,size=(248,326))
-        self.panel.Bind(wx.EVT_PAINT,self.OnPaint)
-        #self.panel.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
-        self.bitmap = wx.EmptyBitmap(248,326)
+        self.bitmap = wx.EmptyBitmap(240,320)
         self.dc = wx.MemoryDC()
         self.dc.SelectObject(self.bitmap)
 
         self.mapwidget = MapWidget(None)
-        self.mapwidget.Resize((240,320))
+        self.mapwidget.Resize((230,260))
 
         self.bus = databus
         self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"position",  "handler":self.OnPosition } )
@@ -335,7 +331,23 @@ class MapControl:
         self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"trk_hide",  "handler":self.OnTrackHide } )
         self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"wpt_show",  "handler":self.OnWaypointShow } )
         self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"wpt_hide",  "handler":self.OnWaypointHide } )
+
+        self.bus.Signal( { "type":"view_register", "id":"map", "getdc":self.GetDC, "resize":self.OnResize, "key":self.OnKey } )
+
         self.InitMapList()
+
+    def RedrawView(self):
+        self.bus.Signal( { "type":"view_redraw", "id":"map" } )
+
+    def OnKey(self,key):
+        Log("map","MapControl::OnKey()")
+
+    def OnResize(self,size):
+        Log("map","MapControl::OnResize()")
+
+    def GetDC(self):
+        Log("map","MapControl::GetDC()")
+        return self.dc
 
     def OnPosition(self,position):
         Log("map*","MapControl::OnPosition(",position,")")
@@ -344,9 +356,7 @@ class MapControl:
 
         try:
             self.Draw()
-            dc = wx.ClientDC(self.panel)
-            w,h = self.dc.GetSize()
-            dc.Blit(0,0,w,h,self.dc,0,0)
+            self.RedrawView()
         except:
             DumpExceptionInfo()
 
@@ -458,11 +468,10 @@ class MapControl:
         self.dc.Clear()
         self.dc.SetPen(wx.Pen(Color['dashbg'],1))
         self.dc.SetBrush(wx.Brush(Color['dashbg'],wx.SOLID))
-        #self.dc.DrawRectangleRect((0,0,210,210))
         self.dc.SetPen(wx.Pen(Color['dashfg'],1))
 
         self.dc.Blit(
-            4,4,244,324,
+            5,5,235,265,
             self.mapwidget.dc,0,0 )
 
     def Quit(self):
