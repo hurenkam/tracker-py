@@ -5,6 +5,7 @@ sys.path.append("../lib")
 from databus import *
 from helpers import *
 from control import *
+#loglevels += ["databus","databus*","simgps","simgps*","gps","gps*","map","map*"]
 
 def StartRecording(b,name):
     b.Signal( { "type":"trk_start", "interval":10, "name":name } )
@@ -23,19 +24,16 @@ def Main():
 
     b = DataBus()
     ui = UserInterface(b)
-    d = DatumList(b)
-    for name in ["timer","simgps","recorder","rd","utm","wxmap"]:
+    for name in ["simgps","datumlist","rd","utm","wxmap"]:
         b.LoadPlugin(name)
 
     StartRecording(b,"default")
     OpenMap(b,"51a_oisterwijk")
-    ShowWaypoint(b)
+    #ShowWaypoint(b)
     ui.Run()
 
     StopRecording(b)
 
-    print d.datums
-    d.Quit()
     ui.Quit()
     b.Quit()
 

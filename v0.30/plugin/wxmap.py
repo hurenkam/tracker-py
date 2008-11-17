@@ -3,7 +3,6 @@ from widgets import *
 from datatypes import *
 from xmlparser import *
 
-#loglevels += ["map","map*","map!"]
 loglevels += ["map!"]
 
 def Init(databus,datastorage):
@@ -331,6 +330,7 @@ class MapControl:
         self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"trk_hide",  "handler":self.OnTrackHide } )
         self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"wpt_show",  "handler":self.OnWaypointShow } )
         self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"wpt_hide",  "handler":self.OnWaypointHide } )
+        self.bus.Signal( { "type":"gps_start",  "id":"map", "tolerance":10 } )
 
         self.bus.Signal( { "type":"view_register", "id":"map", "getdc":self.GetDC, "resize":self.OnResize, "key":self.OnKey } )
 
@@ -478,6 +478,7 @@ class MapControl:
         Log("map","MapControl::Quit()")
         self.bus.Signal( { "type":"view_unregister", "id":"map" } )
 
+        self.bus.Signal( { "type":"gps_stop",      "id":"map" } )
         self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"position" } )
         self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"trk_point" } )
         self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"map_show" } )
