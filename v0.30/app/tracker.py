@@ -9,7 +9,7 @@ loglevels += [
               #"databus","databus*",
               #"gps","gps*","lrgps","lrgps*","simgps","simgps*",
               #"map","map*",
-              #"userinterface","userinterface*",
+              "userinterface","userinterface*",
               #"datumlist","datumlist*","rd","rd*","utm","utm*",
               #"datastorage","datastorage*",
               #"recorder","recorder*",
@@ -32,12 +32,12 @@ def Main():
 
     b = DataBus()
     ui = UserInterface(b)
-    for name in ["simgps","datumlist","rd","utm","wxmap"]:
+    for name in ["simgps","datumlist","rd","utm","recorder","wxmap"]:
         b.LoadPlugin(name)
 
     StartRecording(b,"default")
     OpenMap(b,"51a_oisterwijk")
-    #ShowWaypoint(b)
+    ShowWaypoint(b)
     ui.Run()
 
     StopRecording(b)
