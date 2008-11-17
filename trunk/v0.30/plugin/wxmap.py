@@ -337,7 +337,7 @@ class MapControl:
         self.InitMapList()
 
     def RedrawView(self):
-        self.bus.Signal( { "type":"view_redraw", "id":"map" } )
+        self.bus.Signal( { "type":"view_update", "id":"map" } )
 
     def OnKey(self,key):
         Log("map","MapControl::OnKey()")
@@ -476,6 +476,8 @@ class MapControl:
 
     def Quit(self):
         Log("map","MapControl::Quit()")
+        self.bus.Signal( { "type":"view_unregister", "id":"map" } )
+
         self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"position" } )
         self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"trk_point" } )
         self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"map_show" } )
