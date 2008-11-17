@@ -1,6 +1,6 @@
 from helpers import *
 from gps import *
-loglevels += ["lrgps"]
+loglevels += ["lrgps!"]
 
 def Init(databus,datastorage):
     global gps

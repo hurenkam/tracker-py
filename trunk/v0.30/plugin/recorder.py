@@ -1,5 +1,5 @@
 from helpers import *
-#loglevels += ["recorder","recorder*"]
+loglevels += ["recorder!"]
 
 
 def Init(databus,datastorage):

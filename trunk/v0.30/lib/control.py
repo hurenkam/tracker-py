@@ -2,7 +2,7 @@ from databus import *
 from helpers import *
 from widgets import *
 import wx
-loglevels += ["userinterface","userinterface*"]
+loglevels += ["userinterface!"]
 
 class UserInterface:
     def __init__(self,databus):

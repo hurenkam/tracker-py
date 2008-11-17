@@ -5,7 +5,15 @@ sys.path.append("../lib")
 from databus import *
 from helpers import *
 from control import *
-#loglevels += ["databus","databus*","simgps","simgps*","gps","gps*","map","map*"]
+loglevels += [
+              #"databus","databus*",
+              #"gps","gps*","lrgps","lrgps*","simgps","simgps*",
+              #"map","map*",
+              #"userinterface","userinterface*",
+              #"datumlist","datumlist*","rd","rd*","utm","utm*",
+              #"datastorage","datastorage*",
+              #"recorder","recorder*",
+              ]
 
 def StartRecording(b,name):
     b.Signal( { "type":"trk_start", "interval":10, "name":name } )

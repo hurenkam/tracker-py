@@ -1,5 +1,5 @@
 from helpers import *
-loglevels += ["rd","rd*"]
+loglevels += ["rd!"]
 
 
 def Init(databus,datastorage):

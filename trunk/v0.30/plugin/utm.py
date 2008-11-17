@@ -1,5 +1,5 @@
 from helpers import *
-loglevels += ["utm","utm*"]
+loglevels += ["utm!"]
 
 
 def Init(databus,datastorage):
