@@ -105,12 +105,26 @@ class Widget:
 
         self.Draw()
 
+    def LoadImage(self,name):
+        image = wx.Image(u"%s" % name,wx.BITMAP_TYPE_JPEG)
+        #image.LoadFile(u"%s" % self.map.filename)
+        bitmap = wx.BitmapFromImage(image)
+        self.image = wx.MemoryDC()
+        self.image.SelectObject(bitmap)
+        self.size = self.image.GetSize().Get()
+
     def GetImage(self):
         return self.dc
 
     def GetMask(self):
         pass
         #return self.mask
+
+    def Paint(self,event):
+        if self.dc != None:
+            dc = wx.PaintDC(self.panel)
+            w,h = self.dc.GetSize()
+            dc.Blit(0,0,w,h,self.dc,0,0)
 
     def Draw(self):
         if self.dc != None:

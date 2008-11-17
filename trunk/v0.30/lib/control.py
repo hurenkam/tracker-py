@@ -10,6 +10,7 @@ class UserInterface:
         self.bus = databus
         self.Register()
         self.views = {}
+	self.menuitems = {}
         self.active = None
 
         self.app = wx.PySimpleApp()
@@ -34,25 +35,25 @@ class UserInterface:
         self.bus.Signal( { "type":"db_connect", "id":"viewlist", "signal":"view_register", "handler":self.OnViewRegister } )
         self.bus.Signal( { "type":"db_connect", "id":"viewlist", "signal":"view_update", "handler":self.OnViewUpdate } )
         self.bus.Signal( { "type":"db_connect", "id":"viewlist", "signal":"view_unregister", "handler":self.OnViewUnregister } )
-        self.bus.Signal( { "type":"db_connect", "id":"menulist", "signal":"menu_register", "handler":self.OnMenuRegister } )
-        self.bus.Signal( { "type":"db_connect", "id":"menulist", "signal":"menu_update", "handler":self.OnMenuUpdate } )
-        self.bus.Signal( { "type":"db_connect", "id":"menulist", "signal":"menu_unregister", "handler":self.OnMenuUnregister } )
 
     def Unregister(self):
         Log("userinterface","UserInterface::Unregister()")
         self.bus.Signal( { "type":"db_disconnect", "id":"viewlist", "signal":"view_register" } )
         self.bus.Signal( { "type":"db_disconnect", "id":"viewlist", "signal":"view_update" } )
         self.bus.Signal( { "type":"db_disconnect", "id":"viewlist", "signal":"view_unregister" } )
-        self.bus.Signal( { "type":"db_disconnect", "id":"menulist", "signal":"menu_register" } )
-        self.bus.Signal( { "type":"db_disconnect", "id":"menulist", "signal":"menu_update" } )
-        self.bus.Signal( { "type":"db_disconnect", "id":"menulist", "signal":"menu_unregister" } )
 
     def SelectView(self,id):
         self.active = id
+	
+    def UpdateMenu(self,id=None):
+        if id == None:
+	    pass
+	else:
+	    pass
 
     def OnViewRegister(self,signal):
         Log("userinterface","UserInterface::OnViewRegister(",signal,")")
-        self.views[signal["id"]]=(signal["getdc"],signal["resize"],signal["key"])
+        self.views[signal["id"]]=(signal["getview"],signal["getmenu"],signal["resize"],signal["key"])
         if self.active == None:
             self.SelectView(signal["id"])
 
@@ -70,11 +71,11 @@ class UserInterface:
 
     def OnMenuRegister(self,signal):
         Log("userinterface","UserInterface::OnMenuRegister(",signal,")")
-        self.menus[signal["id"]]=(signal["menu"])
+        self.menuitems[signal["id"]]=(signal["submenu"],signal["entry"],signal["handler"])
 
     def OnMenuUnregister(self,signal):
         Log("userinterface","UserInterface::OnMenuUnregister(",signal,")")
-        del self.menus[signal[id]]
+        del self.menuitems[signal[id]]
 
     def Redraw(self):
         dc = wx.ClientDC(self.panel)

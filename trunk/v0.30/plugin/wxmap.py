@@ -7,10 +7,10 @@ loglevels += ["map!"]
 
 def Init(databus,datastorage):
     global m
-    m = MapControl(databus)
+    m = MapView(databus)
 
 def Done():
-    global c
+    global m
     m.Quit()
 
 class MapFile(file):
@@ -197,7 +197,6 @@ class MapWidget(Widget):
     def LoadMap(self):
         Log("map","MapWidget::LoadMap() ", self.map.filename)
         image = wx.Image(u"%s" % self.map.filename,wx.BITMAP_TYPE_JPEG)
-        #image.LoadFile(u"%s" % self.map.filename)
         bitmap = wx.BitmapFromImage(image)
         self.mapimage = wx.MemoryDC()
         self.mapimage.SelectObject(bitmap)
@@ -308,16 +307,24 @@ class MapWidget(Widget):
 
 
 
-class MapControl:
+class MapView(Widget):
     def __init__(self,databus):
         Log("map","MapControl::__init__()")
         from time import time
-        self.bitmap = wx.EmptyBitmap(240,320)
-        self.dc = wx.MemoryDC()
-        self.dc.SelectObject(self.bitmap)
+
+        self.menu = { "map": {
+            "open": self.OnOpen,
+            "close": self.OnClose,
+            "add refpoint": self.OnRefPt,
+            "add ref from wpt": self.OnRefWpt,
+            "save": self.OnSave,
+            "clear": self.OnClear,
+            } }
 
         self.mapwidget = MapWidget(None)
         self.mapwidget.Resize((230,260))
+
+        Widget.__init__(self,(240,320))
 
         self.bus = databus
         self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"position",  "handler":self.OnPosition } )
@@ -330,13 +337,42 @@ class MapControl:
         self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"trk_hide",  "handler":self.OnTrackHide } )
         self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"wpt_show",  "handler":self.OnWaypointShow } )
         self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"wpt_hide",  "handler":self.OnWaypointHide } )
+
         self.bus.Signal( { "type":"gps_start",  "id":"map", "tolerance":10 } )
 
-        self.bus.Signal( { "type":"view_register", "id":"map", "getdc":self.GetDC, "resize":self.OnResize, "key":self.OnKey } )
+        self.bus.Signal( { "type":"view_register", "id":"map",
+            "getview": self.GetImage,
+            "getmenu": self.GetMenu,
+            "resize":  self.OnResize,
+            "key":     self.OnKey,
+            } )
 
         self.InitMapList()
 
+    def GetMenu(self):
+        Log("map","MapControl::GetMenu()")
+        return self.menu
+
+    def OnOpen(self):
+        Log("map","MapControl::OnOpen()")
+
+    def OnClose(self):
+        Log("map","MapControl::OnClose()")
+
+    def OnRefPt(self):
+        Log("map","MapControl::OnRefPt()")
+
+    def OnRefWpt(self):
+        Log("map","MapControl::OnRefWpt()")
+
+    def OnSave(self):
+        Log("map","MapControl::OnSave()")
+
+    def OnClear(self):
+        Log("map","MapControl::OnClear()")
+
     def RedrawView(self):
+        Log("map","MapControl::RedrawView()")
         self.bus.Signal( { "type":"view_update", "id":"map" } )
 
     def OnKey(self,key):
@@ -344,10 +380,6 @@ class MapControl:
 
     def OnResize(self,size):
         Log("map","MapControl::OnResize()")
-
-    def GetDC(self):
-        Log("map","MapControl::GetDC()")
-        return self.dc
 
     def OnPosition(self,position):
         Log("map*","MapControl::OnPosition(",position,")")
@@ -365,7 +397,7 @@ class MapControl:
         name = map["name"]
         if name in self.maps.keys():
             self.mapwidget.SetMap(self.maps[map["name"]])
-	else:
+        else:
             Log("map!","MapControl::OnMapShow(): Map",name,"not found!")
 
     def OnMapHide(self,map):
@@ -398,11 +430,14 @@ class MapControl:
         wpt = Waypoint(waypoint["name"])
         self.mapwidget.HideWaypoint(wpt)
 
-    def OnPaint(self,event):
-        Log("map*","MapControl::OnPaint()")
-        dc = wx.PaintDC(self.panel)
-        w,h = self.dc.GetSize()
-        dc.Blit(0,0,w,h,self.dc,0,0)
+    def Draw(self,rect=None):
+        Log("map*","MapControl::Draw()")
+        Widget.Draw(self)
+        self.Blit(
+            self.mapwidget.GetImage(),
+            (5,5,235,265),
+            (0,0,230,260),
+            0)
 
     def InitMapList(self,dir='.'):
         Log("map","MapControl::InitMapList(",dir,")")
@@ -462,17 +497,6 @@ class MapControl:
                 base,ext = os.path.splitext(filename)
                 m = Map(key,base+'.jpg',[])
                 self.maps[m.name]=m
-
-    def Draw(self,rect=None):
-        Log("map*","MapControl::Draw()")
-        self.dc.Clear()
-        self.dc.SetPen(wx.Pen(Color['dashbg'],1))
-        self.dc.SetBrush(wx.Brush(Color['dashbg'],wx.SOLID))
-        self.dc.SetPen(wx.Pen(Color['dashfg'],1))
-
-        self.dc.Blit(
-            5,5,235,265,
-            self.mapwidget.dc,0,0 )
 
     def Quit(self):
         Log("map","MapControl::Quit()")
