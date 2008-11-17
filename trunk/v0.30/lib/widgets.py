@@ -109,9 +109,9 @@ class Widget:
         image = wx.Image(u"%s" % name,wx.BITMAP_TYPE_JPEG)
         #image.LoadFile(u"%s" % self.map.filename)
         bitmap = wx.BitmapFromImage(image)
-        self.image = wx.MemoryDC()
-        self.image.SelectObject(bitmap)
-        self.size = self.image.GetSize().Get()
+        self.dc = wx.MemoryDC()
+        self.dc.SelectObject(bitmap)
+        self.size = self.dc.GetSize().Get()
 
     def GetImage(self):
         return self.dc
@@ -192,7 +192,12 @@ class Widget:
             dc.SetPen(wx.Pen(linecolor,width))
         dc.DrawLine(x1,y1,x2,y2)
 
-    def Blit(self,dc,target,source,scale):
+    def DrawPolygon(self,points,color=Color['black'],width=1,style=wx.SOLID,fillcolor=Color['white']):
+        self.dc.SetPen(wx.Pen(color,width))
+        self.dc.SetBrush(wx.Brush(fillcolor,style))
+        self.dc.DrawPolygon(points)
+
+    def Blit(self,widget,target,source,scale):
         x1,y1,x2,y2 = target
         x3,y3,x4,y4 = source
         w = x2-x1
@@ -206,8 +211,15 @@ class Widget:
             y3 -= y3
         #print x1,y1,w,h,x3,y3
 
-        self.dc.Blit(x1,y1,w,h,dc,x3,y3)
-        #self.dc.Blit(0,0,w,h,dc,0,0)
+        self.dc.Blit(x1,y1,w,h,widget.GetImage(),x3,y3)
+
+class View(Widget):
+    def GetMenu(self):
+        pass
+    def OnKey(self,key):
+        pass
+    def OnResize(self,size):
+        pass
 
 class Gauge:
     def __init__(self,radius=None):

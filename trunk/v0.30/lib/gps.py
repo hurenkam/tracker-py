@@ -1,6 +1,5 @@
 from helpers import *
 import datums
-#loglevels += ["gps","gps*"]
 
 posevent = {
     'id':'lrgps-pos',
@@ -40,14 +39,13 @@ class Gps:
     def CalculateDistance(self):
         Log("gps*","Gps::CalculateDistance()")
         distance = 0
-	bearing = 0
-	#print self.previous
-	
+        bearing = 0
+
         if self.previous != None:
             lat1,lon1 = (self.position["latitude"],self.position["longitude"])
             lat2,lon2 = (self.previous["latitude"],self.previous["longitude"])
             distance,bearing = datums.CalculateDistanceAndBearing( (lat1,lon1), (lat2,lon2) )
-	    
+
         self.position["distance"] = distance
         self.previous = self.position.copy()
 
@@ -56,18 +54,18 @@ class Gps:
         self.CalculateDistance()
         for k in self.requests.keys():
             r = self.requests[k]
-	    if "previous" in r.keys():
+            if "previous" in r.keys():
                 lat1,lon1 = (self.position["latitude"],self.position["longitude"])
                 lat2,lon2 = (r["previous"]["latitude"],r["previous"]["longitude"])
                 distance,bearing = datums.CalculateDistanceAndBearing( (lat1,lon1), (lat2,lon2) )
                 if r["tolerance"] <= distance:
-		    p = self.position.copy()
-		    p["distance"] = distance
+                    p = self.position.copy()
+                    p["distance"] = distance
                     self.bus.Signal( p )
-		    r["previous"] = p
-	    else:
+                    r["previous"] = p
+            else:
                 self.bus.Signal( self.position )
-		r["previous"] = self.position.copy()
+                r["previous"] = self.position.copy()
 
     def StopGps(self):
         Log("gps","Gps::StopGps()")
