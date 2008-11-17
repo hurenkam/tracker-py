@@ -1,6 +1,6 @@
 from helpers import *
-#loglevels += [ "databus!", "databus", "databus#", "databus*" ]
-loglevels += [ "datastorage", "datastorage*" ]
+loglevels += [ "datastorage!" ]
+loglevels += [ "databus!" ]
 
 class DataStorage:
     def __init__(self):

@@ -7,7 +7,7 @@ try:
     from e32 import ao_sleep as sleep
 except:
     from time import sleep
-#loglevels += ["simgps","simgps*"]
+loglevels += ["simgps!"]
 
 def Init(databus,datastorage):
     global g

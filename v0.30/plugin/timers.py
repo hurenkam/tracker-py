@@ -5,8 +5,7 @@ try:
 except:
     from time import sleep
 
-#loglevels += ["timer"]
-loglevels += []
+loglevels += ["timer!"]
 
 def Init(databus,datastorage):
     global t

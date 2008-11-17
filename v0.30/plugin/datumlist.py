@@ -1,5 +1,5 @@
 from helpers import *
-loglevels += ["datumlist","datumlist*"]
+loglevels += ["datumlist!"]
 
 def Init(databus,datastorage):
     global d
