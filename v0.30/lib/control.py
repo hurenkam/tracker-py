@@ -44,16 +44,10 @@ class UserInterface:
 
     def SelectView(self,id):
         self.active = id
-	
-    def UpdateMenu(self,id=None):
-        if id == None:
-	    pass
-	else:
-	    pass
 
     def OnViewRegister(self,signal):
         Log("userinterface","UserInterface::OnViewRegister(",signal,")")
-        self.views[signal["id"]]=(signal["getview"],signal["getmenu"],signal["resize"],signal["key"])
+        self.views[signal["id"]]=signal["view"]
         if self.active == None:
             self.SelectView(signal["id"])
 
@@ -62,24 +56,13 @@ class UserInterface:
         if signal["id"]==self.active:
             self.Redraw()
 
-    def OnMenuUpdate(self,signal):
-        Log("userinterface","UserInterface::OnMenuUpdate(",signal,")")
-
     def OnViewUnregister(self,signal):
         Log("userinterface","UserInterface::OnViewUnregister(",signal,")")
         del self.views[signal[id]]
 
-    def OnMenuRegister(self,signal):
-        Log("userinterface","UserInterface::OnMenuRegister(",signal,")")
-        self.menuitems[signal["id"]]=(signal["submenu"],signal["entry"],signal["handler"])
-
-    def OnMenuUnregister(self,signal):
-        Log("userinterface","UserInterface::OnMenuUnregister(",signal,")")
-        del self.menuitems[signal[id]]
-
     def Redraw(self):
         dc = wx.ClientDC(self.panel)
-        activedc = self.views[self.active][0]()
+        activedc = self.views[self.active].GetImage()
         w,h = activedc.GetSize()
         dc.Blit(0,0,w,h,activedc,0,0)
 
@@ -89,6 +72,6 @@ class UserInterface:
             return
 
         dc = wx.PaintDC(self.panel)
-        activedc = self.views[self.active][0]()
+        activedc = self.views[self.active].GetImage()
         w,h = activedc.GetSize()
         dc.Blit(0,0,w,h,activedc,0,0)

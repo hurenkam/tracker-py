@@ -113,9 +113,10 @@ class MapWidget(Widget):
         self.map = None
         self.mapimage = None
         self.lastarea = None
+        self.heading = 0
         #self.position = self.storage.GetValue("app_lastknownposition")
         self.position = Point(0,51.5431429,5.26938448,0)
-        self.UpdatePosition(self.position)
+        self.UpdatePosition(self.position,0)
         self.Resize(size)
 
     def ShowTrack(self,track,color=Color["darkblue"]):
@@ -171,7 +172,7 @@ class MapWidget(Widget):
 
         cur = self.map.PointOnMap(point)
         if cur != None:
-            self.DrawPoint(cur[0],cur[1],color,width=5,dc=self.mapimage)
+            self.DrawPoint(cur[0],cur[1],color,width=5,dc=self.mapimage.GetImage())
 
     def DrawTrack(self,points,color=Color["darkblue"]):
         Log("map","MapWidget::DrawTrack()")
@@ -196,13 +197,11 @@ class MapWidget(Widget):
 
     def LoadMap(self):
         Log("map","MapWidget::LoadMap() ", self.map.filename)
-        image = wx.Image(u"%s" % self.map.filename,wx.BITMAP_TYPE_JPEG)
-        bitmap = wx.BitmapFromImage(image)
-        self.mapimage = wx.MemoryDC()
-        self.mapimage.SelectObject(bitmap)
+        self.mapimage = Widget()
+        self.mapimage.LoadImage(self.map.filename)
 
         if self.map != None:
-            self.map.SetSize(self.mapimage.GetSize().Get())
+            self.map.SetSize(self.mapimage.GetSize())
         if self.position != None:
             self.UpdatePosition(self.position)
         self.lastarea = None
@@ -217,9 +216,10 @@ class MapWidget(Widget):
         w,h = self.size
         return (2,2,w-2,h-2)
 
-    def UpdatePosition(self,point):
-        Log("map*","MapWidget::UpdatePosition(",point,")")
+    def UpdatePosition(self,point,heading):
+        Log("map*","MapWidget::UpdatePosition(",point,heading,")")
         self.position = point
+        self.heading = heading
         if self.map != None:
             self.onmap = self.map.PointOnMap(self.position)
         else:
@@ -256,15 +256,21 @@ class MapWidget(Widget):
         self.DrawLine(x,y-10,x,y-5,linecolor=color,width=3)
         self.DrawLine(x,y+10,x,y+5,linecolor=color,width=3)
 
-    def DrawArrow(self,image,coords,color=Color["black"]):
+    def CalculatePoint(self,heading,(x,y),length):
+        _heading = heading * 3.14159265 / 180
+        point =  ( x + length * math.sin(_heading),
+                   y - length * math.cos(_heading) )
+        return point
+
+    def DrawArrow(self,coords,color=Color["black"]):
         Log("map*","MapWidget::DrawArrow(",coords,color,")")
-        r=10
+        r=10.0
         point1 = self.CalculatePoint(self.heading,   coords,r*4)
         point2 = self.CalculatePoint(self.heading+30,coords,r*1.5)
         point3 = self.CalculatePoint(self.heading,   coords,r*2)
         point4 = self.CalculatePoint(self.heading-30,coords,r*1.5)
-        image.polygon((point1,point2,point3,point4),Color["white"],fill=color)
-
+        #image.polygon((point1,point2,point3,point4),Color["white"],fill=color)
+        self.DrawPolygon((point1,point2,point3,point4),color=color)
 
     def DrawWaypoints(self,zoom=1.0):
         Log("map*","MapWidget::DrawWaypoints(",zoom,")")
@@ -303,11 +309,11 @@ class MapWidget(Widget):
 
             self.DrawWaypoints()
             self.DrawCursor((w/2,h/2),c)
-            #self.DrawArrow(self.image,(w/2,h/2),c)
+            self.DrawArrow((w/2,h/2),c)
 
 
 
-class MapView(Widget):
+class MapView(View):
     def __init__(self,databus):
         Log("map","MapControl::__init__()")
         from time import time
@@ -340,12 +346,7 @@ class MapView(Widget):
 
         self.bus.Signal( { "type":"gps_start",  "id":"map", "tolerance":10 } )
 
-        self.bus.Signal( { "type":"view_register", "id":"map",
-            "getview": self.GetImage,
-            "getmenu": self.GetMenu,
-            "resize":  self.OnResize,
-            "key":     self.OnKey,
-            } )
+        self.bus.Signal( { "type":"view_register", "id":"map", "view":self } )
 
         self.InitMapList()
 
@@ -384,7 +385,7 @@ class MapView(Widget):
     def OnPosition(self,position):
         Log("map*","MapControl::OnPosition(",position,")")
         heading = position["heading"]
-        self.mapwidget.UpdatePosition(Point(0,position["latitude"],position["longitude"]))
+        self.mapwidget.UpdatePosition(Point(0,position["latitude"],position["longitude"]),heading)
 
         try:
             self.Draw()
@@ -434,7 +435,7 @@ class MapView(Widget):
         Log("map*","MapControl::Draw()")
         Widget.Draw(self)
         self.Blit(
-            self.mapwidget.GetImage(),
+            self.mapwidget,
             (5,5,235,265),
             (0,0,230,260),
             0)
