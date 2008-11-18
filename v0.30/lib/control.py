@@ -10,7 +10,6 @@ class UserInterface:
         self.bus = databus
         self.Register()
         self.views = {}
-	self.menuitems = {}
         self.active = None
 
         self.app = wx.PySimpleApp()
