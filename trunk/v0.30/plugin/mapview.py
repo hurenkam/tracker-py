@@ -332,8 +332,11 @@ class MapView(View):
 
         self.mapwidget = MapWidget(None)
         self.mapwidget.Resize((230,260))
-        #self.timegauge = ClockGauge(None,"time")
-        #self.timegauge.Resize(25)
+        self.menuwidget = TextWidget("Menu",fgcolor=Color["white"],bgcolor=Color["darkblue"])
+        self.editwidget = TextWidget("Find map",fgcolor=Color["white"],bgcolor=Color["darkblue"])
+        self.exitwidget = TextWidget("Exit",fgcolor=Color["white"],bgcolor=Color["darkblue"])
+        self.satwidget = BarWidget((15,50),bars=5,range=10)
+        self.batwidget = BarWidget((15,50),bars=5,range=100)
 
         Widget.__init__(self,(240,320))
 
@@ -446,11 +449,42 @@ class MapView(View):
             (0,0,230,260),
             0)
 
-        #self.Blit(
-        #    self.timegauge,
-        #    (5,268,55,320),
-        #    (0,0,50,50),
-        #    0)
+        self.DrawRectangle((0,270,240,50),linecolor=Color["darkblue"],fillcolor=Color["darkblue"])
+        w,h = self.menuwidget.GetSize()
+        self.Blit(
+            self.menuwidget,
+            (20,320-h,20+w,320),
+            (0,0,w,h),
+            0)
+
+        w,h = self.editwidget.GetSize()
+        self.Blit(
+            self.editwidget,
+            (120-w/2,320-h,120+w,320),
+            (0,0,w,h),
+            0)
+
+        w,h = self.exitwidget.GetSize()
+        self.Blit(
+            self.exitwidget,
+            (220-w,320-h,220,320),
+            (0,0,w,h),
+            0)
+
+        w,h = self.satwidget.GetSize()
+        self.Blit(
+            self.satwidget,
+            (0,270,w,270+h),
+            (0,0,w,h),
+            0)
+
+        w,h = self.batwidget.GetSize()
+        self.Blit(
+            self.batwidget,
+            (225,270,225+w,270+h),
+            (0,0,w,h),
+            0)
+
 
     def InitMapList(self,dir='.'):
         Log("map","MapControl::InitMapList(",dir,")")

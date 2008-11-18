@@ -21,6 +21,166 @@ try:
 except:
     pass
 
+
+class TextWidget(Widget):
+    def __init__(self,text='',hpad=5,vpad=3,fgcolor=Color["black"],bgcolor=Color["white"]):
+        Widget.__init__(self)
+        self.fgcolor = fgcolor
+        self.bgcolor = bgcolor
+        self.text = text
+        self.hpad = hpad
+        self.vpad = vpad
+        self.Resize((1,1))
+        self.UpdateText(text,hpad,vpad)
+
+    def UpdateText(self,text,hpad=5,vpad=3):
+        self.text = text
+        self.hpad = hpad
+        self.vpad = vpad
+        w,h = self.GetTextSize(u'%s' % text)
+        w += hpad*2
+        h += vpad*2
+        self.Resize((w,h))
+
+    def Draw(self):
+        Widget.Draw(self)
+        self.DrawText( (self.vpad,self.hpad ), u'%s' % self.text)
+
+
+class PositionWidget(Widget):
+    def __init__(self,size = None):
+        self.point = None
+        Widget.__init__(self,size)
+
+    def UpdatePosition(self,point):
+        self.point = point
+        self.Draw()
+
+    def Draw(self):
+        Widget.Draw(self)
+        s=self.GetSize()
+        self.DrawRectangle((0,0,s[0],s[1]),Color["black"])
+        if self.point:
+            w,h = self.DrawText( (5,5),     u"Lat: %8.5f" % self.point.latitude)
+            w,h = self.DrawText( (5,5+h+2), u"Lon: %8.5f" % self.point.longitude)
+        else:
+            w,h = self.DrawText( (5,5),     u"Position")
+            w,h = self.DrawText( (5,5+h+2), u"Unknown")
+
+class BarWidget(Widget):
+
+    def __init__(self,size=None,c1=Color["bar_c1"],c2=Color["bar_c2"],range=100,bars=7):
+        Widget.__init__(self)
+        self.bgcolor = Color["bar_bg"]
+        self.v1=40
+        self.v2=80
+        self.SetParams(c1,c2,range,bars)
+        self.Resize(size)
+
+    def SetParams(self,c1=Color["bar_c1"],c2=Color["bar_c2"],range=100,bars=7):
+        self.c1=c1
+        self.c2=c2
+        self.bars = bars
+        self.range = range
+        self.Resize(self.size)
+
+    def UpdateValues(self,v1,v2):
+        self.v1 = v1
+        self.v2 = v2
+        self.Draw()
+
+    def CalcValues(self):
+        if self.v1 == None:
+            v1=0
+        else:
+            v1 = int(0.5 + float(self.v1) * float(self.bars) / float(self.range))
+        if self.v2 == None:
+            v2 = v1
+        else:
+            v2 = int(0.5 + float(self.v2) * float(self.bars) / float(self.range))
+        if v2 < v1:
+            v2=v1
+
+        if v1 > self.bars:
+            v1 = self.bars
+        if v2 > self.bars:
+            v2 = self.bars
+        if v1 < 0:
+            v1 = 0
+        if v2 < 0:
+            v2 = 0
+
+        return v1,v2
+
+    def Draw(self):
+        if self.size == None:
+            return
+
+        Widget.Draw(self)
+
+        w,h = self.size
+        if w > h:
+            self.bars = (w-3)/2
+            x1,y1 = 2,2
+            x2,y2 = 2,h-4
+            dx = 2
+            dy = 0
+        else:
+            self.bars = (h-3)/2
+            x1,y1 = 2,h-2
+            x2,y2 = w-4,h-2
+            dx = 0
+            dy = 2
+
+        v1,v2 = self.CalcValues()
+
+        for i in range (0,v1):
+            self.DrawLine(x1,y1,x2,y2,self.c1)
+            x1 += dx; x2 += dx
+            y1 -= dy; y2 -= dy
+        for i in range (v1,v2):
+            self.DrawLine(x1,y1,x2,y2,self.c2)
+            x1 += dx; x2 += dx
+            y1 -= dy; y2 -= dy
+        for i in range (v2,self.bars):
+            self.DrawLine(x1,y1,x2,y2,Color["black"])
+            x1 += dx; x2 += dx
+            y1 -= dy; y2 -= dy
+
+
+    def _Draw(self):
+        if self.v1 == None:
+            v1=0
+        else:
+            v1 = int(0.5 + float(self.v1) * float(self.bars) / float(self.range))
+        if self.v2 == None:
+            v2 = v1
+        else:
+            v2 = int(0.5 + float(self.v2) * float(self.bars) / float(self.range))
+        if v2 < v1:
+            v2=v1
+
+        if v1 > self.bars:
+            v1 = self.bars
+        if v2 > self.bars:
+            v2 = self.bars
+        if v1 < 0:
+            v1 = 0
+        if v2 < 0:
+            v2 = 0
+
+        #print 0,v2,v2,self.bars,self.x,self.y,self.dy
+        for i in range (0,v1):
+            y = self.y+(self.bars-(i+1))*self.dy
+            self.DrawDot((self.x,y),self.c1,self.width)
+        for i in range (v1,v2):
+            y = self.y+(self.bars-(i+1))*self.dy
+            self.DrawDot((self.x,y),self.c2,self.width)
+        for i in range (v2,self.bars):
+            y = self.y+(self.bars-(i+1))*self.dy
+            self.DrawDot((self.x,y),Color["black"],self.width)
+
+
 class Gauge(Widget):
     def __init__(self,radius=None):
         self.value = None
