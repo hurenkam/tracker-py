@@ -332,6 +332,8 @@ class MapView(View):
 
         self.mapwidget = MapWidget(None)
         self.mapwidget.Resize((230,260))
+        #self.timegauge = ClockGauge(None,"time")
+        #self.timegauge.Resize(25)
 
         Widget.__init__(self,(240,320))
 
@@ -443,6 +445,12 @@ class MapView(View):
             (5,5,235,265),
             (0,0,230,260),
             0)
+
+        #self.Blit(
+        #    self.timegauge,
+        #    (5,268,55,320),
+        #    (0,0,50,50),
+        #    0)
 
     def InitMapList(self,dir='.'):
         Log("map","MapControl::InitMapList(",dir,")")
