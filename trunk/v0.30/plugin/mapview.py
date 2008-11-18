@@ -269,7 +269,6 @@ class MapWidget(Widget):
         point2 = self.CalculatePoint(self.heading+30,coords,r*1.5)
         point3 = self.CalculatePoint(self.heading,   coords,r*2)
         point4 = self.CalculatePoint(self.heading-30,coords,r*1.5)
-        #image.polygon((point1,point2,point3,point4),Color["white"],fill=color)
         self.DrawPolygon((point1,point2,point3,point4),color=color)
 
     def DrawWaypoints(self,zoom=1.0):
