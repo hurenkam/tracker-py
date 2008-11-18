@@ -26,7 +26,15 @@ class Recorder:
 
     def OpenDbmFiles(self,file,mode):
         import os
-        import dbm
+        try:
+            import dbm
+        except:
+            pass
+        try:
+            import dbhash as dbm
+        except:
+            pass
+
         b,e = os.path.splitext(os.path.expanduser(file))
         self.data = dbm.open("%s-data" % b,mode)
         self.meta = dbm.open("%s-meta" % b,mode)

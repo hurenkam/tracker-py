@@ -203,7 +203,7 @@ class MapWidget(Widget):
         if self.map != None:
             self.map.SetSize(self.mapimage.GetSize())
         if self.position != None:
-            self.UpdatePosition(self.position)
+            self.UpdatePosition(self.position,0)
         self.lastarea = None
         self.DrawOpenTracks()
 
@@ -273,6 +273,8 @@ class MapWidget(Widget):
 
     def DrawWaypoints(self,zoom=1.0):
         Log("map*","MapWidget::DrawWaypoints(",zoom,")")
+        if self.map == None:
+            return
 
         def isinrange(v,v1,v2):
             if v1>v2:
@@ -317,14 +319,16 @@ class MapView(View):
         Log("map","MapControl::__init__()")
         from time import time
 
-        self.menu = { "map": {
-            "open": self.OnOpen,
-            "close": self.OnClose,
-            "add refpoint": self.OnRefPt,
-            "add ref from wpt": self.OnRefWpt,
-            "save": self.OnSave,
-            "clear": self.OnClear,
-            } }
+        self.menu = {
+            "name":"Map",
+            "items": [
+                { "name":"Open",             "desc":"Open a map",               "handler":self.OnOpen },
+                { "name":"Close",            "desc":"Close the map",            "handler":self.OnClose },
+                { "name":"Add Refpoint",     "desc":"Add a refpoint",           "handler":self.OnRefPt },
+                { "name":"Add Ref from Wpt", "desc":"Add waypoint as refpoint", "handler":self.OnRefWpt },
+                { "name":"Save",             "desc":"Save the map",             "handler":self.OnSave },
+                { "name":"Clear Refpoints",  "desc":"Clear calibration data",   "handler":self.OnClear },
+            ]}
 
         self.mapwidget = MapWidget(None)
         self.mapwidget.Resize((230,260))
@@ -350,11 +354,12 @@ class MapView(View):
         self.InitMapList()
 
     def GetMenu(self):
-        Log("map","MapControl::GetMenu()")
+        Log("map*","MapControl::GetMenu()")
         return self.menu
 
     def OnOpen(self):
         Log("map","MapControl::OnOpen()")
+        self.mapwidget.SetMap(self.maps["51a_oisterwijk"])
 
     def OnClose(self):
         Log("map","MapControl::OnClose()")
@@ -372,7 +377,7 @@ class MapView(View):
         Log("map","MapControl::OnClear()")
 
     def RedrawView(self):
-        Log("map","MapControl::RedrawView()")
+        Log("map*","MapControl::RedrawView()")
         self.bus.Signal( { "type":"view_update", "id":"map" } )
 
     def OnKey(self,key):

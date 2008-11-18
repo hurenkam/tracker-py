@@ -1,26 +1,7 @@
 import wx
 import math
 
-ID_MAP_OPEN=201
-ID_MAP_CLOSE=202
-ID_MAP_IMPORT=203
-ID_MAP_ADDREF=204
-ID_MAP_DELREF=205
-ID_MAP_CLEAR=206
-
-ID_WP_ADD=304
-ID_WP_DEL=305
-ID_WP_CLEAR=306
-
-ID_TRACK_OPEN=401
-ID_TRACK_CLOSE=402
-ID_TRACK_DEL=405
-ID_TRACK_CLEAR=406
-ID_TRACK_START=407
-ID_TRACK_STOP=408
-
-ID_GPX_EXPORT=501
-ID_GPX_IMPORT=502
+ID_MENU_FIRST=101
 
 Color = {
           "black":'#000000',
@@ -43,47 +24,6 @@ Color = {
           "satsignal":'#4040f0',
           "nosignal":'#e0e0e0'
     }
-
-class WXAppFrame(wx.Frame):
-    def __init__(self,title="---",size=(210,235)):
-        wx.Frame.__init__(self,None,wx.ID_ANY, title, size=size)
-
-        # A Statusbar in the bottom of the window
-        self.CreateStatusBar()
-
-        # Setting up the map menu.
-        mapmenu= wx.Menu()
-        mapmenu.Append(ID_MAP_IMPORT,"Import","Import a map (from jpg)")
-        mapmenu.Append(ID_MAP_ADDREF,"Calibrate","Add a reference point for the current map")
-        mapmenu.Append(ID_MAP_DELREF,"Clear","Remove reference points from the current map")
-
-        # Setting up the waypoint menu.
-        wpmenu= wx.Menu()
-        wpmenu.Append(ID_WP_ADD,"Add","Define a new waypoint")
-        wpmenu.Append(ID_WP_DEL,"Delete","Delete a waypoint")
-        wpmenu.Append(ID_WP_CLEAR,"Clear","Delete all waypoints")
-
-        # Setting up the track menu.
-        trackmenu= wx.Menu()
-        trackmenu.Append(ID_TRACK_START,"Start","Start recording a new track")
-        trackmenu.Append(ID_TRACK_STOP,"Stop","Stop recording")
-        trackmenu.Append(ID_TRACK_OPEN,"Open","Load a track")
-        trackmenu.Append(ID_TRACK_CLOSE,"Close","Load a track")
-        trackmenu.Append(ID_TRACK_DEL,"Delete","Delete a track")
-
-        # Setting up the track menu.
-        gpxmenu= wx.Menu()
-        gpxmenu.Append(ID_GPX_EXPORT,"Export","Export open waypoints and tracks to a gpx file")
-        gpxmenu.Append(ID_GPX_IMPORT,"Import","Import waypoints and tracks from a gpx file")
-
-        # Creating the menubar.
-        menuBar = wx.MenuBar()
-        menuBar.Append(mapmenu,"Map") # Adding the "filemenu" to the MenuBar
-        menuBar.Append(wpmenu,"Waypoint") # Adding the "filemenu" to the MenuBar
-        menuBar.Append(trackmenu,"Track") # Adding the "filemenu" to the MenuBar
-        menuBar.Append(gpxmenu,"GPX") # Adding the "filemenu" to the MenuBar
-        self.SetMenuBar(menuBar)  # Adding the MenuBar to the Frame content.
-        self.Show(True)
 
 class Widget:
     def __init__(self,size=None):
@@ -220,6 +160,81 @@ class View(Widget):
         pass
     def OnResize(self,size):
         pass
+
+class WXAppFrame(wx.Frame):
+    def __init__(self,title="---",size=(210,235)):
+        wx.Frame.__init__(self,None,wx.ID_ANY, title, size=size)
+
+        # A Statusbar in the bottom of the window
+        self.CreateStatusBar()
+
+        self.Show(True)
+
+class Application(Widget):
+    def __init__(self,title,(x,y)):
+        self.app = wx.PySimpleApp()
+        self.frame = WXAppFrame(u"%s" % title,(x+8,y+66))
+        self.control = wx.PyControl(self.frame)
+        self.panel = wx.Panel(self.frame,size=(x+8,y+6))
+        self.panel.Bind(wx.EVT_PAINT,self.OnPaint)
+        self.view = None
+        self.menus = []
+        Widget.__init__(self,(x+8,y+6))
+
+    def AddMenu(self,menu):
+        self.menus.append(menu)
+
+    def ClearMenu(self):
+        self.menus = []
+
+    def Run(self):
+        self.app.MainLoop()
+
+    def SelectView(self,view):
+        self.view = view
+        self.Redraw()
+
+    def Redraw(self):
+        dc = wx.ClientDC(self.panel)
+        if self.view == None:
+            return
+
+        viewdc = self.view.GetImage()
+        w,h = viewdc.GetSize()
+        dc.Blit(0,0,w,h,viewdc,0,0)
+
+    def OnPaint(self,event):
+        dc = wx.PaintDC(self.panel)
+        if self.view == None:
+            return
+
+        viewdc = self.view.GetImage()
+        w,h = viewdc.GetSize()
+        dc.Blit(0,0,w,h,viewdc,0,0)
+
+    def Handler(self,event):
+        print event
+
+    def RedrawMenu(self):
+        class EventHandler:
+            def __init__(self,callback):
+                self.callback = callback
+            def Handler(self,event):
+                self.callback()
+
+        id = ID_MENU_FIRST
+        menuBar = wx.MenuBar()
+        for menu in self.menus:
+            wxmenu= wx.Menu()
+            for item in menu["items"]:
+                wxmenu.Append(id,item["name"],item["desc"])
+                wrapper = EventHandler(item["handler"])
+                wx.EVT_MENU(self.frame, id, wrapper.Handler)
+                id += 1
+
+            menuBar.Append(wxmenu,menu["name"]) # Adding the "filemenu" to the MenuBar
+
+        self.frame.SetMenuBar(menuBar)  # Adding the MenuBar to the Frame content.
 
 class Gauge:
     def __init__(self,radius=None):
