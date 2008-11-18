@@ -22,7 +22,13 @@ Color = {
           "batsignal":'#f04040',
           "gsmsignal":'#404040',
           "satsignal":'#4040f0',
-          "nosignal":'#e0e0e0'
+          "nosignal":'#e0e0e0',
+
+          "bar_c1": '#00cf00',
+          "bar_c2": '#ff0000',
+          "bar_c3": '#000000',
+          "bar_bg": '#0000ff',
+
     }
 
 Fill = {
@@ -36,7 +42,7 @@ Style = {
 class Widget:
     def __init__(self,size=None):
         self.fontsize=14
-        self.font = wx.Font(22, wx.SWISS, wx.NORMAL, wx.NORMAL)
+        self.font = wx.Font(14, wx.SWISS, wx.NORMAL, wx.NORMAL)
         self.fgcolor = Color["black"]
         self.bgcolor = Color["white"]
         self.dc = None
@@ -125,7 +131,7 @@ class Widget:
             dc.SetPen(wx.Pen(linecolor,width))
         if fillcolor is not None:
             dc.SetBrush(wx.Brush(fillcolor,wx.SOLID))
-        dc.DrawRectangleRect((0,0,self.size[0],self.size[1]))
+        dc.DrawRectangleRect((x,y,w,h))
 
     def DrawPoint(self,x,y,linecolor=None,width=1,dc=None):
         if dc == None:
