@@ -219,6 +219,7 @@ class Application(Widget):
         class EventHandler:
             def __init__(self,callback):
                 self.callback = callback
+
             def Handler(self,event):
                 self.callback()
 
