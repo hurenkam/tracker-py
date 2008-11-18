@@ -8,8 +8,8 @@ from control import *
 loglevels += [
               #"databus","databus*",
               #"gps","gps*","lrgps","lrgps*","simgps","simgps*",
-              "map","map*",
-              "userinterface","userinterface*",
+              "map",#"map*",
+              "userinterface",#"userinterface*",
               #"datumlist","datumlist*","rd","rd*","utm","utm*",
               #"datastorage","datastorage*",
               #"recorder","recorder*",
@@ -20,9 +20,6 @@ def StartRecording(b,name):
 
 def StopRecording(b):
     b.Signal( { "type":"trk_stop" } )
-
-def OpenMap(b,name):
-    b.Signal( { "type":"map_show", "name":name } )
 
 def ShowWaypoint(b):
     b.Signal( { "type":"wpt_show", "name":"Kampina", "latitude":51.5431429, "longitude":5.26938448, "altitude":0 } )
@@ -36,7 +33,6 @@ def Main():
         b.LoadPlugin(name)
 
     StartRecording(b,"default")
-    OpenMap(b,"51a_oisterwijk")
     ShowWaypoint(b)
     ui.Run()
 
