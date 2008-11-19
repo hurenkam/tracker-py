@@ -27,11 +27,25 @@ class DatumList:
         Log("datumlist","DatumList::Register()")
         self.bus.Signal( { "type":"db_connect", "id":"datumlist", "signal":"datum_register", "handler":self.OnRegister } )
         self.bus.Signal( { "type":"db_connect", "id":"datumlist", "signal":"datum_unregister", "handler":self.OnUnregister } )
+        self.bus.Signal( { "type":"db_connect", "id":"datumlist", "signal":"datum_format", "handler":self.OnFormat } )
+        self.bus.Signal( { "type":"db_connect", "id":"datumlist", "signal":"datum_query", "handler":self.OnQuery } )
 
     def Unregister(self):
         Log("datumlist","DatumList::Unregister()")
         self.bus.Signal( { "type":"db_disconnect", "id":"datumlist", "signal":"datum_register" } )
         self.bus.Signal( { "type":"db_disconnect", "id":"datumlist", "signal":"datum_unregister" } )
+        self.bus.Signal( { "type":"db_disconnect", "id":"datumlist", "signal":"datum_format" } )
+        self.bus.Signal( { "type":"db_disconnect", "id":"datumlist", "signal":"datum_query" } )
+
+    def OnQuery(self,signal):
+        pass
+
+    def OnFormat(self,signal):
+        Log("datumlist*","DatumList::OnFormat(",signal,")")
+        if len(self.datums) > 0:
+            short,desc,format,query = self.datums[self.datums.keys()[0]]
+            s = format(signal['latitude'],signal['longitude'])
+            self.bus.Signal( { "type":"formated_position", "datum":self.datums.keys()[0], "position":s } )
 
     def OnRegister(self,signal):
         Log("datumlist","DatumList::OnRegister(",signal,")")

@@ -330,6 +330,7 @@ class MapView(View):
                 { "name":"Clear Refpoints",  "desc":"Clear calibration data",   "handler":self.OnClear },
             ]}
 
+        self.positionwidget = PositionWidget((200,15))
         self.mapwidget = MapWidget(None)
         self.mapwidget.Resize((230,260))
         self.menuwidget = TextWidget("Menu",fgcolor=Color["white"],bgcolor=Color["darkblue"])
@@ -351,6 +352,7 @@ class MapView(View):
         self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"trk_hide",  "handler":self.OnTrackHide } )
         self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"wpt_show",  "handler":self.OnWaypointShow } )
         self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"wpt_hide",  "handler":self.OnWaypointHide } )
+        self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"formated_position", "handler":self.OnFormatedPosition } )
 
         self.bus.Signal( { "type":"gps_start",  "id":"map", "tolerance":10 } )
 
@@ -412,9 +414,20 @@ class MapView(View):
 
     def OnPosition(self,position):
         Log("map*","MapView::OnPosition(",position,")")
+        self.bus.Signal( { "type":"datum_format", "id":"map", "latitude":position["latitude"], "longitude":position["longitude"] } )
+
         heading = position["heading"]
         self.mapwidget.UpdatePosition(Point(0,position["latitude"],position["longitude"]),heading)
 
+        try:
+            self.Draw()
+            self.RedrawView()
+        except:
+            DumpExceptionInfo()
+
+    def OnFormatedPosition(self,position):
+        Log("map*","MapView::OnFormatedPosition(",position,")")
+        self.positionwidget.UpdatePosition(position["position"])
         try:
             self.Draw()
             self.RedrawView()
@@ -469,6 +482,13 @@ class MapView(View):
             0)
 
         self.DrawRectangle((0,270,240,50),linecolor=Color["darkblue"],fillcolor=Color["darkblue"])
+        w,h = self.positionwidget.GetSize()
+        self.Blit(
+            self.positionwidget,
+            (20,275,20+w,275+h),
+            (0,0,w,h),
+            0)
+
         w,h = self.menuwidget.GetSize()
         self.Blit(
             self.menuwidget,
@@ -581,4 +601,5 @@ class MapView(View):
         self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"trk_hide" } )
         self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"wpt_show" } )
         self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"wpt_hide" } )
+        self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"formated_position" } )
         self.bus = None
