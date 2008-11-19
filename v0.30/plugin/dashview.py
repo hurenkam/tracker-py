@@ -14,7 +14,7 @@ def Done():
 
 class DashView(View):
     def __init__(self,databus):
-        Log("map","MapControl::__init__()")
+        Log("dash","DashView::__init__()")
         from time import time
 
         self.menu = {}
@@ -54,6 +54,8 @@ class DashView(View):
 
         self.bus = databus
         self.bus.Signal( { "type":"view_register", "id":"dash", "view":self } )
+        self.bus.Signal( { "type":"db_connect",  "id":"dash", "signal":"dash", "handler":self.OnClock } )
+        self.bus.Signal( { "type":"timer_start", "id":"dash", "interval":1, "start":time() } )
 
     def GetMenu(self):
         Log("dash*","DashView::GetMenu()")
@@ -62,6 +64,17 @@ class DashView(View):
     def RedrawView(self):
         Log("dash*","DashView::RedrawView()")
         self.bus.Signal( { "type":"view_update", "id":"dash" } )
+
+    def OnClock(self,signal):
+        Log("dash*","DashView::OnClock()")
+        self.clockgauge1.UpdateValue(signal["time"])
+        self.clockgauge2.UpdateValue(signal["time"])
+        self.clockgauge3.UpdateValue(signal["time"])
+        self.clockgauge4.UpdateValue(signal["time"])
+        self.clockgauge5.UpdateValue(signal["time"])
+        self.clockgauge6.UpdateValue(signal["time"])
+        self.Draw()
+        self.RedrawView()
 
     def OnKey(self,key):
         Log("dash","DashView::OnKey()")
@@ -171,5 +184,7 @@ class DashView(View):
 
     def Quit(self):
         Log("dash","DashView::Quit()")
+        self.bus.Signal( { "type":"db_disconnect", "id":"dash", "signal":"dash" } )
+        self.bus.Signal( { "type":"timer_stop",    "id":"dash" } )
         self.bus.Signal( { "type":"view_unregister", "id":"dash" } )
         self.bus = None

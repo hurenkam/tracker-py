@@ -8,8 +8,9 @@ from control import *
 loglevels += [
               #"databus","databus*",
               #"gps","gps*","lrgps","lrgps*","simgps","simgps*",
+              #"timer","timer*",
               "map",#"map*",
-              "dash","dash*",
+              "dash",#"dash*",
               "userinterface",#"userinterface*",
               #"datumlist","datumlist*","rd","rd*","utm","utm*",
               #"datastorage","datastorage*",
@@ -30,7 +31,7 @@ def Main():
 
     b = DataBus()
     ui = UserInterface(b)
-    for name in ["simgps","datumlist","rd","utm","recorder","mapview","dashview"]:
+    for name in ["simgps","timers","datumlist","rd","utm","recorder","mapview","dashview"]:
         b.LoadPlugin(name)
 
     StartRecording(b,"default")
