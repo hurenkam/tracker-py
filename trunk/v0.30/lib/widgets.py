@@ -47,7 +47,7 @@ class TextWidget(Widget):
         self.DrawText( (self.vpad,self.hpad ), u'%s' % self.text)
 
 
-class PositionWidget(Widget):
+class _PositionWidget(Widget):
     def __init__(self,size = None):
         self.point = None
         Widget.__init__(self,size)
@@ -66,6 +66,31 @@ class PositionWidget(Widget):
         else:
             w,h = self.DrawText( (5,5),     u"Position")
             w,h = self.DrawText( (5,5+h+2), u"Unknown")
+
+class PositionWidget(Widget):
+    def __init__(self,size = None):
+        self.position = None
+        Widget.__init__(self,size)
+
+    def UpdatePosition(self,formatedposition):
+        self.position = formatedposition
+        self.Draw()
+
+    def Draw(self):
+        Widget.Draw(self)
+        s=self.GetSize()
+        self.DrawRectangle((0,0,s[0],s[1]),Color["black"])
+        if self.position:
+            x,y = 5,5
+            text = u""
+            for t in self.position:
+                text = text + t + u" "
+            #    w,h = self.DrawText((x,y),t)
+            #    x = x+w+7
+
+            self.DrawText( (5,1), text, size=0.7)
+        else:
+            self.DrawText( (5,1), u"Position unknown", size=0.7)
 
 class BarWidget(Widget):
 

@@ -9,7 +9,7 @@ loglevels += [
               #"databus","databus*",
               #"gps","gps*","lrgps","lrgps*","simgps","simgps*",
               #"timer","timer*",
-              "map",#"map*",
+              "map","map*",
               "dash",#"dash*",
               "userinterface",#"userinterface*",
               #"datumlist","datumlist*","rd","rd*","utm","utm*",

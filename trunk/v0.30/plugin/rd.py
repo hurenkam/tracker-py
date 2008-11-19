@@ -35,11 +35,11 @@ class DatumRD:
 
     def Wgs2RD(self,latitude,longitude):
         import datums
-        return datums.GetRDFromWgs84(latitude,longitude)
+        return datums.GetRdFromWgs84(latitude,longitude)
 
     def RD2Wgs(self,rdx,rdy):
         import datums
-        return datums.GetWgs84FromRD(rdx,rdy)
+        return datums.GetWgs84FromRd(rdx,rdy)
 
     def QueryRD(self,latitude,longitude):
         Log("rd","DatumRD::QueryRD()")
