@@ -9,10 +9,8 @@ class UserInterface(Application):
         self.bus = databus
         self.Register()
         self.views = {}
+        self.selectedview = None
         Application.__init__(self,"Tracker",(240,320))
-
-    def OnMapOpen(self):
-        pass
 
     def Quit(self):
         Log("userinterface","UserInterface::Quit()")
@@ -33,9 +31,6 @@ class UserInterface(Application):
         self.bus.Signal( { "type":"db_disconnect", "id":"viewlist", "signal":"menu_update" } )
         self.bus.Signal( { "type":"db_disconnect", "id":"viewlist", "signal":"view_unregister" } )
 
-    def OnMenuUpdate(self,signal):
-        self.UpdateMenu()
-
     def UpdateMenu(self):
         #self.ClearMenu()
         menus = []
@@ -44,11 +39,39 @@ class UserInterface(Application):
         self.menus = menus
         self.RedrawMenu()
 
+    def SelectView(self,id):
+        self.selectedview = id
+        Application.SelectView(self,self.views[id])
+
+    def SelectPreviousView(self):
+        list = self.views.keys()
+        list.sort()
+        current = list.index(self.selectedview)-1
+        self.SelectView(list[current])
+
+    def SelectNextView(self):
+        list = self.views.keys()
+        list.sort()
+        current = list.index(self.selectedview)+1
+        if current >= len(list):
+            current -= len(list)
+        self.SelectView(list[current])
+
+    def OnMenuUpdate(self,signal):
+        self.UpdateMenu()
+
+    def OnKey(self,key):
+        if key == "left":
+            self.SelectPreviousView()
+
+        if key == "right":
+            self.SelectNextView()
+
     def OnViewRegister(self,signal):
         Log("userinterface","UserInterface::OnViewRegister(",signal,")")
         self.views[signal["id"]]=signal["view"]
         if self.view == None:
-            self.SelectView(self.views[signal["id"]])
+            self.SelectView(signal["id"])
         self.UpdateMenu()
 
     def OnViewUpdate(self,signal):
