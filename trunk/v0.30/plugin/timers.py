@@ -37,6 +37,7 @@ class Timer:
     def CheckForExpiredTimers(self):
         import time
         t = time.time()
+        Log("timer*","Timer::CheckForExpiredTimers(): %s" % t)
 
         for k in self.requests.keys():
             r = self.requests[k]

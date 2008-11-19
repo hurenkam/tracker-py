@@ -257,11 +257,11 @@ class TwoHandGauge(Gauge):
 
         Gauge.Draw(self)
         self.DrawScale(self.scale[0],self.scale[1])
-        self.DrawText(((self.radius,0.6*self.radius)),u'%s' % self.name)
+        self.DrawText(((self.radius,0.6*self.radius)),u'%s' % self.name,align="center")
         if (self.value != None):
             longhand =  (self.value % self.shortdivider) / self.longdivider * 360/self.factor
             shorthand = (self.value / self.shortdivider)                    * 360/self.factor
-            self.DrawText(((self.radius,1.6*self.radius)), self.units % self.value, size=1.5)
+            self.DrawText(((self.radius,1.6*self.radius)), self.units % self.value, size=1.5,align="center")
             self.DrawTriangleHand (longhand,  0.7 * self.radius, Color['black'], 4)
             self.DrawTriangleHand (shorthand, 0.5 * self.radius, Color['black'], 4)
 
@@ -283,10 +283,13 @@ class ClockGauge(Gauge):
         if self.radius is None:
             return
 
+        size1 = self.radius / 50.0
+        size2 = 1.2 * size1
+
         Gauge.Draw(self)
         self.DrawScale(12,60)
         if self.radius >= 30:
-            self.DrawText(((self.radius,0.6*self.radius)),u'%s' % self.tag)
+            self.DrawText(((self.radius,0.6*self.radius)),u'%s' % self.tag,size=size1,align="center")
         if ((self.radius != None) and
             (self.hours != None) and
             (self.minutes != None)):
@@ -296,13 +299,13 @@ class ClockGauge(Gauge):
                     minuteshand =  self.minutes * 360/60  + self.seconds * 360/60/60
                     secondshand =  self.seconds * 360/60
                     if self.radius >= 30:
-                        self.DrawText(((self.radius,1.6*self.radius)),u'%2i:%02i:%02i' % (self.hours,self.minutes,self.seconds),size=1.3)
+                        self.DrawText(((self.radius,1.6*self.radius)),u'%2i:%02i:%02i' % (self.hours,self.minutes,self.seconds),size=size1,align="center")
                     self.DrawLineHand     (secondshand, 0.75 * self.radius, Color['black'], 1)
                     self.DrawTriangleHand (minuteshand, 0.7  * self.radius, Color['black'], 4)
                     self.DrawTriangleHand (hourshand,   0.5  * self.radius, Color['black'], 4)
                 else:
                     minuteshand =  self.minutes * 360/60
                     if self.radius >= 30:
-                        self.DrawText(((self.radius,1.6*self.radius)),u'%2i:%02i' % (self.hours,self.minutes),size=1.5)
+                        self.DrawText(((self.radius,1.6*self.radius)),u'%2i:%02i' % (self.hours,self.minutes),size=size2,align="center")
                     self.DrawTriangleHand (minuteshand, 0.7  * self.radius, Color['black'], 4)
                     self.DrawTriangleHand (hourshand,   0.5  * self.radius, Color['black'], 4)

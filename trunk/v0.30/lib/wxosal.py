@@ -50,8 +50,8 @@ def FindKey(value):
 
 class Widget:
     def __init__(self,size=None):
-        self.fontsize=11
-        self.font = wx.Font(11, wx.SWISS, wx.NORMAL, wx.NORMAL)
+        self.fontsize=14
+        self.font = wx.Font(14, wx.SWISS, wx.NORMAL, wx.NORMAL)
         self.fgcolor = Color["black"]
         self.bgcolor = Color["white"]
         self.dc = None
@@ -73,7 +73,6 @@ class Widget:
 
     def LoadImage(self,name):
         image = wx.Image(u"%s" % name,wx.BITMAP_TYPE_JPEG)
-        #image.LoadFile(u"%s" % self.map.filename)
         bitmap = wx.BitmapFromImage(image)
         self.dc = wx.MemoryDC()
         self.dc.SelectObject(bitmap)
@@ -84,7 +83,6 @@ class Widget:
 
     def GetMask(self):
         pass
-        #return self.mask
 
     def Paint(self,event):
         if self.dc == None:
@@ -122,25 +120,28 @@ class Widget:
     def GetMask(self):
         return self.mask
 
-    def DrawText(self,coords,text,size=None):
-        if size != None:
-            #print "DrawText: %s %s" % (text,size)
-            self.fontsize=11 * size
-            self.font = wx.Font(11 * size, wx.SWISS, wx.NORMAL, wx.NORMAL)
-
+    def DrawText(self,coords,text,size=None,align=None):
         if self.size == None or self.dc == None:
             return
+
+        if size != None:
+            size = int(size * 14.0)
+            self.fontsize=size
+            self.font = wx.Font(size, wx.SWISS, wx.NORMAL, wx.NORMAL)
 
         self.dc.SetFont(self.font)
         self.dc.SetBrush(wx.Brush(self.bgcolor,wx.SOLID))
         self.dc.SetTextForeground(self.fgcolor)
         w,h = self.GetTextSize(u'%s' % text)
         x,y = coords
-        #y += h
         if x < 0:
            x = size[0] + x - w
         if y < 0:
            y = size[1] + y - h
+
+        if align == "center":
+            x -= w/2.0
+            y -= h/2.0
 
         self.dc.DrawText(u"%s" % text,x,y)
         return (w,h)
@@ -202,7 +203,6 @@ class Widget:
         if y3 < 0:
             y1 -= y3
             y3 -= y3
-        #print x1,y1,w,h,x3,y3
 
         self.dc.Blit(x1,y1,w,h,widget.GetImage(),x3,y3)
 
