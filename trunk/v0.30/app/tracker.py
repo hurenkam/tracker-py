@@ -29,7 +29,7 @@ def Main():
 
     b = DataBus()
     ui = UserInterface(b)
-    for name in ["simgps","datumlist","rd","utm","recorder","mapview"]:
+    for name in ["simgps","datumlist","rd","utm","recorder","mapview","dashview"]:
         b.LoadPlugin(name)
 
     StartRecording(b,"default")

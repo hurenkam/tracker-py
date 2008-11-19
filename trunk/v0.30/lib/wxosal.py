@@ -32,12 +32,21 @@ Color = {
     }
 
 Fill = {
-            "solid":wx.SOLID
+            "solid":wx.SOLID,
     }
 
 Style = {
-           "transparent":wx.TRANSPARENT
+            "transparent":wx.TRANSPARENT,
     }
+
+Key = {
+            "left":wx.WXK_LEFT,
+            "right":wx.WXK_RIGHT,
+    }
+
+def FindKey(value):
+    return [k for k,v in Key.iteritems() if v == value][0]
+
 
 class Widget:
     def __init__(self,size=None):
@@ -197,8 +206,9 @@ class Application(Widget):
         self.app = wx.PySimpleApp()
         self.frame = AppFrame(u"%s" % title,(x+8,y+66))
         self.control = wx.PyControl(self.frame)
-        self.panel = wx.Panel(self.frame,size=(x+8,y+6))
+        self.panel = wx.Panel(self.frame,size=(x+8,y+6), style=wx.WANTS_CHARS)
         self.panel.Bind(wx.EVT_PAINT,self.OnPaint)
+        self.panel.Bind(wx.EVT_KEY_DOWN,self.OnWxKey)
         self.view = None
         self.menus = []
         Widget.__init__(self,(x+8,y+6))
@@ -224,6 +234,15 @@ class Application(Widget):
         viewdc = self.view.GetImage()
         w,h = viewdc.GetSize()
         dc.Blit(0,0,w,h,viewdc,0,0)
+
+    def OnKey(self,key):
+        pass
+        #print "Application::OnKey(",key,")"
+
+    def OnWxKey(self,event):
+        keycode = event.GetKeyCode()
+        if keycode in Key.values():
+            self.OnKey(FindKey(keycode))
 
     def OnPaint(self,event):
         dc = wx.PaintDC(self.panel)
