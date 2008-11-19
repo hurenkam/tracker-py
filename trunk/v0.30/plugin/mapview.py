@@ -7,7 +7,7 @@ loglevels += ["map!"]
 
 def Init(databus,datastorage):
     global m
-    m = MapView(databus)
+    m = MapView(databus,datastorage)
 
 def Done():
     global m
@@ -172,7 +172,7 @@ class MapWidget(Widget):
 
         cur = self.map.PointOnMap(point)
         if cur != None:
-            self.DrawPoint(cur[0],cur[1],color,width=5,dc=self.mapimage.GetImage())
+            self.mapimage.DrawPoint(cur[0],cur[1],color,width=5)
 
     def DrawTrack(self,points,color=Color["darkblue"]):
         Log("map","MapWidget::DrawTrack()")
@@ -315,8 +315,8 @@ class MapWidget(Widget):
 
 
 class MapView(View):
-    def __init__(self,databus):
-        Log("map","MapControl::__init__()")
+    def __init__(self,databus,datastorage):
+        Log("map","MapView::__init__()")
         from time import time
 
         self.menu = {
@@ -356,43 +356,62 @@ class MapView(View):
 
         self.bus.Signal( { "type":"view_register", "id":"map", "view":self } )
 
+        self.storage = datastorage
+        self.storage.Register( { "setting":"map_current", "description":u"Current/Last map shown",
+                                 "default":"51a_oisterwijk", "query":self.QueryCurrentMap } )
         self.InitMapList()
+        self.LoadMap(self.GetCurrentMap())
 
     def GetMenu(self):
-        Log("map*","MapControl::GetMenu()")
+        Log("map*","MapView::GetMenu()")
         return self.menu
 
+    def GetCurrentMap(self):
+        Log("map*","MapView::GetCurrentMap()")
+        return self.storage.GetValue("map_current")
+
+    def SetCurrentMap(self,name):
+        self.storage.SetValue("map_current",name)
+
+    def QueryCurrentMap(self):
+        Log("map","MapView::QueryMap()")
+
+    def LoadMap(self,name):
+        if name in self.maps.keys():
+            self.mapwidget.SetMap(self.maps[name])
+            self.SetCurrentMap(name)
+
     def OnOpen(self):
-        Log("map","MapControl::OnOpen()")
-        self.mapwidget.SetMap(self.maps["51a_oisterwijk"])
+        Log("map","MapView::OnOpen()")
+        self.LoadMap("51a_oisterwijk")
 
     def OnClose(self):
-        Log("map","MapControl::OnClose()")
+        Log("map","MapView::OnClose()")
 
     def OnRefPt(self):
-        Log("map","MapControl::OnRefPt()")
+        Log("map","MapView::OnRefPt()")
 
     def OnRefWpt(self):
-        Log("map","MapControl::OnRefWpt()")
+        Log("map","MapView::OnRefWpt()")
 
     def OnSave(self):
-        Log("map","MapControl::OnSave()")
+        Log("map","MapView::OnSave()")
 
     def OnClear(self):
-        Log("map","MapControl::OnClear()")
+        Log("map","MapView::OnClear()")
 
     def RedrawView(self):
-        Log("map*","MapControl::RedrawView()")
+        Log("map*","MapView::RedrawView()")
         self.bus.Signal( { "type":"view_update", "id":"map" } )
 
     def OnKey(self,key):
-        Log("map","MapControl::OnKey()")
+        Log("map","MapView::OnKey()")
 
     def OnResize(self,size):
-        Log("map","MapControl::OnResize()")
+        Log("map","MapView::OnResize()")
 
     def OnPosition(self,position):
-        Log("map*","MapControl::OnPosition(",position,")")
+        Log("map*","MapView::OnPosition(",position,")")
         heading = position["heading"]
         self.mapwidget.UpdatePosition(Point(0,position["latitude"],position["longitude"]),heading)
 
@@ -403,45 +422,45 @@ class MapView(View):
             DumpExceptionInfo()
 
     def OnMapShow(self,map):
-        Log("map","MapControl::OnMapShow(",map,")")
+        Log("map","MapView::OnMapShow(",map,")")
         name = map["name"]
         if name in self.maps.keys():
             self.mapwidget.SetMap(self.maps[map["name"]])
         else:
-            Log("map!","MapControl::OnMapShow(): Map",name,"not found!")
+            Log("map!","MapView::OnMapShow(): Map",name,"not found!")
 
     def OnMapHide(self,map):
-        Log("map!","Not implemented: MapControl::OnMapHide(",map,")")
+        Log("map!","Not implemented: MapView::OnMapHide(",map,")")
 
     def OnRouteShow(self,route):
-        Log("map!","Not implemented: MapControl::OnRouteShow(",route,")")
+        Log("map!","Not implemented: MapView::OnRouteShow(",route,")")
 
     def OnRouteHide(self,route):
-        Log("map!","Not implemented: MapControl::OnRouteHide(",route,")")
+        Log("map!","Not implemented: MapView::OnRouteHide(",route,")")
 
     def OnTrackPoint(self,position):
-        Log("map*","MapControl::OnTrackPoint(",position,")")
+        Log("map*","MapView::OnTrackPoint(",position,")")
         point = Point(0,position["latitude"],position["longitude"])
         self.mapwidget.DrawTrackPoint(point,Color["darkred"])
 
     def OnTrackShow(self,track):
-        Log("map!","Not implemented: MapControl::OnTrackShow(",track,")")
+        Log("map!","Not implemented: MapView::OnTrackShow(",track,")")
 
     def OnTrackHide(self,track):
-        Log("map!","Not implemented: MapControl::OnTrackHide(",track,")")
+        Log("map!","Not implemented: MapView::OnTrackHide(",track,")")
 
     def OnWaypointShow(self,waypoint):
-        Log("map","MapControl::OnWaypointShow(",waypoint,")")
+        Log("map","MapView::OnWaypointShow(",waypoint,")")
         wpt = Waypoint(waypoint["name"],waypoint["latitude"],waypoint["longitude"],waypoint["altitude"])
         self.mapwidget.ShowWaypoint(wpt)
 
     def OnWaypointHide(self,waypoint):
-        Log("map","MapControl::OnWaypointHide(",waypoint,")")
+        Log("map","MapView::OnWaypointHide(",waypoint,")")
         wpt = Waypoint(waypoint["name"])
         self.mapwidget.HideWaypoint(wpt)
 
     def Draw(self,rect=None):
-        Log("map*","MapControl::Draw()")
+        Log("map*","MapView::Draw()")
         Widget.Draw(self)
         self.Blit(
             self.mapwidget,
@@ -487,7 +506,7 @@ class MapView(View):
 
 
     def InitMapList(self,dir='.'):
-        Log("map","MapControl::InitMapList(",dir,")")
+        Log("map","MapView::InitMapList(",dir,")")
         selector = FileSelector(dir,".xml")
         self.maps = {}
         for key in selector.files.keys():
@@ -546,7 +565,9 @@ class MapView(View):
                 self.maps[m.name]=m
 
     def Quit(self):
-        Log("map","MapControl::Quit()")
+        Log("map","MapView::Quit()")
+        self.storage.Unregister("map_current")
+
         self.bus.Signal( { "type":"view_unregister", "id":"map" } )
 
         self.bus.Signal( { "type":"gps_stop",      "id":"map" } )

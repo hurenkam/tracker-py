@@ -50,8 +50,8 @@ def FindKey(value):
 
 class Widget:
     def __init__(self,size=None):
-        self.fontsize=14
-        self.font = wx.Font(14, wx.SWISS, wx.NORMAL, wx.NORMAL)
+        self.fontsize=11
+        self.font = wx.Font(11, wx.SWISS, wx.NORMAL, wx.NORMAL)
         self.fgcolor = Color["black"]
         self.bgcolor = Color["white"]
         self.dc = None
@@ -59,7 +59,7 @@ class Widget:
 
     def Resize(self,size=None):
         self.size = size
-        if self.size == None:
+        if size == None:
             return
 
         self.bitmap = wx.EmptyBitmap(size[0],size[1])
@@ -87,24 +87,32 @@ class Widget:
         #return self.mask
 
     def Paint(self,event):
-        if self.dc != None:
-            dc = wx.PaintDC(self.panel)
-            w,h = self.dc.GetSize()
-            dc.Blit(0,0,w,h,self.dc,0,0)
+        if self.dc == None:
+            return
+
+        dc = wx.PaintDC(self.panel)
+        w,h = self.dc.GetSize()
+        dc.Blit(0,0,w,h,self.dc,0,0)
 
     def Draw(self):
-        if self.dc != None:
-            self.dc.Clear()
-            self.dc.SetPen(wx.Pen(self.bgcolor,1))
-            self.dc.SetBrush(wx.Brush(self.bgcolor,wx.SOLID))
-            self.dc.DrawRectangleRect((0,0,self.size[0],self.size[1]))
-            self.dc.SetPen(wx.Pen(self.fgcolor,1))
+        if self.dc == None:
+            return
+
+        self.dc.Clear()
+        self.dc.SetPen(wx.Pen(self.bgcolor,1))
+        self.dc.SetBrush(wx.Brush(self.bgcolor,wx.SOLID))
+        self.dc.DrawRectangleRect((0,0,self.size[0],self.size[1]))
+        self.dc.SetPen(wx.Pen(self.fgcolor,1))
 
 
     def GetSize(self):
-        return self.size
+        if self.dc != None:
+            return self.dc.GetSize().Get()
 
     def GetTextSize(self,text):
+        if self.dc == None:
+            return (0,0)
+
         w,h = self.dc.GetTextExtent(u"%s" % text)
         return (w,h)
 
@@ -114,8 +122,13 @@ class Widget:
     def GetMask(self):
         return self.mask
 
-    def DrawText(self,coords,text):
-        if self.size == None:
+    def DrawText(self,coords,text,size=None):
+        if size != None:
+            #print "DrawText: %s %s" % (text,size)
+            self.fontsize=11 * size
+            self.font = wx.Font(11 * size, wx.SWISS, wx.NORMAL, wx.NORMAL)
+
+        if self.size == None or self.dc == None:
             return
 
         self.dc.SetFont(self.font)
@@ -132,43 +145,52 @@ class Widget:
         self.dc.DrawText(u"%s" % text,x,y)
         return (w,h)
 
-    def DrawRectangle(self,(x,y,w,h),linecolor,fillcolor=None,width=1,dc=None):
-        if dc == None:
-            dc = self.dc
+    def DrawRectangle(self,(x,y,w,h),linecolor,fillcolor=None,width=1):
+        if self.dc == None:
+            return
 
         if linecolor is not None:
-            dc.SetPen(wx.Pen(linecolor,width))
+            self.dc.SetPen(wx.Pen(linecolor,width))
         if fillcolor is not None:
-            dc.SetBrush(wx.Brush(fillcolor,wx.SOLID))
-        dc.DrawRectangleRect((x,y,w,h))
+            self.dc.SetBrush(wx.Brush(fillcolor,wx.SOLID))
+        self.dc.DrawRectangleRect((x,y,w,h))
 
-    def DrawPoint(self,x,y,linecolor=None,width=1,dc=None):
-        if dc == None:
-            dc = self.dc
-
-        if linecolor is not None:
-            dc.SetPen(wx.Pen(linecolor,width))
-        dc.DrawPoint(x,y)
-
-    def DrawLine(self,x1,y1,x2,y2,linecolor=None,width=1,dc=None):
-        if dc == None:
-            dc = self.dc
+    def DrawPoint(self,x,y,linecolor=None,width=1):
+        if self.dc == None:
+            return
 
         if linecolor is not None:
-            dc.SetPen(wx.Pen(linecolor,width))
-        dc.DrawLine(x1,y1,x2,y2)
+            self.dc.SetPen(wx.Pen(linecolor,width))
+        self.dc.DrawPoint(x,y)
+
+    def DrawLine(self,x1,y1,x2,y2,linecolor=None,width=1):
+        if self.dc == None:
+            return
+
+        if linecolor is not None:
+            self.dc.SetPen(wx.Pen(linecolor,width))
+        self.dc.DrawLine(x1,y1,x2,y2)
 
     def DrawPolygon(self,points,color=Color['black'],width=1,style=wx.SOLID,fillcolor=Color['white']):
+        if self.dc == None:
+            return
+
         self.dc.SetPen(wx.Pen(color,width))
         self.dc.SetBrush(wx.Brush(fillcolor,style))
         self.dc.DrawPolygon(points)
 
     def DrawEllipse(self,x1,y1,x2,y2,color=Color['black'],width=1,style=wx.TRANSPARENT,fillcolor=Color['white']):
+        if self.dc == None:
+            return
+
         self.dc.SetPen(wx.Pen(color,width))
         self.dc.SetBrush(wx.Brush(fillcolor,style))
         self.dc.DrawEllipse(x1,y1,x2,y2)
 
     def Blit(self,widget,target,source,scale):
+        if self.dc == None:
+            return
+
         x1,y1,x2,y2 = target
         x3,y3,x4,y4 = source
         w = x2-x1
@@ -232,7 +254,10 @@ class Application(Widget):
             return
 
         viewdc = self.view.GetImage()
-        w,h = viewdc.GetSize()
+        if viewdc == None:
+            return
+
+        w,h = viewdc.GetSize().Get()
         dc.Blit(0,0,w,h,viewdc,0,0)
 
     def OnKey(self,key):
@@ -250,6 +275,9 @@ class Application(Widget):
             return
 
         viewdc = self.view.GetImage()
+        if viewdc == None:
+            return
+
         w,h = viewdc.GetSize()
         dc.Blit(0,0,w,h,viewdc,0,0)
 
@@ -268,12 +296,13 @@ class Application(Widget):
         menuBar = wx.MenuBar()
         for menu in self.menus:
             wxmenu= wx.Menu()
-            for item in menu["items"]:
-                wxmenu.Append(id,item["name"],item["desc"])
-                wrapper = EventHandler(item["handler"])
-                wx.EVT_MENU(self.frame, id, wrapper.Handler)
-                id += 1
+            if "items" in menu.keys():
+                for item in menu["items"]:
+                    wxmenu.Append(id,item["name"],item["desc"])
+                    wrapper = EventHandler(item["handler"])
+                    wx.EVT_MENU(self.frame, id, wrapper.Handler)
+                    id += 1
 
-            menuBar.Append(wxmenu,menu["name"]) # Adding the "filemenu" to the MenuBar
+                menuBar.Append(wxmenu,menu["name"]) # Adding the "filemenu" to the MenuBar
 
         self.frame.SetMenuBar(menuBar)  # Adding the MenuBar to the Frame content.

@@ -148,39 +148,6 @@ class BarWidget(Widget):
             y1 -= dy; y2 -= dy
 
 
-    def _Draw(self):
-        if self.v1 == None:
-            v1=0
-        else:
-            v1 = int(0.5 + float(self.v1) * float(self.bars) / float(self.range))
-        if self.v2 == None:
-            v2 = v1
-        else:
-            v2 = int(0.5 + float(self.v2) * float(self.bars) / float(self.range))
-        if v2 < v1:
-            v2=v1
-
-        if v1 > self.bars:
-            v1 = self.bars
-        if v2 > self.bars:
-            v2 = self.bars
-        if v1 < 0:
-            v1 = 0
-        if v2 < 0:
-            v2 = 0
-
-        #print 0,v2,v2,self.bars,self.x,self.y,self.dy
-        for i in range (0,v1):
-            y = self.y+(self.bars-(i+1))*self.dy
-            self.DrawDot((self.x,y),self.c1,self.width)
-        for i in range (v1,v2):
-            y = self.y+(self.bars-(i+1))*self.dy
-            self.DrawDot((self.x,y),self.c2,self.width)
-        for i in range (v2,self.bars):
-            y = self.y+(self.bars-(i+1))*self.dy
-            self.DrawDot((self.x,y),Color["black"],self.width)
-
-
 class Gauge(Widget):
     def __init__(self,radius=None):
         self.value = None
