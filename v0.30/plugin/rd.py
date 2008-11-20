@@ -4,7 +4,6 @@ loglevels += ["rd!"]
 def Init(r):
     global registry
     registry = r
-    #registry.PluginAdd("datumregistry")
     registry.DatumAdd("RD",FormatRD,QueryRD)
 
 def Done():

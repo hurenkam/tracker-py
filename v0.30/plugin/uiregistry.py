@@ -23,6 +23,7 @@ class UserInterface:
         self.view = None
         #self.application = None
         self.application = Application("Tracker",(240,320))
+        self.application.RedrawMenu(registry)
 
     def UIRun(self):
         if self.application != None:
@@ -59,21 +60,13 @@ class UserInterface:
         self.application.Redraw()
 
     def UIMenuAdd(self,id,item,sub=None):
-        if sub != None:
-            if sub not in self.subitems.keys():
-                self.subitems[sub]=[]
-            self.subitems[sub].append((item,id))
-        else:
-            self.mainitems.append((item,id))
+        self.application.MenuAdd(id,item,sub)
 
     def UIMenuDel(self,id,item,sub=None):
-        if sub != None:
-            if sub in self.subitems.keys():
-                self.subitems[sub].remove((item,id))
-                if len(self.subitems[sub]) == 0:
-                    del self.subitems[sub]
-        else:
-            self.mainitems.remove((item,id))
+        self.application.MenuDel(id,item,sub)
+
+    def UIMenuRedraw(self):
+        self.application.RedrawMenu(self.registry)
 
     def UIKeyAdd(self,key,id):
         pass

@@ -348,15 +348,8 @@ class MapView(View):
         self.registry = registry
         self.registry.Signal( { "type":"db_connect", "id":"map", "signal":"position",  "handler":self.OnPosition } )
         self.registry.Signal( { "type":"db_connect", "id":"map", "signal":"trk_point", "handler":self.OnTrackPoint } )
-        #self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"map_show",  "handler":self.OnMapShow } )
-        #self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"map_hide",  "handler":self.OnMapHide } )
-        #self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"rte_show",  "handler":self.OnRouteShow } )
-        #self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"rte_hide",  "handler":self.OnRouteHide } )
-        #self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"trk_show",  "handler":self.OnTrackShow } )
-        #self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"trk_hide",  "handler":self.OnTrackHide } )
-        #self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"wpt_show",  "handler":self.OnWaypointShow } )
-        #self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"wpt_hide",  "handler":self.OnWaypointHide } )
-        #self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"formated_position", "handler":self.OnFormatedPosition } )
+        self.registry.Signal( { "type":"db_connect", "id":"map", "signal":"map_open",  "handler":self.OnOpen } )
+        self.registry.Signal( { "type":"db_connect", "id":"map", "signal":"map_close", "handler":self.OnClose } )
 
         self.registry.Signal( { "type":"gps_start",  "id":"map", "tolerance":10 } )
 
@@ -367,6 +360,8 @@ class MapView(View):
                                  "default":"51a_oisterwijk", "query":self.QueryCurrentMap } )
         self.InitMapList()
         self.LoadMap(self.GetCurrentMap())
+        self.registry.UIMenuAdd("map_open","Open","Map")
+        self.registry.UIMenuRedraw()
 
     def GetMenu(self):
         Log("map*","MapView::GetMenu()")
@@ -391,23 +386,23 @@ class MapView(View):
             Log("map!","MapView::LoadMap(",name,"): Not found!")
 
 
-    def OnOpen(self):
+    def OnOpen(self,signal):
         Log("map","MapView::OnOpen()")
         self.LoadMap("51a_oisterwijk")
 
-    def OnClose(self):
+    def OnClose(self,signal):
         Log("map","MapView::OnClose()")
 
-    def OnRefPt(self):
+    def OnRefPt(self,signal):
         Log("map","MapView::OnRefPt()")
 
-    def OnRefWpt(self):
+    def OnRefWpt(self,signal):
         Log("map","MapView::OnRefWpt()")
 
-    def OnSave(self):
+    def OnSave(self,signal):
         Log("map","MapView::OnSave()")
 
-    def OnClear(self):
+    def OnClear(self,signal):
         Log("map","MapView::OnClear()")
 
     def RedrawView(self):
