@@ -422,6 +422,7 @@ class MapView(View):
 
         heading = position["heading"]
         self.mapwidget.UpdatePosition(Point(0,position["latitude"],position["longitude"]),heading)
+        self.positionwidget.UpdatePosition(self.registry.DatumFormat((position["latitude"],position["longitude"])))
 
         try:
             self.Draw()

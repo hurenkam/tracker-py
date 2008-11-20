@@ -20,6 +20,7 @@ class DashView(View):
 
         self.menu = {}
 
+        self.positionwidget = PositionWidget((200,15))
         self.clockgauge1 = ClockGauge(None)
         self.clockgauge2 = ClockGauge(None)
         self.clockgauge3 = ClockGauge(None)
@@ -56,6 +57,7 @@ class DashView(View):
 
         self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"dash", "handler":self.OnClock } )
         self.registry.Signal( { "type":"timer_start", "id":"dash", "interval":1, "start":time() } )
+        self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"position",  "handler":self.OnPosition } )
 
         #self.bus = databus
         #self.bus.Signal( { "type":"view_register", "id":"dash", "view":self } )
@@ -90,6 +92,13 @@ class DashView(View):
 
     def OnPosition(self,position):
         Log("dash*","DashView::OnPosition(",position,")")
+        self.positionwidget.UpdatePosition(self.registry.DatumFormat((position["latitude"],position["longitude"])))
+
+        try:
+            self.Draw()
+            self.RedrawView()
+        except:
+            DumpExceptionInfo()
 
     def Resize(self,rect=None):
         #return View.Resize(self,rect)
@@ -152,6 +161,13 @@ class DashView(View):
 
         self.DrawRectangle((0,270,240,50),linecolor=Color["darkblue"],fillcolor=Color["darkblue"])
 
+        w,h = self.positionwidget.GetSize()
+        self.Blit(
+            self.positionwidget,
+            (20,275,20+w,275+h),
+            (0,0,w,h),
+            0)
+
         w,h = self.menuwidget.GetSize()
         self.Blit(
             self.menuwidget,
@@ -192,5 +208,6 @@ class DashView(View):
         Log("dash","DashView::Quit()")
         self.registry.Signal( { "type":"db_disconnect", "id":"dash", "signal":"dash" } )
         self.registry.Signal( { "type":"timer_stop",    "id":"dash" } )
+        self.registry.Signal( { "type":"db_disconnect", "id":"dash", "signal":"position" } )
         self.registry.UIViewDel(self)
         self.registry = None
