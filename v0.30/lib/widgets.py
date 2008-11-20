@@ -334,3 +334,60 @@ class ClockGauge(Gauge):
                         self.DrawText(((self.radius,1.6*self.radius)),u'%2i:%02i' % (self.hours,self.minutes),size=size2,align="center")
                     self.DrawTriangleHand (minuteshand, 0.7  * self.radius, Color['black'], 4)
                     self.DrawTriangleHand (hourshand,   0.5  * self.radius, Color['black'], 4)
+
+
+class WaypointGauge(Gauge):
+
+    def __init__(self,radius=None,tag="wpt"):
+        Gauge.__init__(self,radius)
+        self.tag = tag
+        self.heading = None
+        self.bearing = None
+        self.distance = None
+
+    def UpdateValues(self,heading,bearing,distance):
+        self.heading = heading
+        self.bearing = bearing
+        self.distance = distance
+        self.Draw()
+
+    def _sanevalues(self):
+        if self.heading is None or str(self.heading) is 'NaN':
+            self.heading = 0
+        if self.bearing is None or str(self.bearing) is 'NaN':
+            self.bearing = 0
+        if self.distance is None or str(self.distance) is'NaN':
+            self.distance = 0
+
+        north = 0 - self.heading
+        bearing = north + self.bearing
+        return north,bearing
+
+    def DrawCompas(self, north):
+        self.DrawScale(12,60,north)
+        self.DrawDotHand(north      ,self.radius-5,Color['north'],handwidth=7)
+        self.DrawDotHand(north +  90,self.radius-5,Color['black'],handwidth=5)
+        self.DrawDotHand(north + 180,self.radius-5,Color['black'],handwidth=5)
+        self.DrawDotHand(north + 270,self.radius-5,Color['black'],handwidth=7)
+
+    def DrawBearing(self, bearing):
+        if (self.radius >= 10):
+            self.DrawTriangleHand(bearing,     self.radius-10, Color['waypoint'], 8)
+            self.DrawTriangleHand(bearing+180, self.radius-10, Color['black'], 8)
+
+    def DrawInfo(self):
+        if (self.radius >= 40):
+            self.DrawText(((self.radius,0.5*self.radius+7)),u'%s' %self.tag)
+            self.DrawText(((self.radius,1.5*self.radius   )),u'%8.0f' % self.distance)
+            self.DrawText(((self.radius,1.5*self.radius+30)),u'%05.1f' % self.bearing)
+
+    def Draw(self):
+        if self.radius is None:
+            return
+
+        Gauge.Draw(self)
+        north, bearing = self._sanevalues()
+        self.DrawCompas(north)
+        self.DrawInfo()
+        self.DrawBearing(bearing)
+

@@ -12,6 +12,7 @@ def Done():
     global d
     d.Quit()
 
+
 class DashView(View):
     def __init__(self,registry):
         Log("dash","DashView::__init__()")
@@ -21,19 +22,19 @@ class DashView(View):
         self.menu = {}
 
         self.positionwidget = PositionWidget((200,15))
+        self.wptgauge    = WaypointGauge(None)
         self.clockgauge1 = ClockGauge(None)
         self.clockgauge2 = ClockGauge(None)
         self.clockgauge3 = ClockGauge(None)
         self.clockgauge4 = ClockGauge(None)
         self.clockgauge5 = ClockGauge(None)
-        self.clockgauge6 = ClockGauge(None)
         self.gauges = [
+                self.wptgauge,
                 self.clockgauge1,
                 self.clockgauge2,
                 self.clockgauge3,
                 self.clockgauge4,
                 self.clockgauge5,
-                self.clockgauge6,
             ]
         self.spots = [
                 ((0,80),    (160,160)),
@@ -59,11 +60,6 @@ class DashView(View):
         self.registry.Signal( { "type":"timer_start", "id":"dash", "interval":1, "start":time() } )
         self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"position",  "handler":self.OnPosition } )
 
-        #self.bus = databus
-        #self.bus.Signal( { "type":"view_register", "id":"dash", "view":self } )
-        #self.bus.Signal( { "type":"db_connect",  "id":"dash", "signal":"dash", "handler":self.OnClock } )
-        #self.bus.Signal( { "type":"timer_start", "id":"dash", "interval":1, "start":time() } )
-
     def GetMenu(self):
         Log("dash*","DashView::GetMenu()")
         return self.menu
@@ -71,16 +67,14 @@ class DashView(View):
     def RedrawView(self):
         Log("dash*","DashView::RedrawView()")
         self.registry.UIViewRedraw()
-        #self.bus.Signal( { "type":"view_update", "id":"dash" } )
 
     def OnClock(self,signal):
         Log("dash*","DashView::OnClock()")
         self.clockgauge1.UpdateValue(signal["time"])
-        self.clockgauge2.UpdateValue(signal["time"])
-        self.clockgauge3.UpdateValue(signal["time"])
-        self.clockgauge4.UpdateValue(signal["time"])
-        self.clockgauge5.UpdateValue(signal["time"])
-        self.clockgauge6.UpdateValue(signal["time"])
+        #self.clockgauge2.UpdateValue(signal["time"])
+        #self.clockgauge3.UpdateValue(signal["time"])
+        #self.clockgauge4.UpdateValue(signal["time"])
+        #self.clockgauge5.UpdateValue(signal["time"])
         self.Draw()
         self.RedrawView()
 
@@ -93,6 +87,7 @@ class DashView(View):
     def OnPosition(self,position):
         Log("dash*","DashView::OnPosition(",position,")")
         self.positionwidget.UpdatePosition(self.registry.DatumFormat((position["latitude"],position["longitude"])))
+        self.wptgauge.UpdateValues(position["heading"],0,0)
 
         try:
             self.Draw()
@@ -101,8 +96,6 @@ class DashView(View):
             DumpExceptionInfo()
 
     def Resize(self,rect=None):
-        #return View.Resize(self,rect)
-
         View.Resize(self,rect)
 
         #if size == (320,240):
