@@ -232,14 +232,9 @@ class Application(Widget):
         self.panel.Bind(wx.EVT_PAINT,self.OnPaint)
         self.panel.Bind(wx.EVT_KEY_DOWN,self.OnWxKey)
         self.view = None
-        self.menus = []
+        self.mainitems = []
+        self.subitems = {}
         Widget.__init__(self,(x+8,y+6))
-
-    def AddMenu(self,menu):
-        self.menus.append(menu)
-
-    def ClearMenu(self):
-        self.menus = []
 
     def Run(self):
         self.app.MainLoop()
@@ -290,25 +285,46 @@ class Application(Widget):
     def Handler(self,event):
         print event
 
-    def RedrawMenu(self):
+    def MenuAdd(self,id,item,sub=None):
+        if sub != None:
+            if sub not in self.subitems.keys():
+                self.subitems[sub]=[]
+            self.subitems[sub].append((item,id))
+        else:
+            self.mainitems.append((item,id))
+
+    def MenuDel(self,id,item,sub=None):
+        if sub != None:
+            if sub in self.subitems.keys():
+                self.subitems[sub].remove((item,id))
+                if len(self.subitems[sub]) == 0:
+                    del self.subitems[sub]
+        else:
+            self.mainitems.remove((item,id))
+
+    def RedrawMenu(self,registry):
         class EventHandler:
-            def __init__(self,callback):
-                self.callback = callback
+            def __init__(self,registry,id):
+                self.registry = registry
+                self.id = id
 
             def Handler(self,event):
-                self.callback()
+                self.registry.Signal({ "type":self.id, "id":"ui" })
 
-        id = ID_MENU_FIRST
+        wxid = ID_MENU_FIRST
         menuBar = wx.MenuBar()
-        for menu in self.menus:
-            wxmenu= wx.Menu()
-            if "items" in menu.keys():
-                for item in menu["items"]:
-                    wxmenu.Append(id,item["name"],item["desc"])
-                    wrapper = EventHandler(item["handler"])
-                    wx.EVT_MENU(self.frame, id, wrapper.Handler)
-                    id += 1
+        for item,id in self.mainitems:
+            menuBar.Append(wxid,item,"")
+            wrapper = EventHandler(registry,id)
+            wx.EVT_MENU(self.frame, wxid, wrapper.Handler)
+            wxid += 1
 
-                menuBar.Append(wxmenu,menu["name"]) # Adding the "filemenu" to the MenuBar
-
+        for sub in self.subitems.keys():
+            submenu = wx.Menu()
+            for item,id in self.subitems[sub]:
+                submenu.Append(wxid,item,"")
+                wrapper = EventHandler(registry,id)
+                wx.EVT_MENU(self.frame, wxid, wrapper.Handler)
+                wxid += 1
+            menuBar.Append(submenu,sub) # Adding the "filemenu" to the MenuBar
         self.frame.SetMenuBar(menuBar)  # Adding the MenuBar to the Frame content.

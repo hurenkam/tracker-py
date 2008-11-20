@@ -4,14 +4,6 @@ from datatypes import *
 
 loglevels += ["dash!"]
 
-#def Init(databus,datastorage):
-#    global d
-#    d = DashView(databus)
-
-#def Done():
-#    global d
-#    d.Quit()
-
 def Init(registry):
     global d
     d = DashView(registry)
@@ -21,12 +13,9 @@ def Done():
     d.Quit()
 
 class DashView(View):
-#    def __init__(self,databus):
     def __init__(self,registry):
         Log("dash","DashView::__init__()")
         self.registry = registry
-        #self.registry.PluginAdd("timers")
-        #self.registry.PluginAdd("uiregistry")
         from time import time
 
         self.menu = {}
@@ -205,7 +194,3 @@ class DashView(View):
         self.registry.Signal( { "type":"timer_stop",    "id":"dash" } )
         self.registry.UIViewDel(self)
         self.registry = None
-        #self.bus.Signal( { "type":"db_disconnect", "id":"dash", "signal":"dash" } )
-        #self.bus.Signal( { "type":"timer_stop",    "id":"dash" } )
-        #self.bus.Signal( { "type":"view_unregister", "id":"dash" } )
-        #self.bus = None
