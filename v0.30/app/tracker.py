@@ -12,7 +12,7 @@ loglevels += [
               "map",#"map*",
               "dash",#"dash*",
               #"userinterface",#"userinterface*",
-              #"datumlist","datumlist*","rd","rd*","utm","utm*",
+              #"rd","rd*","utm","utm*",
               #"datastorage","datastorage*",
               #"recorder","recorder*",
               ]
@@ -36,6 +36,7 @@ def Main():
         "timers",
         "simgps",
         "datumregistry",
+        "utm",
         "rd",
         "recorder",
         "uiregistry",

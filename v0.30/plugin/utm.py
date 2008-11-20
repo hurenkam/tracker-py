@@ -2,9 +2,9 @@ from helpers import *
 loglevels += ["utm!"]
 
 
-def Init(databus,datastorage):
+def Init(registry):
     global r
-    r = DatumUTM(databus,datastorage)
+    r = DatumUTM(registry)
 
 def Done():
     global r
@@ -12,10 +12,9 @@ def Done():
 
 
 class DatumUTM:
-    def __init__(self,databus,datastorage):
+    def __init__(self,registry):
         Log("utm","DatumUTM::__init__()")
-        self.bus = databus
-        self.storage = datastorage
+        self.registry = registry
         self.data = None
         self.meta = None
         self.Register()
@@ -28,20 +27,19 @@ class DatumUTM:
     def Register(self):
         Log("utm","DatumUTM::Register()")
 
-        self.storage.Register( { "setting":"utm_ellipsoid", "description":u"UTM Ellipsoid",
-                                 "default":"international", "query":self.QueryEllipsoid } )
+        self.registry.ConfigAdd( { "setting":"utm_ellipsoid", "description":u"UTM Ellipsoid",
+                                 "default":"International", "query":self.QueryEllipsoid } )
 
-        self.bus.Signal( { "type":"datum_register", "id":"utm", "short":"UTM", "description":"UTM",
-            "query":self.QueryUTM, "format":self.FormatUTM } )
+        self.registry.DatumAdd("UTM",self.FormatUTM,self.QueryUTM)
 
     def Unregister(self):
         Log("utm","DatumUTM::Unregister()")
-        self.bus.Signal( { "type":"datum_unregister", "id":"utm", "short":"UTM" } )
-        self.storage.Unregister( "utm_ellipsoid" )
+        self.registry.Signal( { "type":"datum_unregister", "id":"utm", "short":"UTM" } )
+        self.registry.ConfigDel( "utm_ellipsoid" )
 
     def GetEllipsoid(self):
         Log("utm*","DatumUTM::GetEllipsoid()")
-        return self.storage.GetValue("utm_ellipsoid")
+        return self.registry.ConfigGetValue("utm_ellipsoid")
 
     def QueryEllipsoid(self):
         pass
@@ -58,7 +56,7 @@ class DatumUTM:
         ellips = self.GetEllipsoid()
         return datums.utm_to_latlon(ellips,x,y)
 
-    def QueryUTM(self,latitude,longitude):
+    def QueryUTM(self,(latitude,longitude)):
         Log("utm","DatumUTM::QueryUTM()")
         import appuifw
 
@@ -80,8 +78,8 @@ class DatumUTM:
 
         return self.UTM2Wgs(self,zone,x,y)
 
-    def FormatUTM(self,latitude,longitude):
+    def FormatUTM(self,(latitude,longitude)):
         Log("utm*","DatumUTM::FormatUTM()")
         zone,x,y = self.Wgs2UTM(latitude,longitude)
-        return (u"UTM", u"%s" % zone, u"%s" % x, u"%s" % y )
+        return (u"UTM", u"%s" % zone, u"%s" % int(x), u"%s" % int(y) )
 
