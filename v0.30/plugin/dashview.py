@@ -4,17 +4,29 @@ from datatypes import *
 
 loglevels += ["dash!"]
 
-def Init(databus,datastorage):
+#def Init(databus,datastorage):
+#    global d
+#    d = DashView(databus)
+
+#def Done():
+#    global d
+#    d.Quit()
+
+def Init(registry):
     global d
-    d = DashView(databus)
+    d = DashView(registry)
 
 def Done():
     global d
     d.Quit()
 
 class DashView(View):
-    def __init__(self,databus):
+#    def __init__(self,databus):
+    def __init__(self,registry):
         Log("dash","DashView::__init__()")
+        self.registry = registry
+        #self.registry.PluginAdd("timers")
+        #self.registry.PluginAdd("uiregistry")
         from time import time
 
         self.menu = {}
@@ -50,12 +62,16 @@ class DashView(View):
         self.batwidget = BarWidget((15,50),bars=5,range=100)
 
         Widget.__init__(self,(240,320))
+        self.registry.UIViewAdd(self)
         #self.Resize((240,320))
 
-        self.bus = databus
-        self.bus.Signal( { "type":"view_register", "id":"dash", "view":self } )
-        self.bus.Signal( { "type":"db_connect",  "id":"dash", "signal":"dash", "handler":self.OnClock } )
-        self.bus.Signal( { "type":"timer_start", "id":"dash", "interval":1, "start":time() } )
+        self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"dash", "handler":self.OnClock } )
+        self.registry.Signal( { "type":"timer_start", "id":"dash", "interval":1, "start":time() } )
+
+        #self.bus = databus
+        #self.bus.Signal( { "type":"view_register", "id":"dash", "view":self } )
+        #self.bus.Signal( { "type":"db_connect",  "id":"dash", "signal":"dash", "handler":self.OnClock } )
+        #self.bus.Signal( { "type":"timer_start", "id":"dash", "interval":1, "start":time() } )
 
     def GetMenu(self):
         Log("dash*","DashView::GetMenu()")
@@ -63,7 +79,8 @@ class DashView(View):
 
     def RedrawView(self):
         Log("dash*","DashView::RedrawView()")
-        self.bus.Signal( { "type":"view_update", "id":"dash" } )
+        self.registry.UIViewRedraw()
+        #self.bus.Signal( { "type":"view_update", "id":"dash" } )
 
     def OnClock(self,signal):
         Log("dash*","DashView::OnClock()")
@@ -184,7 +201,11 @@ class DashView(View):
 
     def Quit(self):
         Log("dash","DashView::Quit()")
-        self.bus.Signal( { "type":"db_disconnect", "id":"dash", "signal":"dash" } )
-        self.bus.Signal( { "type":"timer_stop",    "id":"dash" } )
-        self.bus.Signal( { "type":"view_unregister", "id":"dash" } )
-        self.bus = None
+        self.registry.Signal( { "type":"db_disconnect", "id":"dash", "signal":"dash" } )
+        self.registry.Signal( { "type":"timer_stop",    "id":"dash" } )
+        self.registry.UIViewDel(self)
+        self.registry = None
+        #self.bus.Signal( { "type":"db_disconnect", "id":"dash", "signal":"dash" } )
+        #self.bus.Signal( { "type":"timer_stop",    "id":"dash" } )
+        #self.bus.Signal( { "type":"view_unregister", "id":"dash" } )
+        #self.bus = None

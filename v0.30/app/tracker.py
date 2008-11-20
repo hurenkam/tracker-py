@@ -4,43 +4,52 @@ import sys
 sys.path.append("../lib")
 from databus import *
 from helpers import *
-from control import *
+#from control import *
 loglevels += [
               #"databus","databus*",
               #"gps","gps*","lrgps","lrgps*","simgps","simgps*",
               #"timer","timer*",
-              "map","map*",
+              "map",#"map*",
               "dash",#"dash*",
-              "userinterface",#"userinterface*",
+              #"userinterface",#"userinterface*",
               #"datumlist","datumlist*","rd","rd*","utm","utm*",
               #"datastorage","datastorage*",
               #"recorder","recorder*",
               ]
 
-def StartRecording(b,name):
-    b.Signal( { "type":"trk_start", "interval":10, "name":name } )
+from registry import *
 
-def StopRecording(b):
-    b.Signal( { "type":"trk_stop" } )
+def StartRecording(r,name):
+    r.Signal( { "type":"trk_start", "interval":10, "name":name } )
 
-def ShowWaypoint(b):
-    b.Signal( { "type":"wpt_show", "name":"Kampina", "latitude":51.5431429, "longitude":5.26938448, "altitude":0 } )
+def StopRecording(r):
+    r.Signal( { "type":"trk_stop" } )
+
+def ShowWaypoint(r):
+    r.Signal( { "type":"wpt_show", "name":"Kampina", "latitude":51.5431429, "longitude":5.26938448, "altitude":0 } )
 
 def Main():
-    Log("tracker","Main()")
+    r = Registry()
+    r.RegistryAdd(ConfigRegistry())
+    r.RegistryAdd(SignalRegistry())
+    for name in [
+        "timers",
+        "simgps",
+        "datumregistry",
+        "rd",
+        "recorder",
+        "uiregistry",
+        "dashview",
+        "mapview",
+        ]:
+        r.PluginAdd(name)
 
-    b = DataBus()
-    ui = UserInterface(b)
-    for name in ["simgps","timers","datumlist","rd","utm","recorder","mapview","dashview"]:
-        b.LoadPlugin(name)
+    StartRecording(r,"default")
 
-    StartRecording(b,"default")
-    ShowWaypoint(b)
-    ui.Run()
+    r.UIRun()
 
-    StopRecording(b)
+    StopRecording(r)
 
-    ui.Quit()
-    b.Quit()
+    r.Quit()
 
 Main()

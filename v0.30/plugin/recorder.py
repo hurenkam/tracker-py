@@ -2,9 +2,9 @@ from helpers import *
 loglevels += ["recorder!"]
 
 
-def Init(databus,datastorage):
+def Init(registry):
     global r
-    r = Recorder(databus)
+    r = Recorder(registry)
 
 def Done():
     global r
@@ -12,9 +12,9 @@ def Done():
 
 
 class Recorder:
-    def __init__(self,databus):
+    def __init__(self,registry):
         Log("recorder","Recorder::__init__()")
-        self.bus = databus
+        self.registry = registry
         self.data = None
         self.meta = None
         self.RegisterSignals()
@@ -44,20 +44,20 @@ class Recorder:
         self.meta.close()
 
     def RegisterSignals(self):
-        self.bus.Signal( { "type":"db_connect", "id":"recorder", "signal":"trk_start", "handler":self.OnStart } )
-        self.bus.Signal( { "type":"db_connect", "id":"recorder", "signal":"trk_stop", "handler":self.OnStop } )
+        self.registry.Signal( { "type":"db_connect", "id":"recorder", "signal":"trk_start", "handler":self.OnStart } )
+        self.registry.Signal( { "type":"db_connect", "id":"recorder", "signal":"trk_stop", "handler":self.OnStop } )
 
     def UnregisterSignals(self):
-        self.bus.Signal( { "type":"db_disconnect", "id":"recorder", "signal":"trk_start" } )
-        self.bus.Signal( { "type":"db_disconnect", "id":"recorder", "signal":"trk_stop" } )
+        self.registry.Signal( { "type":"db_disconnect", "id":"recorder", "signal":"trk_start" } )
+        self.registry.Signal( { "type":"db_disconnect", "id":"recorder", "signal":"trk_stop" } )
 
     def SubscribePositionSignals(self,interval):
-        self.bus.Signal( { "type":"db_connect", "id":"recorder", "signal":"position", "handler":self.OnPosition } )
-        self.bus.Signal( { "type":"gps_start",  "id":"recorder", "tolerance":interval } )
+        self.registry.Signal( { "type":"db_connect", "id":"recorder", "signal":"position", "handler":self.OnPosition } )
+        self.registry.Signal( { "type":"gps_start",  "id":"recorder", "tolerance":interval } )
 
     def UnsubscribePositionSignals(self):
-        self.bus.Signal( { "type":"disconnect", "id":"recorder", "signal":"position" } )
-        self.bus.Signal( { "type":"gps_stop",   "id":"recorder" } )
+        self.registry.Signal( { "type":"disconnect", "id":"recorder", "signal":"position" } )
+        self.registry.Signal( { "type":"gps_stop",   "id":"recorder" } )
 
     def OpenTrack(self,name):
         Log("recorder","Recorder::OpenTrack(",name,")")
@@ -104,7 +104,7 @@ class Recorder:
         self.UpdateMetaData(p["latitude"],p["longitude"],p["distance"])
         p["type"] = "trk_point"
         p["id"] = "recorder"
-        self.bus.Signal( p )
+        self.registry.Signal( p )
 
     def OnStart(self,signal):
         Log("recorder","Recorder::OnStart(",signal,")")

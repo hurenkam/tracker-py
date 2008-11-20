@@ -23,10 +23,10 @@ posevent = {
     }
 
 class Gps:
-    def __init__(self,databus):
+    def __init__(self,registry):
         global posevent
         Log("gps","Gps::__init__()")
-        self.bus = databus
+        self.registry = registry
         self.requests = {}
         self.previous = None
         self.position = posevent
@@ -61,10 +61,10 @@ class Gps:
                 if r["tolerance"] <= distance:
                     p = self.position.copy()
                     p["distance"] = distance
-                    self.bus.Signal( p )
+                    self.registry.Signal( p )
                     r["previous"] = p
             else:
-                self.bus.Signal( self.position )
+                self.registry.Signal( self.position )
                 r["previous"] = self.position.copy()
 
     def StopGps(self):
@@ -75,18 +75,18 @@ class Gps:
         self.StopGps()
         self.UnregisterSignals()
         self.requests = {}
-        self.bus = None
+        self.registry = None
 
 
     def RegisterSignals(self):
         Log("gps","Gps::RegisterSignals()")
-        self.bus.Signal( { "type":"db_connect", "id":"gps", "signal":"gps_start", "handler":self.OnStart } )
-        self.bus.Signal( { "type":"db_connect", "id":"gps", "signal":"gps_stop",  "handler":self.OnStop } )
+        self.registry.Signal( { "type":"db_connect", "id":"gps", "signal":"gps_start", "handler":self.OnStart } )
+        self.registry.Signal( { "type":"db_connect", "id":"gps", "signal":"gps_stop",  "handler":self.OnStop } )
 
     def UnregisterSignals(self):
         Log("gps","Gps::UnregisterSignals()")
-        self.bus.Signal( { "type":"db_disconnect", "id":"gps", "signal":"gps_start" } )
-        self.bus.Signal( { "type":"db_disconnect", "id":"gps", "signal":"gps_stop" } )
+        self.registry.Signal( { "type":"db_disconnect", "id":"gps", "signal":"gps_start" } )
+        self.registry.Signal( { "type":"db_disconnect", "id":"gps", "signal":"gps_stop" } )
 
 
     def OnStart(self,signal):

@@ -9,9 +9,9 @@ except:
     from time import sleep
 loglevels += ["simgps!"]
 
-def Init(databus,datastorage):
+def Init(registry):
     global g
-    g = SimGps(databus)
+    g = SimGps(registry)
 
 def Done():
     global g
@@ -38,8 +38,8 @@ campina = [
 ]
 
 class SimGps(Gps):
-    def __init__(self,databus):
-        Gps.__init__(self,databus)
+    def __init__(self,registry):
+        Gps.__init__(self,registry)
         Log("simgps","SimGps::__init__()")
         self.running = False
         self.index = -1
