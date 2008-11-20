@@ -4,7 +4,6 @@ import sys
 sys.path.append("../lib")
 from databus import *
 from helpers import *
-#from control import *
 loglevels += [
               #"databus","databus*",
               #"gps","gps*","lrgps","lrgps*","simgps","simgps*",
