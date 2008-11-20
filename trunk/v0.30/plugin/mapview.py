@@ -5,9 +5,9 @@ from xmlparser import *
 
 loglevels += ["map!"]
 
-def Init(databus,datastorage):
+def Init(registry):
     global m
-    m = MapView(databus,datastorage)
+    m = MapView(registry)
 
 def Done():
     global m
@@ -315,8 +315,11 @@ class MapWidget(Widget):
 
 
 class MapView(View):
-    def __init__(self,databus,datastorage):
+    def __init__(self,registry):
         Log("map","MapView::__init__()")
+        self.registry = registry
+        #self.registry.PluginAdd("simgps")
+        #self.registry.PluginAdd("uiregistry")
         from time import time
 
         self.menu = {
@@ -340,26 +343,27 @@ class MapView(View):
         self.batwidget = BarWidget((15,50),bars=5,range=100)
 
         Widget.__init__(self,(240,320))
+        self.registry.UIViewAdd(self)
 
-        self.bus = databus
-        self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"position",  "handler":self.OnPosition } )
-        self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"trk_point", "handler":self.OnTrackPoint } )
-        self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"map_show",  "handler":self.OnMapShow } )
-        self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"map_hide",  "handler":self.OnMapHide } )
-        self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"rte_show",  "handler":self.OnRouteShow } )
-        self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"rte_hide",  "handler":self.OnRouteHide } )
-        self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"trk_show",  "handler":self.OnTrackShow } )
-        self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"trk_hide",  "handler":self.OnTrackHide } )
-        self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"wpt_show",  "handler":self.OnWaypointShow } )
-        self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"wpt_hide",  "handler":self.OnWaypointHide } )
-        self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"formated_position", "handler":self.OnFormatedPosition } )
+        self.registry = registry
+        self.registry.Signal( { "type":"db_connect", "id":"map", "signal":"position",  "handler":self.OnPosition } )
+        self.registry.Signal( { "type":"db_connect", "id":"map", "signal":"trk_point", "handler":self.OnTrackPoint } )
+        #self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"map_show",  "handler":self.OnMapShow } )
+        #self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"map_hide",  "handler":self.OnMapHide } )
+        #self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"rte_show",  "handler":self.OnRouteShow } )
+        #self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"rte_hide",  "handler":self.OnRouteHide } )
+        #self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"trk_show",  "handler":self.OnTrackShow } )
+        #self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"trk_hide",  "handler":self.OnTrackHide } )
+        #self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"wpt_show",  "handler":self.OnWaypointShow } )
+        #self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"wpt_hide",  "handler":self.OnWaypointHide } )
+        #self.bus.Signal( { "type":"db_connect", "id":"map", "signal":"formated_position", "handler":self.OnFormatedPosition } )
 
-        self.bus.Signal( { "type":"gps_start",  "id":"map", "tolerance":10 } )
+        self.registry.Signal( { "type":"gps_start",  "id":"map", "tolerance":10 } )
 
-        self.bus.Signal( { "type":"view_register", "id":"map", "view":self } )
+        self.registry.Signal( { "type":"view_register", "id":"map", "view":self } )
 
-        self.storage = datastorage
-        self.storage.Register( { "setting":"map_current", "description":u"Current/Last map shown",
+        #self.storage = datastorage
+        self.registry.ConfigAdd( { "setting":"map_current", "description":u"Current/Last map shown",
                                  "default":"51a_oisterwijk", "query":self.QueryCurrentMap } )
         self.InitMapList()
         self.LoadMap(self.GetCurrentMap())
@@ -370,18 +374,22 @@ class MapView(View):
 
     def GetCurrentMap(self):
         Log("map*","MapView::GetCurrentMap()")
-        return self.storage.GetValue("map_current")
+        return self.registry.ConfigGetValue("map_current")
 
     def SetCurrentMap(self,name):
-        self.storage.SetValue("map_current",name)
+        self.registry.ConfigSetValue("map_current",name)
 
     def QueryCurrentMap(self):
         Log("map","MapView::QueryMap()")
 
     def LoadMap(self,name):
+        Log("map","MapView::LoadMap(",name,")")
         if name in self.maps.keys():
             self.mapwidget.SetMap(self.maps[name])
             self.SetCurrentMap(name)
+        else:
+            Log("map!","MapView::LoadMap(",name,"): Not found!")
+
 
     def OnOpen(self):
         Log("map","MapView::OnOpen()")
@@ -404,7 +412,8 @@ class MapView(View):
 
     def RedrawView(self):
         Log("map*","MapView::RedrawView()")
-        self.bus.Signal( { "type":"view_update", "id":"map" } )
+        #self.bus.Signal( { "type":"view_update", "id":"map" } )
+        self.registry.UIViewRedraw()
 
     def OnKey(self,key):
         Log("map","MapView::OnKey()")
@@ -414,7 +423,7 @@ class MapView(View):
 
     def OnPosition(self,position):
         Log("map*","MapView::OnPosition(",position,")")
-        self.bus.Signal( { "type":"datum_format", "id":"map", "latitude":position["latitude"], "longitude":position["longitude"] } )
+        #self.bus.Signal( { "type":"datum_format", "id":"map", "latitude":position["latitude"], "longitude":position["longitude"] } )
 
         heading = position["heading"]
         self.mapwidget.UpdatePosition(Point(0,position["latitude"],position["longitude"]),heading)
@@ -586,20 +595,20 @@ class MapView(View):
 
     def Quit(self):
         Log("map","MapView::Quit()")
-        self.storage.Unregister("map_current")
+        self.registry.ConfigDel("map_current")
 
-        self.bus.Signal( { "type":"view_unregister", "id":"map" } )
+        #self.bus.Signal( { "type":"view_unregister", "id":"map" } )
 
-        self.bus.Signal( { "type":"gps_stop",      "id":"map" } )
-        self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"position" } )
-        self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"trk_point" } )
-        self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"map_show" } )
-        self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"map_hide" } )
-        self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"rte_show" } )
-        self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"rte_hide" } )
-        self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"trk_show" } )
-        self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"trk_hide" } )
-        self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"wpt_show" } )
-        self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"wpt_hide" } )
-        self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"formated_position" } )
-        self.bus = None
+        self.registry.Signal( { "type":"gps_stop",      "id":"map" } )
+        self.registry.Signal( { "type":"db_disconnect", "id":"map", "signal":"position" } )
+        self.registry.Signal( { "type":"db_disconnect", "id":"map", "signal":"trk_point" } )
+        #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"map_show" } )
+        #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"map_hide" } )
+        #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"rte_show" } )
+        #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"rte_hide" } )
+        #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"trk_show" } )
+        #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"trk_hide" } )
+        #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"wpt_show" } )
+        #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"wpt_hide" } )
+        #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"formated_position" } )
+        self.registry = None

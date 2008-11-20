@@ -7,23 +7,35 @@ except:
 
 loglevels += ["timer!"]
 
-def Init(databus,datastorage):
+def Init(registry):
     global t
-    t = Timer(databus)
+    t = Timer(registry)
 
 def Done():
     global t
     t.Quit()
 
+#def Init(databus,datastorage):
+#    global t
+#    t = Timer(databus)
+
+#def Done():
+#    global t
+#    t.Quit()
+
 
 class Timer:
-    def __init__(self,databus):
+#    def __init__(self,databus):
+    def __init__(self,registry):
         Log("timer","Timer::__init__()")
-        self.bus = databus
+        #self.bus = databus
+        self.registry = registry
         self.requests = {}
         self.running = True
-        self.bus.Signal( { "type":"db_connect", "id":"timer", "signal":"timer_start", "handler":self.OnStart } )
-        self.bus.Signal( { "type":"db_connect", "id":"timer", "signal":"timer_stop",  "handler":self.OnStop } )
+        self.registry.Signal( { "type":"db_connect", "id":"timer", "signal":"timer_start", "handler":self.OnStart } )
+        self.registry.Signal( { "type":"db_connect", "id":"timer", "signal":"timer_stop",  "handler":self.OnStop } )
+        #self.bus.Signal( { "type":"db_connect", "id":"timer", "signal":"timer_start", "handler":self.OnStart } )
+        #self.bus.Signal( { "type":"db_connect", "id":"timer", "signal":"timer_stop",  "handler":self.OnStop } )
         thread.start_new_thread(self.Run,())
 
     def OnStart(self,signal):
@@ -43,7 +55,8 @@ class Timer:
             r = self.requests[k]
             if r["start"] + r["interval"] < t:
                 r["start"] += r["interval"]
-                self.bus.Signal( { "type":k, "time":t } )
+                #self.bus.Signal( { "type":k, "time":t } )
+                self.registry.Signal( { "type":k, "time":t } )
 
     def Run(self):
         Log("timer","Timer::Run()")
@@ -55,7 +68,10 @@ class Timer:
         Log("timer","Timer::Quit()")
         self.running = False
         sleep(1)
-        self.bus.Signal( { "type":"db_disconnect", "id":"timer", "signal":"timer_start" } )
-        self.bus.Signal( { "type":"db_disconnect", "id":"timer", "signal":"timer_stop" } )
+        self.registry.Signal( { "type":"db_disconnect", "id":"timer", "signal":"timer_start" } )
+        self.registry.Signal( { "type":"db_disconnect", "id":"timer", "signal":"timer_stop" } )
+        self.registry = None
+        #self.bus.Signal( { "type":"db_disconnect", "id":"timer", "signal":"timer_start" } )
+        #self.bus.Signal( { "type":"db_disconnect", "id":"timer", "signal":"timer_stop" } )
         self.requests = {}
-        self.bus = None
+        #self.bus = None

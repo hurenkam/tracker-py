@@ -249,16 +249,19 @@ class Application(Widget):
         self.Redraw()
 
     def Redraw(self):
-        dc = wx.ClientDC(self.panel)
-        if self.view == None:
-            return
+        try:
+            dc = wx.ClientDC(self.panel)
+            if self.view == None:
+                return
 
-        viewdc = self.view.GetImage()
-        if viewdc == None:
-            return
+            viewdc = self.view.GetImage()
+            if viewdc == None:
+                return
 
-        w,h = viewdc.GetSize().Get()
-        dc.Blit(0,0,w,h,viewdc,0,0)
+            w,h = viewdc.GetSize().Get()
+            dc.Blit(0,0,w,h,viewdc,0,0)
+        except:
+            pass
 
     def OnKey(self,key):
         pass
@@ -270,16 +273,19 @@ class Application(Widget):
             self.OnKey(FindKey(keycode))
 
     def OnPaint(self,event):
-        dc = wx.PaintDC(self.panel)
-        if self.view == None:
-            return
+        try:
+            dc = wx.PaintDC(self.panel)
+            if self.view == None:
+                return
 
-        viewdc = self.view.GetImage()
-        if viewdc == None:
-            return
+            viewdc = self.view.GetImage()
+            if viewdc == None:
+                return
 
-        w,h = viewdc.GetSize()
-        dc.Blit(0,0,w,h,viewdc,0,0)
+            w,h = viewdc.GetSize()
+            dc.Blit(0,0,w,h,viewdc,0,0)
+        except:
+            pass
 
     def Handler(self,event):
         print event
