@@ -17,11 +17,10 @@ class DatumRegistry:
         Log("datum","DatumRegistry::__init__()")
         self.registry = registry
         self.datums = []
+        self.current = 0
         registry.ConfigAdd(
             { "setting":"datum_current", "description":u"Current datum",
               "default":"RD", "query":self.DatumQuery } )
-    def DatumQuery(self):
-        Log("datum","DatumRegistry::DatumQuery()")
     def DatumAdd(self,short,format,query):
         Log("datum","DatumRegistry::DatumAdd(",short,")")
         self.datums.append((short,format,query))
@@ -29,7 +28,11 @@ class DatumRegistry:
         Log("datum","DatumRegistry::DatumDel()")
     def DatumFormat(self,position):
         Log("datum*","DatumRegistry::DatumFormat(",position,")")
-        return "RD","X: 0.0","Y: 0.0"
+        if self.datums:
+            short,format,query = self.datums[self.current]
+            return format(position)
     def DatumQuery(self,position=None):
         Log("datum","DatumRegistry::DatumQuery(",position,")")
-        return 0.0,0.0
+        if self.datums:
+            short,format,query = self.datums[self.current]
+            return query(position)
