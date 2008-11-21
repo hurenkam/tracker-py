@@ -42,6 +42,13 @@ Style = {
 Key = {
             "left":wx.WXK_LEFT,
             "right":wx.WXK_RIGHT,
+            "up":wx.WXK_UP,
+            "down":wx.WXK_DOWN,
+            "home":wx.WXK_HOME,
+            "end":wx.WXK_END,
+            "enter":wx.WXK_RETURN,
+            "tab":wx.WXK_TAB,
+            "back":wx.WXK_BACK,
     }
 
 def FindKey(value):
@@ -73,9 +80,9 @@ class Widget:
 
     def LoadImage(self,name):
         image = wx.Image(u"%s" % name,wx.BITMAP_TYPE_JPEG)
-        bitmap = wx.BitmapFromImage(image)
+        self.bitmap = wx.BitmapFromImage(image)
         self.dc = wx.MemoryDC()
-        self.dc.SelectObject(bitmap)
+        self.dc.SelectObject(self.bitmap)
         self.size = self.dc.GetSize().Get()
 
     def GetImage(self):
@@ -203,12 +210,29 @@ class Widget:
         if y3 < 0:
             y1 -= y3
             y3 -= y3
-
-        self.dc.Blit(x1,y1,w,h,widget.GetImage(),x3,y3)
+        if scale == 1:
+            image = widget.bitmap.ConvertToImage()
+            rect = wx.Rect(x3,y3,x4-x3,y4-y3)
+            image = image.GetSubImage(rect)
+            image.Rescale(w,h)
+            bitmap = wx.BitmapFromImage(image)
+            dc = wx.MemoryDC()
+            dc.SelectObject(bitmap)
+            self.dc.Blit(x1,y1,w,h,dc,0,0)
+        else:
+            self.dc.Blit(x1,y1,w,h,widget.dc,x3,y3)
 
 class View(Widget):
+    def __init__(self):
+        self.keylist = {}
     def OnKey(self,key):
+        if key in self.keylist.keys():
+            return self.keylist[key](key)
         return False
+    def KeyAdd(self,key,handler):
+        self.keylist[key]=handler
+    def KeyDel(self,key):
+        del self.keylist[key]
     def OnResize(self,size):
         pass
 

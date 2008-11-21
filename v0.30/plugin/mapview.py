@@ -4,6 +4,8 @@ from datatypes import *
 from xmlparser import *
 
 loglevels += ["map!"]
+Zoom =     [ 0.5, 0.75, 1.0, 1.5, 2.0 ]
+Scroll =   [ 100,   20,  10,   5,   1 ]
 
 def Init(registry):
     global m
@@ -114,6 +116,8 @@ class MapWidget(Widget):
         self.mapimage = None
         self.lastarea = None
         self.heading = 0
+        self.zoom = 2
+        self.cursor = None
         #self.position = self.storage.GetValue("app_lastknownposition")
         self.position = Point(0,51.5431429,5.26938448,0)
         self.UpdatePosition(self.position,0)
@@ -227,7 +231,24 @@ class MapWidget(Widget):
 
         self.Draw()
 
-    def MapArea(self):
+    def MapArea(self,size,zoom=1.0,pos=None):
+        w,h = size
+        w = w/zoom
+        h = h/zoom
+
+        if pos == None:
+            if self.lastpos == None:
+                mw,mh = self.map.size
+                x,y = (mw/2, mh/2)
+            else:
+                x,y = self.lastpos
+        else:
+            x,y = pos
+
+        self.lastarea = (x-w/2,y-h/2,x+w/2,y+h/2)
+        return self.lastarea
+
+    def _MapArea(self,size,zoom,onmap):
         Log("map*","MapWidget::MapArea()")
         p = self.onmap
         if p == None:
@@ -293,30 +314,84 @@ class MapWidget(Widget):
                 if isinrange(x,x1,x2) and isinrange(y,y1,y2):
                     self.DrawCursor(((x-x1)*zoom,(y-y1)*zoom),Color["darkgreen"])
 
+    def ZoomOut(self):
+        Log("map","MapWidget::ZoomOut()")
+        if self.zoom > 0:
+            self.zoom -=1
+            self.Draw()
+
+    def ZoomIn(self):
+        Log("map","MapWidget::ZoomIn()")
+        if self.zoom < (len(Zoom)-1):
+            self.zoom += 1
+            self.Draw()
+
+    def SaneAreas(self,target,source,zoom=1.0):
+        x1,y1,x2,y2 = target
+        x3,y3,x4,y4 = source
+
+        mw,mh = self.map.size
+        if x3 < 0:
+            x1 -= (x3*zoom)
+            x3 = 0
+        if y3 < 0:
+            y1 -= (y3*zoom)
+            y3 = 0
+        if x4 > mw:
+            x2 -= ((x4 - mw)*zoom)
+            x4 = mw
+        if y4 > mh:
+            y2 -= ((y4 - mh)*zoom)
+            y4 = mh
+
+        target = (int(x1),int(y1),int(x2),int(y2))
+        source = (int(x3),int(y3),int(x4),int(y4))
+        return target,source
 
     def Draw(self):
         Log("map*","MapWidget::Draw()")
         Widget.Draw(self)
         if self.size != None:
+
             w,h = self.size
             self.DrawRectangle((0,0,w,h),linecolor=Color["black"],fillcolor=None)
-            if self.mapimage != None:
-                self.Blit(self.mapimage,target=self.ScreenArea(),source=self.MapArea(),scale=1)
 
-            if self.onmap == None:
+            if self.map != None:
+                zoom = Zoom[self.zoom]
+                screenarea = self.ScreenArea()
+                size = (screenarea[2]-screenarea[0],screenarea[3]-screenarea[1])
+                if self.cursor == None:
+                    maparea = self.MapArea(size,zoom,self.onmap)
+                else:
+                    maparea = self.MapArea(size,zoom,self.cursor)
+
+                t,s = self.SaneAreas(screenarea,maparea,zoom)
+
+                if self.mapimage != None:
+                    self.Blit(self.mapimage,target=t,source=s,scale=1)
+                #if self.mapimage != None:
+                #    width,height = self.size
+                #    self.image.blit(
+                #        self.mapimage,
+                #        target=t,
+                #        source=s,
+                #        scale=1)
+
+                self.DrawWaypoints(zoom)
+
+            if self.onmap == None or self.cursor != None:
                 c = Color["black"]
             else:
                 c = Color["darkblue"]
 
-            self.DrawWaypoints()
             self.DrawCursor((w/2,h/2),c)
             self.DrawArrow((w/2,h/2),c)
-
 
 
 class MapView(View):
     def __init__(self,registry):
         Log("map","MapView::__init__()")
+        View.__init__(self)
         self.registry = registry
         #self.registry.PluginAdd("simgps")
         #self.registry.PluginAdd("uiregistry")
@@ -362,6 +437,20 @@ class MapView(View):
         self.LoadMap(self.GetCurrentMap())
         self.registry.UIMenuAdd("map_open","Open","Map")
         self.registry.UIMenuRedraw()
+        self.KeyAdd("up",self.ZoomIn)
+        self.KeyAdd("down",self.ZoomOut)
+
+    def ZoomIn(self,event=None):
+        Log("map","MapView::ZoomIn()")
+        self.mapwidget.ZoomIn()
+        self.Draw()
+        self.registry.UIViewRedraw()
+
+    def ZoomOut(self,event=None):
+        Log("map","MapView::ZoomOut()")
+        self.mapwidget.ZoomOut()
+        self.Draw()
+        self.registry.UIViewRedraw()
 
     def GetMenu(self):
         Log("map*","MapView::GetMenu()")
@@ -409,9 +498,6 @@ class MapView(View):
         Log("map*","MapView::RedrawView()")
         #self.bus.Signal( { "type":"view_update", "id":"map" } )
         self.registry.UIViewRedraw()
-
-    def OnKey(self,key):
-        Log("map","MapView::OnKey()")
 
     def OnResize(self,size):
         Log("map","MapView::OnResize()")

@@ -41,8 +41,8 @@ def Main():
         "utm",
         "rd",
         "uiregistry",
-        "dashview",
         "mapview",
+        "dashview",
         ]:
         r.PluginAdd(name)
 
