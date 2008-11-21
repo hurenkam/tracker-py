@@ -16,6 +16,7 @@ def Done():
 class DashView(View):
     def __init__(self,registry):
         Log("dash","DashView::__init__()")
+        View.__init__(self)
         self.registry = registry
         from time import time
 
@@ -44,7 +45,10 @@ class DashView(View):
                 ((160,80),  (80,80)),
                 ((160,160), (80,80)),
                 ]
-        self.zoomedgauge = 0
+
+        self.registry.ConfigAdd( { "setting":"dash_zoomedgauge", "description":u"Enlarged gauge",
+                                   "default":0, "query":None } )
+        self.zoomedgauge = self.registry.ConfigGetValue("dash_zoomedgauge")
 
         self.menuwidget = TextWidget("Menu",fgcolor=Color["white"],bgcolor=Color["darkblue"])
         self.editwidget = TextWidget("Find map",fgcolor=Color["white"],bgcolor=Color["darkblue"])
@@ -59,6 +63,20 @@ class DashView(View):
         self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"dash", "handler":self.OnClock } )
         self.registry.Signal( { "type":"timer_start", "id":"dash", "interval":1, "start":time() } )
         self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"position",  "handler":self.OnPosition } )
+        self.KeyAdd("up",self.MoveUp)
+        self.KeyAdd("down",self.MoveDown)
+
+    def MoveUp(self,key):
+        self.zoomedgauge = (self.zoomedgauge -1) % (len(self.spots))
+        self.registry.ConfigSetValue("dash_zoomedgauge",self.zoomedgauge)
+        self.Resize()
+        self.registry.UIViewRedraw()
+
+    def MoveDown(self,key):
+        self.zoomedgauge = (self.zoomedgauge +1) % (len(self.spots))
+        self.registry.ConfigSetValue("dash_zoomedgauge",self.zoomedgauge)
+        self.Resize()
+        self.registry.UIViewRedraw()
 
     def GetMenu(self):
         Log("dash*","DashView::GetMenu()")
@@ -78,9 +96,6 @@ class DashView(View):
         self.Draw()
         self.RedrawView()
 
-    def OnKey(self,key):
-        Log("dash","DashView::OnKey()")
-
     def OnResize(self,size):
         Log("dash","DashView::OnResize()")
 
@@ -96,7 +111,7 @@ class DashView(View):
             DumpExceptionInfo()
 
     def Resize(self,rect=None):
-        View.Resize(self,rect)
+        View.Resize(self,(240,320))
 
         #if size == (320,240):
         if False:

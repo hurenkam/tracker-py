@@ -26,6 +26,7 @@ class UserInterface:
         self.application.RedrawMenu(registry)
         self.application.KeyAdd("left",self.UIViewPrevious)
         self.application.KeyAdd("right",self.UIViewNext)
+        self.application.KeyAdd("end",self.UIQuit)
         self.registry.Signal({ "type":"ui_active", "id":"ui" })
 
     def UIRun(self):
@@ -84,3 +85,6 @@ class UserInterface:
 
     def UIKeyDel(self,key):
         self.application.KeyDel(key)
+
+    def UIQuit(self,key=None):
+        self.application.frame.Destroy()
