@@ -67,20 +67,18 @@ class DashView(View):
         self.KeyAdd("down",self.MoveDown)
 
     def MoveUp(self,key):
+        Log("dash","DashView::MoveUp()")
         self.zoomedgauge = (self.zoomedgauge -1) % (len(self.spots))
         self.registry.ConfigSetValue("dash_zoomedgauge",self.zoomedgauge)
         self.Resize()
         self.registry.UIViewRedraw()
 
     def MoveDown(self,key):
+        Log("dash","DashView::MoveDown()")
         self.zoomedgauge = (self.zoomedgauge +1) % (len(self.spots))
         self.registry.ConfigSetValue("dash_zoomedgauge",self.zoomedgauge)
         self.Resize()
         self.registry.UIViewRedraw()
-
-    def GetMenu(self):
-        Log("dash*","DashView::GetMenu()")
-        return self.menu
 
     def RedrawView(self):
         Log("dash*","DashView::RedrawView()")
@@ -111,6 +109,7 @@ class DashView(View):
             DumpExceptionInfo()
 
     def Resize(self,rect=None):
+        Log("dash*","DashView::Resize()")
         View.Resize(self,(240,320))
 
         #if size == (320,240):
