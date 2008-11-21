@@ -207,10 +207,8 @@ class Widget:
         self.dc.Blit(x1,y1,w,h,widget.GetImage(),x3,y3)
 
 class View(Widget):
-    def GetMenu(self):
-        pass
     def OnKey(self,key):
-        pass
+        return False
     def OnResize(self,size):
         pass
 
@@ -234,6 +232,7 @@ class Application(Widget):
         self.view = None
         self.mainitems = []
         self.subitems = {}
+        self.keylist = {}
         Widget.__init__(self,(x+8,y+6))
 
     def Run(self):
@@ -258,14 +257,27 @@ class Application(Widget):
         except:
             pass
 
+    def KeyAdd(self,key,handler):
+        self.keylist[key]=handler
+
+    def KeyDel(self,key):
+        del self.keylist[key]
+
     def OnKey(self,key):
-        pass
-        #print "Application::OnKey(",key,")"
+        if self.view != None:
+            if self.view.OnKey(key):
+                return True
+
+        if key in self.keylist.keys():
+            return self.keylist[key](key)
+
+        return False
 
     def OnWxKey(self,event):
         keycode = event.GetKeyCode()
         if keycode in Key.values():
-            self.OnKey(FindKey(keycode))
+            key = FindKey(keycode)
+            self.OnKey(key)
 
     def OnPaint(self,event):
         try:

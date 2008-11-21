@@ -376,10 +376,12 @@ class WaypointGauge(Gauge):
             self.DrawTriangleHand(bearing+180, self.radius-10, Color['black'], 8)
 
     def DrawInfo(self):
+        size1 = self.radius / 70.0
+        size2 = 1.2 * size1
         if (self.radius >= 40):
-            self.DrawText(((self.radius,0.5*self.radius+7)),u'%s' %self.tag)
-            self.DrawText(((self.radius,1.5*self.radius   )),u'%8.0f' % self.distance)
-            self.DrawText(((self.radius,1.5*self.radius+30)),u'%05.1f' % self.bearing)
+            self.DrawText(((self.radius,0.5*self.radius)),u'%s' %self.tag,size=size1,align="center")
+            self.DrawText(((self.radius,1.5*self.radius-10)),u'%8.0f' % self.distance,size=size1,align="center")
+            self.DrawText(((self.radius,1.5*self.radius+10)),u'%05.1f' % self.bearing,size=size1,align="center")
 
     def Draw(self):
         if self.radius is None:

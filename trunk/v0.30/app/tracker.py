@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: latin-1 -*-
 
 import sys
 sys.path.append("../lib")
@@ -32,12 +33,13 @@ def Main():
     r.RegistryAdd(ConfigRegistry())
     r.RegistryAdd(SignalRegistry())
     for name in [
+        "recorder",
         "timers",
         "simgps",
         "datumregistry",
+        "wgs84",
         "utm",
         "rd",
-        "recorder",
         "uiregistry",
         "dashview",
         "mapview",

@@ -3,12 +3,12 @@ loglevels += ["utm!"]
 
 
 def Init(registry):
-    global r
-    r = DatumUTM(registry)
+    global u
+    u = DatumUTM(registry)
 
 def Done():
-    global r
-    r.Quit()
+    global u
+    u.Quit()
 
 
 class DatumUTM:
