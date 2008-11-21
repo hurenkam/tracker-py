@@ -248,22 +248,6 @@ class MapWidget(Widget):
         self.lastarea = (x-w/2,y-h/2,x+w/2,y+h/2)
         return self.lastarea
 
-    def _MapArea(self,size,zoom,onmap):
-        Log("map*","MapWidget::MapArea()")
-        p = self.onmap
-        if p == None:
-            Log("map!","MapFile::MapArea: not on map")
-            if self.lastarea != None:
-                return self.lastarea
-            return self.ScreenArea()
-
-        x,y = p
-        w,h = self.size
-        w -= 4
-        h -= 4
-        self.lastarea = (int(x-w/2),int(y-h/2),int(x+w/2),int(y+h/2))
-        return self.lastarea
-
     def DrawCursor(self,coords,color=Color["black"]):
         Log("map*","MapWidget::DrawCursor(",coords,color,")")
         x,y = coords
@@ -369,14 +353,6 @@ class MapWidget(Widget):
 
                 if self.mapimage != None:
                     self.Blit(self.mapimage,target=t,source=s,scale=1)
-                #if self.mapimage != None:
-                #    width,height = self.size
-                #    self.image.blit(
-                #        self.mapimage,
-                #        target=t,
-                #        source=s,
-                #        scale=1)
-
                 self.DrawWaypoints(zoom)
 
             if self.onmap == None or self.cursor != None:
@@ -430,12 +406,11 @@ class MapView(View):
 
         self.registry.Signal( { "type":"view_register", "id":"map", "view":self } )
 
-        #self.storage = datastorage
         self.registry.ConfigAdd( { "setting":"map_current", "description":u"Current/Last map shown",
                                  "default":"51a_oisterwijk", "query":self.QueryCurrentMap } )
         self.InitMapList()
         self.LoadMap(self.GetCurrentMap())
-        self.registry.UIMenuAdd("map_open","Open","Map")
+        self.registry.UIMenuAdd(self.OnOpen,"Open","Map")
         self.registry.UIMenuRedraw()
         self.KeyAdd("up",self.ZoomIn)
         self.KeyAdd("down",self.ZoomOut)
@@ -475,11 +450,11 @@ class MapView(View):
             Log("map!","MapView::LoadMap(",name,"): Not found!")
 
 
-    def OnOpen(self,signal):
+    def OnOpen(self,signal=None):
         Log("map","MapView::OnOpen()")
         self.LoadMap("51a_oisterwijk")
 
-    def OnClose(self,signal):
+    def OnClose(self,signal=None):
         Log("map","MapView::OnClose()")
 
     def OnRefPt(self,signal):
@@ -496,7 +471,6 @@ class MapView(View):
 
     def RedrawView(self):
         Log("map*","MapView::RedrawView()")
-        #self.bus.Signal( { "type":"view_update", "id":"map" } )
         self.registry.UIViewRedraw()
 
     def OnResize(self,size):
@@ -504,11 +478,10 @@ class MapView(View):
 
     def OnPosition(self,position):
         Log("map*","MapView::OnPosition(",position,")")
-        #self.bus.Signal( { "type":"datum_format", "id":"map", "latitude":position["latitude"], "longitude":position["longitude"] } )
-
         heading = position["heading"]
         self.mapwidget.UpdatePosition(Point(0,position["latitude"],position["longitude"]),heading)
-        self.positionwidget.UpdatePosition(self.registry.DatumFormat((position["latitude"],position["longitude"])))
+        self.positionwidget.UpdatePosition(
+            self.registry.DatumFormat((position["latitude"],position["longitude"])))
 
         try:
             self.Draw()
@@ -679,11 +652,11 @@ class MapView(View):
         Log("map","MapView::Quit()")
         self.registry.ConfigDel("map_current")
 
-        #self.bus.Signal( { "type":"view_unregister", "id":"map" } )
-
         self.registry.Signal( { "type":"gps_stop",      "id":"map" } )
         self.registry.Signal( { "type":"db_disconnect", "id":"map", "signal":"position" } )
         self.registry.Signal( { "type":"db_disconnect", "id":"map", "signal":"trk_point" } )
+        self.registry.Signal( { "type":"db_disconnect", "id":"map", "signal":"map_open" } )
+        self.registry.Signal( { "type":"db_disconnect", "id":"map", "signal":"map_close" } )
         #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"map_show" } )
         #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"map_hide" } )
         #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"rte_show" } )

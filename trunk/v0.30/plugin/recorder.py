@@ -25,6 +25,7 @@ class Recorder:
         self.bus = None
 
     def OpenDbmFiles(self,file,mode):
+        Log("recorder","Recorder::OpenDbmFiles()")
         import os
         try:
             import dbm
@@ -40,23 +41,28 @@ class Recorder:
         self.meta = dbm.open("%s-meta" % b,mode)
 
     def CloseDbmFiles(self):
+        Log("recorder","Recorder::CloseDbmFiles()")
         self.data.close()
         self.meta.close()
 
     def RegisterSignals(self):
+        Log("recorder","Recorder::RegisterSignals()")
         self.registry.Signal( { "type":"db_connect", "id":"recorder", "signal":"trk_start", "handler":self.OnStart } )
         self.registry.Signal( { "type":"db_connect", "id":"recorder", "signal":"trk_stop", "handler":self.OnStop } )
 
     def UnregisterSignals(self):
+        Log("recorder","Recorder::UnregisterSignals()")
         self.registry.Signal( { "type":"db_disconnect", "id":"recorder", "signal":"trk_start" } )
         self.registry.Signal( { "type":"db_disconnect", "id":"recorder", "signal":"trk_stop" } )
 
     def SubscribePositionSignals(self,interval):
+        Log("recorder","Recorder::SubscribePositionSignals()")
         self.registry.Signal( { "type":"db_connect", "id":"recorder", "signal":"position", "handler":self.OnPosition } )
         self.registry.Signal( { "type":"gps_start",  "id":"recorder", "tolerance":interval } )
 
     def UnsubscribePositionSignals(self):
-        self.registry.Signal( { "type":"disconnect", "id":"recorder", "signal":"position" } )
+        Log("recorder","Recorder::UnsubscribePositionSignals()")
+        self.registry.Signal( { "type":"db_disconnect", "id":"recorder", "signal":"position" } )
         self.registry.Signal( { "type":"gps_stop",   "id":"recorder" } )
 
     def OpenTrack(self,name):
@@ -69,12 +75,15 @@ class Recorder:
         self.CloseDbmFiles()
 
     def SetValue(self,key,value):
+        Log("recorder","Recorder::SetValue()")
         self.meta[key] = str(value)
 
     def GetValue(self,key):
+        Log("recorder","Recorder::GetValue()")
         return eval(self.meta[key])
 
     def UpdateMetaData(self,lat,lon,dist):
+        Log("recorder","Recorder::UpdateMetaData()")
         north = self.GetValue("north")
         south = self.GetValue("south")
         east  = self.GetValue("east")
