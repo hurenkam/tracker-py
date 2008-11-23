@@ -373,17 +373,6 @@ class MapView(View):
         #self.registry.PluginAdd("uiregistry")
         from time import time
 
-        self.menu = {
-            "name":"Map",
-            "items": [
-                { "name":"Open",             "desc":"Open a map",               "handler":self.OnOpen },
-                { "name":"Close",            "desc":"Close the map",            "handler":self.OnClose },
-                { "name":"Add Refpoint",     "desc":"Add a refpoint",           "handler":self.OnRefPt },
-                { "name":"Add Ref from Wpt", "desc":"Add waypoint as refpoint", "handler":self.OnRefWpt },
-                { "name":"Save",             "desc":"Save the map",             "handler":self.OnSave },
-                { "name":"Clear Refpoints",  "desc":"Clear calibration data",   "handler":self.OnClear },
-            ]}
-
         self.positionwidget = PositionWidget((200,15))
         self.mapwidget = MapWidget(None)
         self.mapwidget.Resize((230,260))
