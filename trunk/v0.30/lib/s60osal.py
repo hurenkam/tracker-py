@@ -1,6 +1,7 @@
 import appuifw as ui
-import graphics as gfx
 import math
+from key_codes import *
+from graphics import *
 
 ID_MENU_FIRST=101
 
@@ -92,14 +93,14 @@ class Widget:
         return self.mask
 
     def Draw(self):
-        if self.dc == None:
+        if self.image == None:
             return
 
         self.Clear()
 
     def GetSize(self):
         if self.image != None:
-            return self.image.size()
+            return self.image.size
 
     def GetTextSize(self,text):
         (bbox,advance,ichars) = self.image.measure_text(text,font=self.font)
@@ -152,7 +153,7 @@ class Widget:
         if self.image == None:
             return
 
-        self.image.polygon(((x1,y1),(x2,y2)),outline=color,width=width,fill=fillcolor)
+        self.image.polygon(points,outline=color,width=width,fill=fillcolor)
 
     def DrawEllipse(self,x1,y1,x2,y2,color=Color['black'],width=1,style=Style["transparent"],fillcolor=Color['white']):
         if self.image == None:
@@ -161,7 +162,7 @@ class Widget:
         self.image.ellipse(((x1,y1),(x2,y2)),outline=color,width=width,fill=fillcolor)
 
     def Blit(self,widget,target,source,scale):
-        if self.dc == None:
+        if self.image == None:
             return
 
         x1,y1,x2,y2 = target
@@ -210,15 +211,15 @@ class View(Widget):
 
 class Application(Widget):
     def __init__(self,title,(x,y)):
-        appuifw.app.screen='full'
-        appuifw.app.title = u"Tracker v0.20a"
-        canvas = appuifw.Canvas(
+        ui.app.screen='full'
+        ui.app.title = u"Tracker v0.20a"
+        canvas = ui.Canvas(
             event_callback=self.OnKey,
             redraw_callback=self.Redraw,
             resize_callback=self.Resize
             )
-        appuifw.app.body = canvas
-        appuifw.app.exit_key_handler=self.Exit
+        ui.app.body = canvas
+        ui.app.exit_key_handler=self.Exit
 
         self.view = None
         self.mainitems = {}
@@ -233,7 +234,7 @@ class Application(Widget):
 
     def Exit(self):
         self.running = False
-        appuifw.app.set_exit()
+        ui.app.set_exit()
 
     def SelectView(self,view):
         self.view = view
@@ -293,7 +294,7 @@ class Application(Widget):
 
             #w,h = self.view.GetSize()
             #dc.Blit(0,0,w,h,viewdc,0,0)
-            appuifw.app.body.blit(self.view.image)
+            ui.app.body.blit(self.view.image)
         except:
             pass
 
@@ -325,4 +326,4 @@ class Application(Widget):
                 menu.append(u"%s" % item, self.subitems[item])
             menu.append(u"%s" % sub, submenu)
 
-        appuifw.app.menu = menu
+        ui.app.menu = menu

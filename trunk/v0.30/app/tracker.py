@@ -3,7 +3,6 @@
 
 import sys
 sys.path.append("../lib")
-from databus import *
 from helpers import *
 loglevels += [
               #"databus",#"databus*",
