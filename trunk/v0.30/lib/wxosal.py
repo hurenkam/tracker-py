@@ -179,7 +179,7 @@ class Widget:
             self.dc.SetPen(wx.Pen(linecolor,width))
         self.dc.DrawLine(x1,y1,x2,y2)
 
-    def DrawPolygon(self,points,color=Color['black'],width=1,style=wx.SOLID,fillcolor=Color['white']):
+    def DrawPolygon(self,points,color=Color['black'],width=1,style=Fill["solid"],fillcolor=Color['white']):
         if self.dc == None:
             return
 
@@ -187,7 +187,7 @@ class Widget:
         self.dc.SetBrush(wx.Brush(fillcolor,style))
         self.dc.DrawPolygon(points)
 
-    def DrawEllipse(self,x1,y1,x2,y2,color=Color['black'],width=1,style=wx.TRANSPARENT,fillcolor=Color['white']):
+    def DrawEllipse(self,x1,y1,x2,y2,color=Color['black'],width=1,style=Style["transparent"],fillcolor=Color['white']):
         if self.dc == None:
             return
 
