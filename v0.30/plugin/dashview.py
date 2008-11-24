@@ -16,7 +16,6 @@ def Done():
 class DashView(View):
     def __init__(self,registry):
         Log("dash","DashView::__init__()")
-        View.__init__(self)
         self.registry = registry
         from time import time
 
@@ -45,7 +44,6 @@ class DashView(View):
                 ((160,80),  (80,80)),
                 ((160,160), (80,80)),
                 ]
-
         self.registry.ConfigAdd( { "setting":"dash_zoomedgauge", "description":u"Enlarged gauge",
                                    "default":0, "query":None } )
         self.zoomedgauge = self.registry.ConfigGetValue("dash_zoomedgauge")
@@ -56,7 +54,8 @@ class DashView(View):
         self.satwidget = BarWidget((15,50),bars=5,range=10)
         self.batwidget = BarWidget((15,50),bars=5,range=100)
 
-        Widget.__init__(self,(240,320))
+        #View.__init__(self)
+        View.__init__(self,(240,320))
         self.registry.UIViewAdd(self)
         #self.Resize((240,320))
 

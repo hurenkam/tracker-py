@@ -1,12 +1,6 @@
 from helpers import *
 import thread
-try:
-    from e32 import ao_sleep as sleep
-    from e32 import ao_callgate as callgate
-except:
-    from time import sleep
-    def callgate(callable):
-        return callable
+from osal import *
 
 loglevels += ["timer!"]
 
@@ -26,7 +20,7 @@ class Timer:
         self.running = True
         self.registry.Signal( { "type":"db_connect", "id":"timer", "signal":"timer_start", "handler":self.OnStart } )
         self.registry.Signal( { "type":"db_connect", "id":"timer", "signal":"timer_stop",  "handler":self.OnStop } )
-        self.safecheck = callgate(self.CheckForExpiredTimers)
+        self.safecheck = Callgate(self.CheckForExpiredTimers)
         thread.start_new_thread(self.Run,())
 
     def OnStart(self,signal):
@@ -53,12 +47,12 @@ class Timer:
         while self.running:
             #self.CheckForExpiredTimers()
             self.safecheck()
-            sleep(0.2)
+            Sleep(0.2)
 
     def Quit(self):
         Log("timer","Timer::Quit()")
         self.running = False
-        sleep(1)
+        Sleep(1)
         self.registry.Signal( { "type":"db_disconnect", "id":"timer", "signal":"timer_start" } )
         self.registry.Signal( { "type":"db_disconnect", "id":"timer", "signal":"timer_stop" } )
         self.registry = None

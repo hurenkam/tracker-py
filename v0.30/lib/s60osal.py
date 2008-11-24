@@ -4,8 +4,6 @@ import math
 from key_codes import *
 from graphics import *
 
-ID_MENU_FIRST=101
-
 Color = {
           "black":0x000000,
           "white":0xffffff,
@@ -34,6 +32,15 @@ Color = {
 
     }
 
+Defaults = {
+        "configdir": "data\\tracker",
+        "plugindir": "data\\tracker\\plugins",
+        "mapdir": "data\\tracker\\maps",
+        "trackdir": "data\\tracker\\tracks",
+        "routedir": "data\\tracker\\routes",
+        "gpxdir": "data\\tracker\\gpx",
+    }
+
 Fill = {
             "solid":0,
     }
@@ -54,9 +61,18 @@ Key = {
             #"back":wx.WXK_BACK,
     }
 
+def Sleep(sleeptime):
+    return e32.ao_sleep(sleeptime)
+
+def Callgate(callable):
+    return e32.ao_callgate(callable)
+
+
+
+
+
 def FindKey(value):
     return [k for k,v in Key.iteritems() if v == value][0]
-
 
 class Widget:
     def __init__(self,size=None):
@@ -84,7 +100,7 @@ class Widget:
         self.mask.clear(1)
 
     def LoadImage(self,name):
-        self.image = Image.open(u"%s" % self.map.filename)
+        self.image = Image.open(u"%s" % name)
         self.size = self.image.size
 
     def GetImage(self):
@@ -163,7 +179,7 @@ class Widget:
         self.image.ellipse(((x1,y1),(x2,y2)),outline=color,width=width,fill=fillcolor)
 
     def Blit(self,widget,target,source,scale):
-        if self.image == None:
+        if self.image == None or widget.image == None:
             return
 
         x1,y1,x2,y2 = target
@@ -185,8 +201,9 @@ class Widget:
 
 
 class View(Widget):
-    def __init__(self):
+    def __init__(self,size=None):
         self.keylist = {}
+        Widget.__init__(self,size)
     def OnKey(self,key):
         if key in self.keylist.keys():
             return self.keylist[key](key)
@@ -200,6 +217,11 @@ class View(Widget):
 
 class Application(Widget):
     def __init__(self,title,(x,y)):
+        self.view = None
+        self.mainitems = {}
+        self.subitems = {}
+        self.keylist = {}
+        Widget.__init__(self,(x+8,y+6))
         ui.app.screen='full'
         ui.app.title = u"Tracker v0.20a"
         canvas = ui.Canvas(
@@ -209,12 +231,6 @@ class Application(Widget):
             )
         ui.app.body = canvas
         ui.app.exit_key_handler=self.Exit
-
-        self.view = None
-        self.mainitems = {}
-        self.subitems = {}
-        self.keylist = {}
-        Widget.__init__(self,(x+8,y+6))
 
     def Run(self):
         self.running = True
