@@ -136,7 +136,7 @@ class DatumWgs84:
         else:
             lon = u"W%s°%s" % (lond*-1,lonm)
 
-        return (u"WGS", lat[0:11]+u"'", lon[0:11]+u"'" )
+        return (u"WGS84", lat[0:11]+u"'", lon[0:11]+u"'" )
 
     def FormatDMS(self,(latitude,longitude)):
         import datums
@@ -153,4 +153,4 @@ class DatumWgs84:
         else:
             lon = u"W%s°%s'%s" % (lond*-1,lonm,lons)
 
-        return (u"WGS", lat[0:12]+u"\"", lon[0:12]+u"\"" )
+        return (u"WGS84", lat[0:12]+u"\"", lon[0:12]+u"\"" )

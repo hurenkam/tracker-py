@@ -47,26 +47,6 @@ class TextWidget(Widget):
         self.DrawText( (self.vpad,self.hpad ), u'%s' % self.text)
 
 
-class _PositionWidget(Widget):
-    def __init__(self,size = None):
-        self.point = None
-        Widget.__init__(self,size)
-
-    def UpdatePosition(self,point):
-        self.point = point
-        self.Draw()
-
-    def Draw(self):
-        Widget.Draw(self)
-        s=self.GetSize()
-        self.DrawRectangle((0,0,s[0],s[1]),Color["black"])
-        if self.point:
-            w,h = self.DrawText( (5,5),     u"Lat: %8.5f" % self.point.latitude)
-            w,h = self.DrawText( (5,5+h+2), u"Lon: %8.5f" % self.point.longitude)
-        else:
-            w,h = self.DrawText( (5,5),     u"Position")
-            w,h = self.DrawText( (5,5+h+2), u"Unknown")
-
 class PositionWidget(Widget):
     def __init__(self,size = None):
         self.position = None
@@ -81,16 +61,15 @@ class PositionWidget(Widget):
         s=self.GetSize()
         self.DrawRectangle((0,0,s[0],s[1]),Color["black"])
         if self.position:
-            x,y = 5,5
             text = u""
             for t in self.position:
                 text = text + t + u" "
-            #    w,h = self.DrawText((x,y),t)
-            #    x = x+w+7
-
-            self.DrawText( (5,1), text, size=0.7)
         else:
-            self.DrawText( (5,1), u"Position unknown", size=0.7)
+            text = u"Position unknown"
+
+        w,h = self.GetTextSize(text)
+        y = int((s[1]-h) / 2.0)
+        self.DrawText( (5,y), text, size=0.7)
 
 class BarWidget(Widget):
 
@@ -218,7 +197,7 @@ class Gauge(Widget):
         self.DrawLine(0, self.radius, self.radius*2, self.radius,color,crosswidth)
 
 
-    def DrawScale(self,inner=12,outer=60,offset=0):
+    def DrawScale(self,inner=12,outer=60,offset=0,color=Color['black']):
         if self.radius == None:
             return
 
@@ -228,13 +207,13 @@ class Gauge(Widget):
             outer_delta = 360.0/outer
             for count in range(0,outer):
                 x,y = self.CalculatePoint(count*outer_delta+offset,self.radius,self.radius-3)
-                self.DrawPoint(x,y)
+                self.DrawPoint(x,y,linecolor=color)
         if (self.radius > 8) and (inner > 0) and (inner <= self.radius * 2):
             inner_delta = 360.0/inner
             for count in range(0,inner):
                 x1,y1 = self.CalculatePoint(count*inner_delta+offset,self.radius,self.radius-3)
                 x2,y2 = self.CalculatePoint(count*inner_delta+offset,self.radius,self.radius-8)
-                self.DrawLine(x1,y1,x2,y2)
+                self.DrawLine(x1,y1,x2,y2,linecolor=color)
 
 
     def DrawDotHand(self,heading,length,color=Color['black'],handwidth=2):
