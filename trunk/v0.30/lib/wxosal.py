@@ -1,5 +1,6 @@
 import wx
 import math
+import time
 
 ID_MENU_FIRST=101
 
@@ -31,6 +32,15 @@ Color = {
 
     }
 
+Defaults = {
+        "configdir": "..",
+        "plugindir": "../plugin",
+        "mapdir": "../maps",
+        "trackdir": "../tracks",
+        "routedir": "../routes",
+        "gpxdir": "../gpx",
+    }
+
 Fill = {
             "solid":wx.SOLID,
     }
@@ -50,6 +60,14 @@ Key = {
             "tab":wx.WXK_TAB,
             "back":wx.WXK_BACK,
     }
+
+def Sleep(sleeptime):
+    return time.sleep(sleeptime)
+
+def Callgate(callable):
+    return callable
+
+
 
 def FindKey(value):
     return [k for k,v in Key.iteritems() if v == value][0]
@@ -223,8 +241,9 @@ class Widget:
             self.dc.Blit(x1,y1,w,h,widget.dc,x3,y3)
 
 class View(Widget):
-    def __init__(self):
+    def __init__(self,size=None):
         self.keylist = {}
+        Widget.__init__(self,size)
     def OnKey(self,key):
         if key in self.keylist.keys():
             return self.keylist[key](key)

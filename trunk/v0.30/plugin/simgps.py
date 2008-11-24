@@ -3,13 +3,7 @@ from gps import *
 import thread
 import time
 import datums
-try:
-    from e32 import ao_sleep as sleep
-    from e32 import ao_callgate as callgate
-except:
-    from time import sleep
-    def callgate(callable):
-        return callable
+from osal import *
 
 loglevels += ["simgps!"]
 
@@ -52,7 +46,7 @@ class SimGps(Gps):
         self.count = None
         self.route = campina
         self.speed = 50
-        self.safesignal = callgate(self.SignalExpiredRequests)
+        self.safesignal = Callgate(self.SignalExpiredRequests)
         thread.start_new_thread(self.Run,())
 
     def NextSegment(self):
@@ -104,10 +98,10 @@ class SimGps(Gps):
         while self.running:
 	    self.CalculatePosition()
             self.safesignal()
-            sleep(1)
+            Sleep(1)
 
     def Quit(self):
         Log("simgps","SimGps::Quit()")
         self.running = False
-        sleep(1)
+        Sleep(1)
         Gps.Quit(self)

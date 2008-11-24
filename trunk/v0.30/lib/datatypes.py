@@ -1,7 +1,7 @@
 import datums
 import os
 import math
-#from osal import *
+from osal import *
 
 class AlarmResponder:
     def AlarmTriggered(self,alarm,point,course,signal,time):
@@ -498,4 +498,5 @@ class FileSelector:
                 if e == fileselector.ext:
                     fileselector.files[u'%s' % b] = os.path.join(dir,file)
 
-        os.path.walk(self.dir,iter,self)
+        for d in Drives:
+            os.path.walk(u"%s%s" % (d,dir),iter,self)
