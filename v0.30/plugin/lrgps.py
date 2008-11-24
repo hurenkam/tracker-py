@@ -2,9 +2,9 @@ from helpers import *
 from gps import *
 loglevels += ["lrgps!"]
 
-def Init(databus,datastorage):
+def Init(registry):
     global gps
-    gps = LRGps(databus)
+    gps = LRGps(registry)
 
 def Done():
     global gps
@@ -12,12 +12,11 @@ def Done():
 
 
 class LRGps(Gps):
-    def __init__(self,databus):
-        Gps.__init__(self,databus)
+    def __init__(self,registry):
+        Gps.__init__(self,registry)
         Log("lrgps","LRGps::__init__()")
 
     def StartGps(self):
-        Gps.__init__(self)
         Log("lrgps","LRGps::StartGps()")
         import locationrequestor as lr
         self.requestor = lr.LocationRequestor()

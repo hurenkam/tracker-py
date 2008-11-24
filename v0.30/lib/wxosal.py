@@ -57,8 +57,8 @@ def FindKey(value):
 
 class Widget:
     def __init__(self,size=None):
-        self.fontsize=14
-        self.font = wx.Font(14, wx.SWISS, wx.NORMAL, wx.NORMAL)
+        self.fontsize=10
+        self.font = wx.Font(10, wx.SWISS, wx.NORMAL, wx.NORMAL)
         self.fgcolor = Color["black"]
         self.bgcolor = Color["white"]
         self.dc = None
@@ -132,7 +132,7 @@ class Widget:
             return
 
         if size != None:
-            size = int(size * 14.0)
+            size = int(size * 10)
             self.fontsize=size
             self.font = wx.Font(size, wx.SWISS, wx.NORMAL, wx.NORMAL)
 

@@ -1,4 +1,5 @@
 import appuifw as ui
+import e32
 import math
 from key_codes import *
 from graphics import *
@@ -176,18 +177,6 @@ class Widget:
         if y3 < 0:
             y1 -= y3
             y3 -= y3
-        #if scale == 1:
-        #    image = widget.bitmap.ConvertToImage()
-        #    rect = wx.Rect(x3,y3,x4-x3,y4-y3)
-        #    image = image.GetSubImage(rect)
-        #    image.Rescale(w,h)
-        #    bitmap = wx.BitmapFromImage(image)
-        #    dc = wx.MemoryDC()
-        #    dc.SelectObject(bitmap)
-        #    self.dc.Blit(x1,y1,w,h,dc,0,0)
-        #else:
-        #    self.dc.Blit(x1,y1,w,h,widget.dc,x3,y3)
-
         self.image.blit(
                 image = widget.image,
                 target = (x1,y1,x2,y2),
@@ -214,9 +203,9 @@ class Application(Widget):
         ui.app.screen='full'
         ui.app.title = u"Tracker v0.20a"
         canvas = ui.Canvas(
-            event_callback=self.OnKey,
-            redraw_callback=self.Redraw,
-            resize_callback=self.Resize
+            event_callback=self.OnS60Key,
+            redraw_callback=self.OnS60Redraw,
+            resize_callback=self.OnS60Resize
             )
         ui.app.body = canvas
         ui.app.exit_key_handler=self.Exit
@@ -228,13 +217,14 @@ class Application(Widget):
         Widget.__init__(self,(x+8,y+6))
 
     def Run(self):
+        self.running = True
         while self.running:
             e32.reset_inactivity()
-            e32.sleep(0.2)
+            e32.ao_sleep(0.5)
 
     def Exit(self):
         self.running = False
-        ui.app.set_exit()
+        #ui.app.set_exit()
 
     def SelectView(self,view):
         self.view = view
@@ -284,46 +274,33 @@ class Application(Widget):
 
     def Redraw(self):
         try:
-            #dc = wx.ClientDC(self.panel)
             if self.view == None:
                 return
 
-            #viewdc = self.view.GetImage()
             if self.view.image == None:
                 return
 
-            #w,h = self.view.GetSize()
-            #dc.Blit(0,0,w,h,viewdc,0,0)
             ui.app.body.blit(self.view.image)
         except:
             pass
 
-    #def OnPaint(self,event):
-    #    try:
-    #        dc = wx.PaintDC(self.panel)
-    #        if self.view == None:
-    #            return
+    def OnS60Redraw(self,event):
+        self.Redraw()
 
-    #        viewdc = self.view.GetImage()
-    #        if viewdc == None:
-    #            return
-
-    #        w,h = viewdc.GetSize()
-    #        dc.Blit(0,0,w,h,viewdc,0,0)
-    #    except:
-    #        pass
+    def OnS60Resize(self,size):
+        self.Resize(size)
 
     def RedrawMenu(self):
 
         menu = []
 
         for item in self.mainitems.keys():
-            menu.append(u"%s" % item, self.mainitems[item])
+            menu.append((u"%s" % item, self.mainitems[item]))
 
         for sub in self.subitems.keys():
             submenu = []
             for item in self.subitems[sub].keys():
-                menu.append(u"%s" % item, self.subitems[item])
-            menu.append(u"%s" % sub, submenu)
+                submenu.append((u"%s" % item, self.subitems[sub][item]))
+            menu.append((u"%s" % sub, tuple(submenu)))
 
         ui.app.menu = menu

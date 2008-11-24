@@ -5,8 +5,12 @@ import time
 import datums
 try:
     from e32 import ao_sleep as sleep
+    from e32 import ao_callgate as callgate
 except:
     from time import sleep
+    def callgate(callable):
+        return callable
+
 loglevels += ["simgps!"]
 
 def Init(registry):
@@ -48,6 +52,7 @@ class SimGps(Gps):
         self.count = None
         self.route = campina
         self.speed = 50
+        self.safesignal = callgate(self.SignalExpiredRequests)
         thread.start_new_thread(self.Run,())
 
     def NextSegment(self):
@@ -98,7 +103,7 @@ class SimGps(Gps):
         self.running = True
         while self.running:
 	    self.CalculatePosition()
-            self.SignalExpiredRequests()
+            self.safesignal()
             sleep(1)
 
     def Quit(self):

@@ -2,8 +2,11 @@ from helpers import *
 import thread
 try:
     from e32 import ao_sleep as sleep
+    from e32 import ao_callgate as callgate
 except:
     from time import sleep
+    def callgate(callable):
+        return callable
 
 loglevels += ["timer!"]
 
@@ -23,6 +26,7 @@ class Timer:
         self.running = True
         self.registry.Signal( { "type":"db_connect", "id":"timer", "signal":"timer_start", "handler":self.OnStart } )
         self.registry.Signal( { "type":"db_connect", "id":"timer", "signal":"timer_stop",  "handler":self.OnStop } )
+        self.safecheck = callgate(self.CheckForExpiredTimers)
         thread.start_new_thread(self.Run,())
 
     def OnStart(self,signal):
@@ -47,8 +51,9 @@ class Timer:
     def Run(self):
         Log("timer","Timer::Run()")
         while self.running:
-            self.CheckForExpiredTimers()
-            sleep(1)
+            #self.CheckForExpiredTimers()
+            self.safecheck()
+            sleep(0.2)
 
     def Quit(self):
         Log("timer","Timer::Quit()")

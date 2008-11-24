@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: latin-1 -*-
 
-import sys
-sys.path.append("../lib")
+#import sys
+#sys.path.append("../lib")
 from helpers import *
 loglevels += [
               #"databus",#"databus*",
               #"gps","gps*","lrgps","lrgps*","simgps","simgps*",
+              "lrgps","lrgps*",
               #"timer","timer*",
-              "map",#"map*",
-              "dash",#"dash*",
-              #"userinterface",#"userinterface*",
+              #"map",#"map*",
+              #"dash",#"dash*",
               #"rd","rd*","utm","utm*",
               #"datastorage","datastorage*",
               #"recorder","recorder*",
-              "ui", #"ui*",
+              #"ui", #"ui*",
               ]
 
 from registry import *
@@ -44,13 +44,14 @@ def Main():
     r.RegistryAdd(SignalRegistry())
     for name in [
         "timers",
-        "simgps",
+        #"simgps",
+        "lrgps",
         "datumregistry",
         "wgs84",
         "utm",
         "rd",
         "uiregistry",
-        "recorder",
+        #"recorder",
         "mapview",
         "dashview",
         ]:
