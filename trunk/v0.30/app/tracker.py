@@ -44,8 +44,8 @@ def Main():
     r.RegistryAdd(SignalRegistry())
     for name in [
         "timers",
-        "simgps",
-        #"lrgps",
+        #"simgps",
+        "lrgps",
         "datumregistry",
         "wgs84",
         "utm",
