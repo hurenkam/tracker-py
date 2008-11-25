@@ -67,8 +67,19 @@ def Sleep(sleeptime):
 def Callgate(callable):
     return e32.ao_callgate(callable)
 
+def MessageBox(title,type):
+    ui.note(u"%s" % title,type)
 
+def SimpleQuery(msg, type, value):
+    return ui.query(u"%s" % msg, type, value)
 
+def ListQuery(msg, list, value):
+    #ui.query(u"%s" % msg, type, value)
+    return value
+
+def ConfigQuery(item):
+    #ui.query(u"%s" % msg, type, value)
+    return
 
 
 def FindKey(value):
@@ -235,7 +246,7 @@ class Application(Widget):
     def Run(self):
         self.running = True
         while self.running:
-            e32.reset_inactivity()
+            #e32.reset_inactivity()
             e32.ao_sleep(0.5)
 
     def Exit(self):

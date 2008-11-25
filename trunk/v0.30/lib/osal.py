@@ -1,25 +1,14 @@
 try:
-    import wxosal
-
-    Defaults = wxosal.Defaults
-    Sleep = wxosal.Sleep
-    Callgate = wxosal.Callgate
+    import wxosal as osal
     Drives = [u""]
 except:
-    pass
-
-try:
-    import s60osal
-
-    Defaults = s60osal.Defaults
-    Sleep = s60osal.Sleep
-    Callgate = s60osal.Callgate
+    import s60osal as osal
     Drives = [u"c:\\",u"e:\\"]
-except:
-    pass
 
-
-#import wxosal
-#Defaults = wxosal.Defaults
-#Sleep = wxosal.Sleep
-#Callgate = wxosal.Callgate
+Defaults = osal.Defaults
+Sleep = osal.Sleep
+Callgate = osal.Callgate
+MessageBox = osal.MessageBox
+SimpleQuery = osal.SimpleQuery
+ListQuery = osal.ListQuery
+ConfigQuery = osal.ConfigQuery

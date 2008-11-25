@@ -8,9 +8,6 @@ try:
     View = wxosal.View
     Application = wxosal.Application
 except:
-    pass
-
-try:
     import s60osal
 
     Fill = s60osal.Fill
@@ -18,9 +15,6 @@ try:
     Widget = s60osal.Widget
     View = s60osal.View
     Application = s60osal.Application
-except:
-    pass
-
 
 class TextWidget(Widget):
     def __init__(self,text='',hpad=5,vpad=3,fgcolor=Color["black"],bgcolor=Color["white"]):
