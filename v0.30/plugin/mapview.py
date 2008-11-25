@@ -617,6 +617,7 @@ class MapView(View):
         self.exitwidget = TextWidget("Exit",fgcolor=Color["white"],bgcolor=Color["darkblue"])
         self.satwidget = BarWidget((15,50),bars=5,range=10)
         self.batwidget = BarWidget((15,50),bars=5,range=100)
+        self.currentposition = None
 
         #View.__init__(self)
         View.__init__(self,(240,320))
@@ -642,6 +643,7 @@ class MapView(View):
         self.registry.UIMenuRedraw()
         self.KeyAdd("up",self.ZoomIn)
         self.KeyAdd("down",self.ZoomOut)
+        self.KeyAdd("enter",self.SelectMap)
 
     def ZoomIn(self,event=None):
         Log("map","MapView::ZoomIn()")
@@ -713,7 +715,8 @@ class MapView(View):
     def OnPosition(self,position):
         Log("map*","MapView::OnPosition(",position,")")
         heading = position["heading"]
-        self.mapwidget.UpdatePosition(Point(0,position["latitude"],position["longitude"]),heading)
+        self.currentposition = Point(0,position["latitude"],position["longitude"])
+        self.mapwidget.UpdatePosition(self.currentposition,heading)
         self.positionwidget.UpdatePosition(
             self.registry.DatumFormat((position["latitude"],position["longitude"])))
         self.UpdateSignal(position["used_satellites"],position["satellites"])
@@ -886,6 +889,22 @@ class MapView(View):
                 base,ext = os.path.splitext(filename)
                 m = Map(key,base+'.jpg',[])
                 self.maps[m.name]=m
+
+    def SelectMap(self,event):
+        if self.currentposition != None:
+            maps = self.FindMaps(self.currentposition)
+            if len(maps) > 0:
+                self.mapwidget.SetMap(maps[0])
+            else:
+                MessageBox("No map found","error")
+
+    def FindMaps(self,point):
+        results = []
+        for map in self.maps.values():
+            if map.PointOnMap(point) != None:
+                results.append(map)
+
+        return results
 
     def Quit(self):
         Log("map","MapView::Quit()")
