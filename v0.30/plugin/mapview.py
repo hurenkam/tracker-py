@@ -635,7 +635,7 @@ class MapView(View):
         self.registry.ConfigAdd( { "setting":"map_dir", "description":u"Directory where map files reside",
                                  "default":Defaults["mapdir"], "query":None } )
         self.registry.ConfigAdd( { "setting":"map_current", "description":u"Current/Last map shown",
-                                 "default":"51a_oisterwijk", "query":self.QueryCurrentMap } )
+                                 "default":"campus", "query":self.QueryCurrentMap } )
         self.InitMapList(self.registry.ConfigGetValue("map_dir"))
         self.LoadMap(self.GetCurrentMap())
         self.registry.UIMenuAdd(self.OnOpen,"Open","Map")
@@ -680,7 +680,7 @@ class MapView(View):
 
     def OnOpen(self,signal=None):
         Log("map","MapView::OnOpen()")
-        self.LoadMap("51a_oisterwijk")
+        self.LoadMap("campus")
 
     def OnClose(self,signal=None):
         Log("map","MapView::OnClose()")
@@ -704,12 +704,19 @@ class MapView(View):
     def OnResize(self,size):
         Log("map","MapView::OnResize()")
 
+    def UpdateSignal(self,used,found):
+        if used < 4:
+            self.satwidget.UpdateValues(used,found)
+        else:
+            self.satwidget.UpdateValues(used,0)
+
     def OnPosition(self,position):
         Log("map*","MapView::OnPosition(",position,")")
         heading = position["heading"]
         self.mapwidget.UpdatePosition(Point(0,position["latitude"],position["longitude"]),heading)
         self.positionwidget.UpdatePosition(
             self.registry.DatumFormat((position["latitude"],position["longitude"])))
+        self.UpdateSignal(position["used_satellites"],position["satellites"])
 
         try:
             self.Draw()

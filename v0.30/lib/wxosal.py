@@ -65,8 +65,32 @@ def Sleep(sleeptime):
     return time.sleep(sleeptime)
 
 def Callgate(callable):
-    return callable
+    class GuiWrapper:
+        def __init__(self,callable):
+            self.callable = callable
+        def Execute(self,*args,**kw):
+            try:
+                wx.CallAfter(self.callable,*args,**kw)
+            except AssertionError:
+                # UI Not active, so call directly
+                self.callable(*args,**kw)
 
+    return GuiWrapper(callable).Execute
+
+def MessageBox(title,type):
+    wx.MessageBox(title,type)
+
+def SimpleQuery(msg, type, value):
+    #ui.query(u"%s" % msg, type, value)
+    return value
+
+def ListQuery(msg, list, value):
+    #ui.query(u"%s" % msg, type, value)
+    return value
+
+def ConfigQuery(item):
+    #ui.query(u"%s" % msg, type, value)
+    return
 
 
 def FindKey(value):

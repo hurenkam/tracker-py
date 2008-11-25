@@ -96,10 +96,17 @@ class DashView(View):
     def OnResize(self,size):
         Log("dash","DashView::OnResize()")
 
+    def UpdateSignal(self,used,found):
+        if used < 4:
+            self.satwidget.UpdateValues(used,found)
+        else:
+            self.satwidget.UpdateValues(used,0)
+
     def OnPosition(self,position):
         Log("dash*","DashView::OnPosition(",position,")")
         self.positionwidget.UpdatePosition(self.registry.DatumFormat((position["latitude"],position["longitude"])))
         self.wptgauge.UpdateValues(position["heading"],0,0)
+        self.UpdateSignal(position["used_satellites"],position["satellites"])
 
         try:
             self.Draw()
