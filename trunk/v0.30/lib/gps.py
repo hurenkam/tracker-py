@@ -10,6 +10,7 @@ posevent = {
     'vertical_dop': 2.29999995231628,
     'time': 1187167353.0,
     'satellites': 11,
+    'satlist':[],
     'time_dop': 1.26999998092651,
     'latitude': 42.6261231,
     'altitude': 40.7,

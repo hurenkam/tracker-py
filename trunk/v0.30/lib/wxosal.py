@@ -4,11 +4,15 @@ import time
 
 ID_MENU_FIRST=101
 
+def RGBColor(r,g,b):
+    return (r,g,b)
+
 Color = {
           "black":'#000000',
           "white":'#ffffff',
           "darkblue":'#0000ff',
           "darkgreen":'#00ff00',
+          "green": '#40c040',
           "darkred":'#ff0000',
           "cyan":'#00ffff',
 
@@ -30,6 +34,7 @@ Color = {
           "bar_c3": '#000000',
           "bar_bg": '#0000ff',
 
+          "sat_0": '#000000',
     }
 
 Defaults = {
@@ -65,6 +70,7 @@ def Sleep(sleeptime):
     return time.sleep(sleeptime)
 
 def Callgate(callable):
+
     class GuiWrapper:
         def __init__(self,callable):
             self.callable = callable
@@ -235,7 +241,7 @@ class Widget:
 
         self.dc.SetPen(wx.Pen(color,width))
         self.dc.SetBrush(wx.Brush(fillcolor,style))
-        self.dc.DrawEllipse(x1,y1,x2,y2)
+        self.dc.DrawEllipse(x1,y1,x2-x1,y2-y1)
 
     def Blit(self,widget,target,source,scale):
         if self.dc == None:

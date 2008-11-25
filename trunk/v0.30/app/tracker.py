@@ -5,16 +5,16 @@ import sys
 sys.path.append("../lib")
 from helpers import *
 loglevels += [
-              #"databus",#"databus*",
+              #"databus","databus*",
               #"gps","gps*","lrgps","lrgps*","simgps","simgps*",
               #"lrgps","lrgps*",
               #"timer","timer*",
-              #"map#",#"map#",#"map*",
-              #"dash",#"dash*",
+              #"map#","map#","map*",
+              #"dash","dash*",
               #"rd","rd*","utm","utm*",
               #"datastorage","datastorage*",
               #"recorder","recorder*",
-              #"ui", #"ui*",
+              #"ui", "ui*",
               ]
 
 from registry import *
