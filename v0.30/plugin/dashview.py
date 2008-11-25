@@ -23,18 +23,19 @@ class DashView(View):
 
         self.positionwidget = PositionWidget((200,15))
         self.wptgauge    = WaypointGauge(None)
+        self.satgauge    = SatelliteGauge(None)
         self.clockgauge1 = ClockGauge(None)
         self.clockgauge2 = ClockGauge(None)
         self.clockgauge3 = ClockGauge(None)
         self.clockgauge4 = ClockGauge(None)
-        self.clockgauge5 = ClockGauge(None)
+        #self.clockgauge5 = ClockGauge(None)
         self.gauges = [
                 self.wptgauge,
                 self.clockgauge1,
                 self.clockgauge2,
                 self.clockgauge3,
                 self.clockgauge4,
-                self.clockgauge5,
+                self.satgauge,
             ]
         self.spots = [
                 ((0,80),    (160,160)),
@@ -107,6 +108,9 @@ class DashView(View):
         self.positionwidget.UpdatePosition(self.registry.DatumFormat((position["latitude"],position["longitude"])))
         self.wptgauge.UpdateValues(position["heading"],0,0)
         self.UpdateSignal(position["used_satellites"],position["satellites"])
+        list = position['satlist']
+        if len(list) > 0:
+            self.satgauge.UpdateList(list)
 
         try:
             self.Draw()

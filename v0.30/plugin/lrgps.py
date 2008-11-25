@@ -51,10 +51,19 @@ class LRGps(Gps):
             self.position["time"] = data[12]
             self.position["satellites"] = eval(str(data[13]))
             self.position["used_satellites"] = eval(str(data[14]))
-            self.GetSatelliteData()
+            self.position["satlist"] = self.GetSatelliteData()
 
     def GetSatelliteData(self):
         Log("lrgps*","LRGps::GetSatelliteData()")
+        list = []
+        for index in range(self.position["satellites"]):
+            try:
+                satinfo = self.requestor.GetSatelliteData(index)
+                satdict = dict(zip(['prn', 'azimuth', 'elevation', 'strength', 'inuse'],satinfo))
+                list.append(satdict)
+            except:
+                pass
+        return list
 
     def StopGps(self):
         Log("lrgps","LRGps::StopGps()")

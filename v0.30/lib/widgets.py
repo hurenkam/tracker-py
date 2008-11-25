@@ -3,6 +3,7 @@ try:
     import wxosal
 
     Fill = wxosal.Fill
+    RGBColor = wxosal.RGBColor
     Color = wxosal.Color
     Widget = wxosal.Widget
     View = wxosal.View
@@ -11,6 +12,7 @@ except:
     import s60osal
 
     Fill = s60osal.Fill
+    RGBColor = s60osal.RGBColor
     Color = s60osal.Color
     Widget = s60osal.Widget
     View = s60osal.View
@@ -179,10 +181,10 @@ class Gauge(Widget):
 
     def DrawInnerCircle(self,radius,color=Color['black'],circlewidth=1):
         self.DrawEllipse(
-            self.radius - radius,
-            self.radius - radius,
-            self.radius + radius,
-            self.radius + radius,
+            self.radius - radius+1,
+            self.radius - radius+1,
+            self.radius + radius+1,
+            self.radius + radius+1,
             color, circlewidth )
 
 
@@ -365,4 +367,49 @@ class WaypointGauge(Gauge):
         self.DrawCompas(north)
         self.DrawInfo()
         self.DrawBearing(bearing)
+
+
+
+class SatelliteGauge(Gauge):
+
+    def __init__(self,radius=None):
+        self.satlist = []
+        self.maxstrength = 0
+        Gauge.__init__(self,radius)
+
+    #def SelectOptions(self):
+    #    appuifw.note(u"No options available.", "info")
+
+    def UpdateList(self,list):
+        self.satlist = list
+        self.Draw()
+
+    def Draw(self):
+        if self.radius is None:
+            return
+
+        Gauge.Draw(self)
+        size1 = self.radius / 60.0
+        self.DrawText(((self.radius,0.4*self.radius)),u'satellites',size=size1,align="center")
+        self.DrawInnerCircle(self.radius*0.4)
+        self.DrawInnerCross()
+
+        if len(self.satlist) > 0:
+            for info in self.satlist:
+                s = info['strength']
+                if s > self.maxstrength:
+                    self.maxstrength = s
+                    print "strength: ", s
+
+                angle = info['azimuth']
+                pos = self.radius * ((90.0 - info['elevation'])/100)
+                c = int(info['strength']/64.0 * 0x7f) % 128
+                if info['inuse']:
+                    #color = c * 0x10000 + 2 * c * 0x100 + c
+                    color = Color["green"]
+                else:
+                    color = RGBColor(2*c,2*c,0)
+                    #color = 0
+                self.DrawDotHand(angle,pos,color,handwidth=self.radius/8)
+
 

@@ -4,11 +4,15 @@ import math
 from key_codes import *
 from graphics import *
 
+def RGBColor(r,g,b):
+    return r*0x10000 + g*0x100 + b
+
 Color = {
           "black":0x000000,
           "white":0xffffff,
           "darkblue":0x0000ff,
           "darkgreen":0x00ff00,
+          "green": 0x40c040,
           "darkred":0xff0000,
           "cyan":0x00ffff,
 
