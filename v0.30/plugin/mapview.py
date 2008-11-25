@@ -336,12 +336,12 @@ class OziFile(file):
 class MapWidget(Widget):
     def __init__(self,size = None):
         Log("map","MapWidget::__init__()")
-        Widget.__init__(self,None)
         #self.storage = DataStorage.GetInstance()
         self.waypoints = {}
         self.tracks = {}
         self.routes = {}
         self.position = None
+        self.lastpos = None
         self.map = None
         self.mapimage = None
         self.lastarea = None
@@ -350,6 +350,7 @@ class MapWidget(Widget):
         self.cursor = None
         #self.position = self.storage.GetValue("app_lastknownposition")
         self.position = Point(0,51.5431429,5.26938448,0)
+        Widget.__init__(self,None)
         self.UpdatePosition(self.position,0)
         self.Resize(size)
 
@@ -560,8 +561,12 @@ class MapWidget(Widget):
             y2 -= ((y4 - mh)*zoom)
             y4 = mh
 
-        target = (int(x1),int(y1),int(x2),int(y2))
-        source = (int(x3),int(y3),int(x4),int(y4))
+        try:
+            target = (int(x1),int(y1),int(x2),int(y2))
+            source = (int(x3),int(y3),int(x4),int(y4))
+        except:
+            pass
+
         return target,source
 
     def Draw(self):
