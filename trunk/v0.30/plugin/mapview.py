@@ -893,8 +893,15 @@ class MapView(View):
     def SelectMap(self,event):
         if self.currentposition != None:
             maps = self.FindMaps(self.currentposition)
-            if len(maps) > 0:
-                self.mapwidget.SetMap(maps[0])
+            bestmap = None
+            lat2y = 0
+            for map in maps:
+                if abs(map.lat2y) > lat2y:
+                    lat2y = abs(map.lat2y)
+                    bestmap = map
+
+            if bestmap != None:
+                self.mapwidget.SetMap(bestmap)
             else:
                 MessageBox("No map found","error")
 
