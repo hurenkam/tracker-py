@@ -39,8 +39,12 @@ class Landmarks:
     def __init__(self,registry):
         Log("landmarks","Landmarks::__init__()")
         global landmarks
-        import landmarks
-        self.lmdb = landmarks.OpenDefaultDatabase()
+        try:
+            import landmarks
+            self.lmdb = landmarks.OpenDefaultDatabase()
+            self.waypoints = None
+        except:
+            self.waypoints = {}
 
         self.registry = registry
         self.registry.Signal( { "type":"db_connect", "id":"wpt", "signal":"wpt_add",   "handler":self.OnWptAdd } )
@@ -96,43 +100,61 @@ class Landmarks:
     def LandmarkAdd(self,waypoint,categories=None):
         Log("landmarks","Landmarks::LandmarkAdd()")
 
-        if waypoint.lmid is None:
-            landmark = landmarks.CreateLandmark()
-            landmark.SetLandmarkName(u'%s' % waypoint.name)
-            landmark.SetPosition(waypoint.latitude,waypoint.longitude,waypoint.altitude,0,0)
-            catid = self.GetDefaultCategoryId()
-            if catid is not None:
-                landmark.AddCategory(catid)
-            waypoint.lmid = self.lmdb.AddLandmark(landmark)
-            landmark.Close()
+        if self.lmdb != None:
+            if waypoint.lmid is None:
+                landmark = landmarks.CreateLandmark()
+                landmark.SetLandmarkName(u'%s' % waypoint.name)
+                landmark.SetPosition(waypoint.latitude,waypoint.longitude,waypoint.altitude,0,0)
+                catid = self.GetDefaultCategoryId()
+                if catid is not None:
+                    landmark.AddCategory(catid)
+                waypoint.lmid = self.lmdb.AddLandmark(landmark)
+                landmark.Close()
+            else:
+                landmark = self.lmdb.ReadLandmark(waypoint.lmid)
+                landmark.SetLandmarkName(u'%s' % waypoint.name)
+                landmark.SetPosition(waypoint.latitude,waypoint.longitude,waypoint.altitude,0,0)
+                self.lmdb.UpdateLandmark(landmark)
+                landmark.Close()
         else:
-            landmark = self.lmdb.ReadLandmark(waypoint.lmid)
-            landmark.SetLandmarkName(u'%s' % waypoint.name)
-            landmark.SetPosition(waypoint.latitude,waypoint.longitude,waypoint.altitude,0,0)
-            self.lmdb.UpdateLandmark(landmark)
-            landmark.Close()
+            name = waypoint.name
+            lat = waypoint.latitude
+            lon = waypoint.longitude
+            alt = waypoint.altitude
+            self.waypoints[u"%s" % name] = "(%f,%f,%f)" % (lat,lon,alt)
+
 
     def LandmarkDel(self,waypoint):
         Log("landmarks","Landmarks::LandmarkDel()")
-        self.lmdb.RemoveLandmark(waypoint.lmid)
+        if self.lmdb != None:
+            self.lmdb.RemoveLandmark(waypoint.lmid)
+        else:
+            del self.waypoints[waypoint.name]
 
     def LandmarkSearch(self,area=None,categories=None):
         Log("landmarks","Landmarks::LandmarkSearch()")
 
         list = []
-        tsc = landmarks.CreateCategoryCriteria(0,0,u'Waypoint')
-        search = self.lmdb.CreateSearch()
-        operation = search.StartLandmarkSearch(tsc, landmarks.EAscending, 0, 0)
-        operation.Execute()
-        operation.Close()
+        if self.lmdb != None:
+            tsc = landmarks.CreateCategoryCriteria(0,0,u'Waypoint')
+            search = self.lmdb.CreateSearch()
+            operation = search.StartLandmarkSearch(tsc, landmarks.EAscending, 0, 0)
+            operation.Execute()
+            operation.Close()
 
-        count = search.NumOfMatches()
-        if count > 0:
-            iter = search.MatchIterator();
-            waypoints = iter.GetItemIds(0,count)
-            for lmid in waypoints:
-                landmark = Landmark(lm=self.lmdb.ReadLandmark(lmid))
-                list.append(landmark)
+            count = search.NumOfMatches()
+            if count > 0:
+                iter = search.MatchIterator();
+                waypoints = iter.GetItemIds(0,count)
+                for lmid in waypoints:
+                    landmark = Landmark(lm=self.lmdb.ReadLandmark(lmid))
+                    list.append(landmark)
+        else:
+            for name in self.waypoints.keys():
+                lat,lon,alt = eval(self.waypoints[name])
+                w = Waypoint(name,lat,lon,alt)
+                list.append(w)
+
         return list
 
     def CategoryAdd(self,category):

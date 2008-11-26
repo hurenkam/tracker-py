@@ -64,11 +64,13 @@ class Recorder:
     def SubscribePositionSignals(self,interval):
         Log("recorder","Recorder::SubscribePositionSignals()")
         self.registry.Signal( { "type":"db_connect", "id":"recorder", "signal":"position", "handler":self.OnPosition } )
+        self.registry.Signal( { "type":"db_connect", "id":"recorder", "signal":"trk_resend", "handler":self.OnResend } )
         self.registry.Signal( { "type":"gps_start",  "id":"recorder", "tolerance":interval } )
 
     def UnsubscribePositionSignals(self):
         Log("recorder","Recorder::UnsubscribePositionSignals()")
         self.registry.Signal( { "type":"db_disconnect", "id":"recorder", "signal":"position" } )
+        self.registry.Signal( { "type":"db_disconnect", "id":"recorder", "signal":"trk_resend" } )
         self.registry.Signal( { "type":"gps_stop",   "id":"recorder" } )
 
     def OpenTrack(self,name):
@@ -124,6 +126,17 @@ class Recorder:
         p["id"] = "recorder"
         self.registry.Signal( p )
 
+    def ResendTrack(self):
+        Log("recorder","Recorder::ResendTrack()")
+        if self.data == None:
+            return
+        l = self.data.keys()
+        l.sort()
+        for key in l:
+            lat,lon,alt = eval(self.data[key])
+            s = { "type":"trk_point", "id":"recorder", "latitude":lat, "longitude":lon, "altitude":alt }
+            self.registry.Signal(s)
+
     def OnStart(self,signal):
         Log("recorder","Recorder::OnStart(",signal,")")
         self.SubscribePositionSignals(signal["interval"])
@@ -143,3 +156,7 @@ class Recorder:
     def OnPosition(self,signal):
         Log("recorder*","Recorder::OnSignal(",signal,")")
         self.AppendTrack(signal)
+
+    def OnResend(self,signal):
+        Log("recorder*","Recorder::OnResend(",signal,")")
+        self.ResendTrack()
