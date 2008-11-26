@@ -1,6 +1,7 @@
 [http://code.google.com/p/tracker-py/wiki/About About] |
 [http://code.google.com/p/tracker-py/wiki/TrackerV0_14 v0.14] |
 [http://code.google.com/p/tracker-py/wiki/TrackerV0_20 v0.20] |
+[http://code.google.com/p/tracker-py/wiki/TrackerV0_30 v0.30] |
 WishList | RoadMap | CodeArchitecture
 
 Tracker has two main views, uses the left softkey for a menu, the right softkey as exit,
