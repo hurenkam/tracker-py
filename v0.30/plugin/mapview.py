@@ -381,7 +381,7 @@ class MapWidget(Widget):
     def ShowWaypoint(self,waypoint):
         Log("map","MapWidget::ShowWaypoint(",waypoint,")")
         self.waypoints[waypoint.name] = waypoint
-        self.Draw()
+        #self.Draw()
 
     def HideWaypoint(self,waypoint):
         Log("map","MapWidget::HideWaypoint(",waypoint,")")
@@ -618,6 +618,9 @@ class MapView(View):
         self.satwidget = BarWidget((15,50),bars=5,range=10)
         self.batwidget = BarWidget((15,50),bars=5,range=100)
         self.currentposition = None
+        self.waypoints = {}
+        self.tmpwaypoints = {}
+        self.showwaypoints = True
 
         #View.__init__(self)
         View.__init__(self,(240,320))
@@ -628,6 +631,9 @@ class MapView(View):
         self.registry.Signal( { "type":"db_connect", "id":"map", "signal":"trk_point", "handler":self.OnTrackPoint } )
         self.registry.Signal( { "type":"db_connect", "id":"map", "signal":"map_open",  "handler":self.OnOpen } )
         self.registry.Signal( { "type":"db_connect", "id":"map", "signal":"map_close", "handler":self.OnClose } )
+        self.registry.Signal( { "type":"db_connect", "id":"map", "signal":"wpt_show",  "handler":self.OnWptShow } )
+        self.registry.Signal( { "type":"db_connect", "id":"map", "signal":"wpt_found", "handler":self.OnWptFound } )
+        self.registry.Signal( { "type":"db_connect", "id":"map", "signal":"wpt_done",  "handler":self.OnWptDone } )
 
         self.registry.Signal( { "type":"gps_start",  "id":"map", "tolerance":10 } )
 
@@ -644,6 +650,7 @@ class MapView(View):
         self.KeyAdd("up",self.ZoomIn)
         self.KeyAdd("down",self.ZoomOut)
         self.KeyAdd("enter",self.SelectMap)
+        self.KeyAdd("7",self.ToggleWaypoints)
 
     def ZoomIn(self,event=None):
         Log("map","MapView::ZoomIn()")
@@ -656,6 +663,16 @@ class MapView(View):
         self.mapwidget.ZoomOut()
         self.Draw()
         self.registry.UIViewRedraw()
+
+    def ToggleWaypoints(self,event=None):
+        Log("map","MapView::ToggleWaypoints()")
+        if self.showwaypoints:
+            self.showwaypoints = False
+            self.Draw()
+        else:
+            self.showwaypoints = True
+            self.FindWaypoints()
+            self.Draw()
 
     def GetMenu(self):
         Log("map*","MapView::GetMenu()")
@@ -676,9 +693,36 @@ class MapView(View):
         if name in self.maps.keys():
             self.mapwidget.SetMap(self.maps[name])
             self.SetCurrentMap(name)
+            if self.showwaypoints:
+                self.FindWaypoints()
+            self.GetRecordedTrackPoints()
         else:
             Log("map!","MapView::LoadMap(",name,"): Not found!")
 
+    def GetRecordedTrackPoints(self):
+        Log("map","MapView::GetRecordedTrackPoints()")
+        self.registry.Signal( { "type":"trk_resend", "id":"map" } )
+
+    def FindWaypoints(self):
+        Log("map-","MapView::FindWaypoints()")
+        self.registry.Signal( { "type":"wpt_search", "id":"map", "ref":"map_wpt_ref" } )
+
+    def OnWptFound(self,signal):
+        Log("map-","MapView::OnWptFound(",signal,")")
+        if signal["ref"] == "map_wpt_ref":
+            self.tmpwaypoints[signal["name"]] = Waypoint(
+                signal["name"],signal["latitude"],signal["longitude"],signal["altitude"] )
+
+    def OnWptDone(self,signal):
+        Log("map-","MapView::OnWptDone(",signal,")")
+        if signal["ref"] == "map_wpt_ref":
+            self.mapwidget.waypoints = self.tmpwaypoints
+            self.tmpwaypoints = {}
+            self.mapwidget.Draw()
+            self.Draw()
+
+    def OnWptShow(self,signal):
+        Log("map-","MapView::OnWptShow(",signal,")")
 
     def OnOpen(self,signal=None):
         Log("map","MapView::OnOpen()")
@@ -902,6 +946,7 @@ class MapView(View):
 
             if bestmap != None:
                 self.mapwidget.SetMap(bestmap)
+                self.GetRecordedTrackPoints()
             else:
                 MessageBox("No map found","error")
 
@@ -922,13 +967,11 @@ class MapView(View):
         self.registry.Signal( { "type":"db_disconnect", "id":"map", "signal":"trk_point" } )
         self.registry.Signal( { "type":"db_disconnect", "id":"map", "signal":"map_open" } )
         self.registry.Signal( { "type":"db_disconnect", "id":"map", "signal":"map_close" } )
-        #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"map_show" } )
-        #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"map_hide" } )
+        self.registry.Signal( { "type":"db_disconnect", "id":"map", "signal":"wpt_show" } )
+        self.registry.Signal( { "type":"db_disconnect", "id":"map", "signal":"wpt_found" } )
+        self.registry.Signal( { "type":"db_disconnect", "id":"map", "signal":"wpt_done" } )
         #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"rte_show" } )
         #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"rte_hide" } )
         #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"trk_show" } )
         #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"trk_hide" } )
-        #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"wpt_show" } )
-        #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"wpt_hide" } )
-        #self.bus.Signal( { "type":"db_disconnect", "id":"map", "signal":"formated_position" } )
         self.registry = None

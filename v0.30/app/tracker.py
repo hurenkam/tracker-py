@@ -9,12 +9,13 @@ loglevels += [
               #"gps","gps*","lrgps","lrgps*","simgps","simgps*",
               #"lrgps","lrgps*",
               #"timer","timer*",
-              #"map#","map#","map*",
+              #"map","map-","map#","map*",
               #"dash","dash*",
               #"rd","rd*","utm","utm*",
               #"datastorage","datastorage*",
               #"recorder","recorder*",
               #"ui", "ui*",
+              #"landmarks","landmarks*",
               ]
 
 from registry import *
@@ -37,6 +38,10 @@ def ShowWaypoint():
     global r
     r.Signal( { "type":"wpt_show", "name":"Kampina", "latitude":51.5431429, "longitude":5.26938448, "altitude":0 } )
 
+def AddWaypoint():
+    global r
+    r.Signal( { "type":"wpt_add", "name":"XYZ", "latitude":51.5431429, "longitude":5.26938448, "altitude":0 } )
+
 def Main():
     global r
     r = Registry()
@@ -50,6 +55,7 @@ def Main():
         "wgs84",
         "utm",
         "rd",
+        "waypoints",
         "uiregistry",
         "recorder",
         "mapview",
