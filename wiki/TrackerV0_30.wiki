@@ -8,12 +8,5 @@ WishList | RoadMap | CodeArchitecture
 
 = Introduction =
 
-Add your content here.
-
-
-= Details =
-
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+Work on this has only just started.
+The current version does show a map and a position, however a lot of features currently do not work yet.
