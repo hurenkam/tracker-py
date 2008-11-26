@@ -8,4 +8,4 @@ WishList | RoadMap | CodeArchitecture
 = Introduction =
 
 Work on this has only just started.
-The current version does show a map and a position, however a lot of features currently do not work yet.
+The current version does show a map and a position, however a lot of features currently do not work.
