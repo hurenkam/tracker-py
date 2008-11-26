@@ -51,7 +51,7 @@ def Main():
         "utm",
         "rd",
         "uiregistry",
-        #"recorder",
+        "recorder",
         "mapview",
         "dashview",
         ]:

@@ -29,16 +29,22 @@ class Recorder:
         import os
         try:
             import dbm
+            b,e = os.path.splitext(os.path.expanduser(file))
         except:
             pass
         try:
             import dbhash as dbm
+            b,e = os.path.splitext(os.path.expanduser(file))
+        except:
+            pass
+        try:
+            import e32dbm as dbm
+            b,e = os.path.splitext(u"e:\\data\\tracker\\tracks\\%s" % file)
         except:
             pass
 
-        b,e = os.path.splitext(os.path.expanduser(file))
-        self.data = dbm.open("%s-data" % b,mode)
-        self.meta = dbm.open("%s-meta" % b,mode)
+        self.data = dbm.open(u"%s-data" % b,mode)
+        self.meta = dbm.open(u"%s-meta" % b,mode)
 
     def CloseDbmFiles(self):
         Log("recorder","Recorder::CloseDbmFiles()")
@@ -68,7 +74,7 @@ class Recorder:
     def OpenTrack(self,name):
         Log("recorder","Recorder::OpenTrack(",name,")")
         self.name = name
-        self.OpenDbmFiles(self.name,"c")
+        self.OpenDbmFiles(self.name,"n")
 
     def CloseTrack(self):
         Log("recorder","Recorder::CloseTrack()")
@@ -108,6 +114,9 @@ class Recorder:
 
     def AppendTrack(self,position):
         Log("recorder*","Recorder::AppendTrack(",position,")")
+        if self.data == None:
+            return
+
         self.data[str(position["time"])]="(%s, %s, %s)" % (position["latitude"],position["longitude"],position["altitude"])
         p = position.copy()
         self.UpdateMetaData(p["latitude"],p["longitude"],p["distance"])
