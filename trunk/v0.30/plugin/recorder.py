@@ -1,4 +1,5 @@
 from helpers import *
+from osal import *
 loglevels += ["recorder!"]
 
 
@@ -26,25 +27,8 @@ class Recorder:
 
     def OpenDbmFiles(self,file,mode):
         Log("recorder","Recorder::OpenDbmFiles()")
-        import os
-        try:
-            import dbm
-            b,e = os.path.splitext(os.path.expanduser(file))
-        except:
-            pass
-        try:
-            import dbhash as dbm
-            b,e = os.path.splitext(os.path.expanduser(file))
-        except:
-            pass
-        try:
-            import e32dbm as dbm
-            b,e = os.path.splitext(u"e:\\data\\tracker\\tracks\\%s" % file)
-        except:
-            pass
-
-        self.data = dbm.open(u"%s-data" % b,mode)
-        self.meta = dbm.open(u"%s-meta" % b,mode)
+        self.data = OpenDbmFile(u"%s-data" % file,mode)
+        self.meta = OpenDbmFile(u"%s-meta" % file,mode)
 
     def CloseDbmFiles(self):
         Log("recorder","Recorder::CloseDbmFiles()")

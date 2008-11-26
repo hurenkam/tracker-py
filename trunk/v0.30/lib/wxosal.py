@@ -1,4 +1,5 @@
 import wx
+import os
 import math
 import time
 
@@ -38,12 +39,12 @@ Color = {
     }
 
 Defaults = {
-        "configdir": "..",
-        "plugindir": "../plugin",
-        "mapdir": "../maps",
-        "trackdir": "../tracks",
-        "routedir": "../routes",
-        "gpxdir": "../gpx",
+        "configdir": "",
+        "plugindir": "plugin",
+        "mapdir": "maps",
+        "trackdir": "tracks",
+        "routedir": "routes",
+        "gpxdir": "gpx",
     }
 
 Fill = {
@@ -65,6 +66,8 @@ Key = {
             "tab":wx.WXK_TAB,
             "back":wx.WXK_BACK,
     }
+
+BaseDirs=["../"]
 
 def Sleep(sleeptime):
     return time.sleep(sleeptime)
@@ -97,6 +100,27 @@ def ListQuery(msg, list, value):
 def ConfigQuery(item):
     #ui.query(u"%s" % msg, type, value)
     return
+
+def OpenDbmFile(file,mode):
+    try: # Posix systems
+        import dbm as db
+        def Split(path):
+            return os.path.splitext(os.path.expanduser(path))
+
+    except: # Windows
+        import dbhash as db
+        def Split(path):
+            return os.path.splitext(path)
+
+    for d in BaseDirs:
+        p = u"%s%s" % (d,file)
+        b,e = Split(p)
+        try:
+            return db.open(p,mode)
+        except:
+            pass
+
+    raise IOError(u"unable to open dbm file %s with mode %s" % (p,mode))
 
 
 def FindKey(value):
