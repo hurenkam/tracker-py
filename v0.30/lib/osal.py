@@ -1,10 +1,12 @@
 try:
     import wxosal as osal
-    Drives = [u""]
+    #Drives = [u""]
 except:
     import s60osal as osal
-    Drives = [u"c:\\",u"e:\\"]
+    #Drives = [u"c:\\",u"e:\\"]
 
+BaseDirs = osal.BaseDirs
+OpenDbmFile = osal.OpenDbmFile
 Defaults = osal.Defaults
 Sleep = osal.Sleep
 Callgate = osal.Callgate

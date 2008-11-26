@@ -65,6 +65,8 @@ Key = {
             #"back":wx.WXK_BACK,
     }
 
+DataDirs = [u"e:\\data\\tracker\\",u"c:\\data\\tracker\\"]
+
 def Sleep(sleeptime):
     return e32.ao_sleep(sleeptime)
 
@@ -84,6 +86,17 @@ def ListQuery(msg, list, value):
 def ConfigQuery(item):
     #ui.query(u"%s" % msg, type, value)
     return
+
+def OpenDbmFile(file,mode):
+    b,e = os.path.splitext(file)
+    for d in BaseDirs:
+        p = u"%s%s" % (d,b)
+        try:
+            return db.open(p,"%sf" % mode)
+        except:
+            pass
+
+    raise IOError(u"unable to open dbm file %s with mode %s" % (p,mode))
 
 
 def FindKey(value):

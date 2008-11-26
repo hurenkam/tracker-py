@@ -48,6 +48,7 @@ def Main():
     r.RegistryAdd(ConfigRegistry())
     r.RegistryAdd(SignalRegistry())
     for name in [
+        "uiregistry",
         "timers",
         #"simgps",
         "lrgps",
@@ -56,7 +57,6 @@ def Main():
         "datumutm",
         "datumrd",
         "waypoints",
-        "uiregistry",
         "recorder",
         "mapview",
         "dashview",
