@@ -1,6 +1,7 @@
 [http://code.google.com/p/tracker-py/wiki/About About] |
 [http://code.google.com/p/tracker-py/wiki/TrackerV0_14 v0.14] |
 [http://code.google.com/p/tracker-py/wiki/TrackerV0_20 v0.20] |
+[http://code.google.com/p/tracker-py/wiki/TrackerV0_30 v0.30] |
 WishList | RoadMap | CodeArchitecture
 
 I started to work on Tracker.py, because I enjoy hiking, and like to use my N95
