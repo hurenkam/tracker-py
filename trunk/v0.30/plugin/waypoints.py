@@ -44,7 +44,8 @@ class Landmarks:
             self.lmdb = landmarks.OpenDefaultDatabase()
             self.waypoints = None
         except:
-            self.waypoints = {}
+            self.waypoints = OpenDbmFile("waypoints","c")
+            self.lmdb = None
 
         self.registry = registry
         self.registry.Signal( { "type":"db_connect", "id":"wpt", "signal":"wpt_add",   "handler":self.OnWptAdd } )
