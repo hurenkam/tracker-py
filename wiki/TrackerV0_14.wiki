@@ -1,6 +1,7 @@
 [http://code.google.com/p/tracker-py/wiki/About About] |
 [http://code.google.com/p/tracker-py/wiki/TrackerV0_14 v0.14] |
 [http://code.google.com/p/tracker-py/wiki/TrackerV0_20 v0.20] |
+[http://code.google.com/p/tracker-py/wiki/TrackerV0_30 v0.30] |
 WishList | RoadMap | CodeArchitecture
 
 == Current stable version: Tracker v0.14k ==
@@ -22,4 +23,3 @@ Available features:
 http://tracker-py.googlecode.com/svn/trunk/v0.14k/screenshots/dash_full_v13.jpg
 http://tracker-py.googlecode.com/svn/trunk/v0.14k/screenshots/campina5_track1.jpg
 http://tracker-py.googlecode.com/svn/trunk/v0.14k/screenshots/campina5_track1_zoom.jpg
-
