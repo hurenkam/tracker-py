@@ -39,12 +39,8 @@ Color = {
     }
 
 Defaults = {
-        "configdir": "",
+        "basedirs": ["../"],
         "plugindir": "plugin",
-        "mapdir": "maps",
-        "trackdir": "tracks",
-        "routedir": "routes",
-        "gpxdir": "gpx",
     }
 
 Fill = {
@@ -67,8 +63,6 @@ Key = {
             "back":wx.WXK_BACK,
     }
 
-BaseDirs=["../"]
-
 def Sleep(sleeptime):
     return time.sleep(sleeptime)
 
@@ -87,11 +81,68 @@ def Callgate(callable):
     return GuiWrapper(callable).Execute
 
 def MessageBox(title,type):
-    wx.MessageBox(title,type)
+    if type == "info":
+        s = wx.OK | wx.ICON_INFORMATION
+    elif type == "error":
+        s = wx.OK | wx.ICON_ERROR
+    elif type == "conf":
+        s = wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION
+    else:
+        s = wx.OK
+
+    dial = wx.MessageBox(title,type,style = s)
+    result = dial.ShowModal()
+    if result == wx.ID_YES or result == wx.ID_OK:
+        return True
+
+
 
 def SimpleQuery(msg, type, value):
-    #ui.query(u"%s" % msg, type, value)
-    return value
+    def RunDialog(msg,value):
+        dialog = wx.TextEntryDialog ( None, msg, 'Query', value )
+        if dialog.ShowModal() == wx.ID_OK:
+            result = dialog.GetValue()
+        else:
+            result = None
+
+        dialog.Destroy()
+        return result
+
+    if type == "query":
+        return MessageBox(msg,"conf")
+
+    result = None
+    if type != "text" and type != "code":
+        if type == "float":
+            v = str(value)
+            result = RunDialog(msg,v)
+            if result != None:
+                result = float(result)
+        elif type == "number":
+            v = str(value)
+            result = RunDialog(msg,v)
+            if result != None:
+                result = int(result)
+        elif type == "date":
+            t = time.localtime(value)
+            v = "%s/%s/%s" %(t[2],t[1],t[0])
+            result = RunDialog(msg,v)
+            if result != None:
+                r = [int(v) for v in result.split('/')]
+                result = time.mktime(r[2],r[1],r[0],0,0,0,0,0,0)
+        elif type == "time":
+            t = time.localtime(value)
+            v = "%s:%s:%s" %(t[3],t[4],t[5])
+            result = RunDialog(msg,v)
+            if result != None:
+                r = [int(v) for v in result.split(':')]
+                result = time.mktime(t[0],t[1],t[2],r[0],r[1],r[2],0,0,0)
+        else:
+            raise IOError("unkown query type")
+    else:
+        result = RunDialog(msg,value)
+
+    return result
 
 def ListQuery(msg, list, value):
     #ui.query(u"%s" % msg, type, value)
@@ -102,6 +153,7 @@ def ConfigQuery(item):
     return
 
 def OpenDbmFile(file,mode):
+    ext = ""
     try: # Posix systems
         import dbm as db
         def Split(path):
@@ -109,11 +161,12 @@ def OpenDbmFile(file,mode):
 
     except: # Windows
         import dbhash as db
+        ext = ".db"
         def Split(path):
             return os.path.splitext(path)
 
-    for d in BaseDirs:
-        p = u"%s%s" % (d,file)
+    for d in Defaults["basedirs"]:
+        p = u"%s%s%s" % (d,file,ext)
         b,e = Split(p)
         try:
             return db.open(p,mode)

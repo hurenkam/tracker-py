@@ -4,9 +4,11 @@
 import sys
 sys.path.append("../lib")
 from helpers import *
+from osal import *
 loglevels += [
               #"databus","databus*",
-              #"gps","gps*","lrgps","lrgps*","simgps","simgps*",
+              #"gps","gps#","gps*",
+              #"simgps","simgps*",
               #"lrgps","lrgps*",
               #"timer","timer*",
               #"map","map-","map#","map*",
@@ -22,10 +24,20 @@ from registry import *
 
 def StartRecording():
     global r
+    name = SimpleQuery("Track name:","text","default")
+    if name == None:
+        MessageBox("Cancelled!","info")
+        return
+
+    interval = SimpleQuery("Interval:","number",10)
+    if interval == None:
+        MessageBox("Cancelled!","info")
+        return
+
     r.UIMenuAdd( StopRecording, "Stop", "Track" )
     r.UIMenuDel( "Start", "Track" )
     r.UIMenuRedraw()
-    r.Signal( { "type":"trk_start", "interval":10, "name":"default" } )
+    r.Signal( { "type":"trk_start", "interval":interval, "name":u"%s" % name } )
 
 def StopRecording():
     global r
@@ -42,6 +54,15 @@ def AddWaypoint():
     global r
     r.Signal( { "type":"wpt_add", "name":"XYZ", "latitude":51.5431429, "longitude":5.26938448, "altitude":0 } )
 
+def MonitorWaypoint():
+    pass
+
+def MonitorTrack():
+    pass
+
+def MonitorRoute():
+    pass
+
 def Main():
     global r
     r = Registry()
@@ -50,8 +71,8 @@ def Main():
     for name in [
         "uiregistry",
         "timers",
-        #"simgps",
-        "lrgps",
+        "simgps",
+        #"lrgps",
         "datumregistry",
         "datumwgs84",
         "datumutm",
@@ -63,7 +84,11 @@ def Main():
         ]:
         r.PluginAdd(name)
 
-    r.UIMenuAdd( StartRecording, "Start", "Track" )
+    r.UIMenuAdd( StartRecording,  "Start",   "Track" )
+    #r.UIMenuAdd( AddWaypoint,     "Add",     "Waypoint" )
+    #r.UIMenuAdd( MonitorWaypoint, "Monitor", "Waypoint" )
+    #r.UIMenuAdd( MonitorTrack,    "Monitor", "Track" )
+    #r.UIMenuAdd( MonitorRoute,    "Monitor", "Route" )
     r.UIMenuRedraw()
     r.UIRun()
 

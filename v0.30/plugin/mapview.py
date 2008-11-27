@@ -640,7 +640,7 @@ class MapView(View):
         self.registry.Signal( { "type":"view_register", "id":"map", "view":self } )
 
         self.registry.ConfigAdd( { "setting":"map_dir", "description":u"Directory where map files reside",
-                                 "default":Defaults["mapdir"], "query":None } )
+                                 "default":"maps/", "query":None } )
         self.registry.ConfigAdd( { "setting":"map_current", "description":u"Current/Last map shown",
                                  "default":"campus", "query":self.QueryCurrentMap } )
         self.InitMapList(self.registry.ConfigGetValue("map_dir"))
