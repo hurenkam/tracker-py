@@ -37,12 +37,8 @@ Color = {
     }
 
 Defaults = {
-        "configdir": "data\\tracker",
-        "plugindir": "data\\tracker\\plugins",
-        "mapdir": "data\\tracker\\maps",
-        "trackdir": "data\\tracker\\tracks",
-        "routedir": "data\\tracker\\routes",
-        "gpxdir": "data\\tracker\\gpx",
+        "basedirs": [u"e:\\data\\tracker\\",u"c:\\data\\tracker\\"],
+        "plugindir": "plugins",
     }
 
 Fill = {
@@ -64,8 +60,6 @@ Key = {
             #"tab":wx.WXK_TAB,
             #"back":wx.WXK_BACK,
     }
-
-DataDirs = [u"e:\\data\\tracker\\",u"c:\\data\\tracker\\"]
 
 def Sleep(sleeptime):
     return e32.ao_sleep(sleeptime)
@@ -89,7 +83,7 @@ def ConfigQuery(item):
 
 def OpenDbmFile(file,mode):
     b,e = os.path.splitext(file)
-    for d in BaseDirs:
+    for d in Defaults["basedirs"]:
         p = u"%s%s" % (d,b)
         try:
             return db.open(p,"%sf" % mode)

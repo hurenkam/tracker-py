@@ -49,6 +49,7 @@ class Gps:
 
         self.position["distance"] = distance
         self.previous = self.position.copy()
+        Log("gps#","Gps::CalculateDistance() result: %s" % str(self.position["distance"]))
 
     def SignalExpiredRequests(self):
         Log("gps*","Gps::SignalExpiredRequests()")
@@ -60,13 +61,17 @@ class Gps:
                 lat2,lon2 = (r["previous"]["latitude"],r["previous"]["longitude"])
                 distance,bearing = datums.CalculateDistanceAndBearing( (lat1,lon1), (lat2,lon2) )
                 if r["tolerance"] <= distance:
+                    Log("gps#","Gps::SignalExpiredRequests(): distance %s > tolerance %s" % (str(distance),str(r["tolerance"])))
                     p = self.position.copy()
                     p["distance"] = distance
+                    p["ref"] = k
                     self.registry.Signal( p )
                     r["previous"] = p
             else:
-                self.registry.Signal( self.position )
-                r["previous"] = self.position.copy()
+                p = self.position.copy()
+                p["ref"] = k
+                self.registry.Signal( p )
+                r["previous"] = p
 
     def StopGps(self):
         Log("gps","Gps::StopGps()")

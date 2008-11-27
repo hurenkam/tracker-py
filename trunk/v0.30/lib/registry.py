@@ -1,11 +1,13 @@
 from helpers import *
+from osal import Defaults
 
 class Registry:
     def __init__(self):
         self.items = []
         import sys
-        plugindir = "../plugin"
-        sys.path.append(plugindir)
+        #plugindir = "e:\\data\\tracker\\plugins"
+        for b in Defaults["basedirs"]:
+            sys.path.append("%s%s" % (b, Defaults["plugindir"]))
         self.plugins = {}
         self.pluginnames = []
 

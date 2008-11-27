@@ -5,7 +5,6 @@ except:
     import s60osal as osal
     #Drives = [u"c:\\",u"e:\\"]
 
-BaseDirs = osal.BaseDirs
 OpenDbmFile = osal.OpenDbmFile
 Defaults = osal.Defaults
 Sleep = osal.Sleep

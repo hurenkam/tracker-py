@@ -18,6 +18,8 @@ class Recorder:
         self.registry = registry
         self.data = None
         self.meta = None
+        self.registry.ConfigAdd( { "setting":"trk_dir", "description":u"Directory where tracks are stored",
+                                   "default":"tracks/", "query":None } )
         self.RegisterSignals()
 
     def Quit(self):
@@ -27,8 +29,8 @@ class Recorder:
 
     def OpenDbmFiles(self,file,mode):
         Log("recorder","Recorder::OpenDbmFiles()")
-        self.data = OpenDbmFile(u"%s-data" % file,mode)
-        self.meta = OpenDbmFile(u"%s-meta" % file,mode)
+        self.data = OpenDbmFile(u"%s%s-data" % (self.registry.ConfigGetValue("trk_dir"),file),mode)
+        self.meta = OpenDbmFile(u"%s%s-meta" % (self.registry.ConfigGetValue("trk_dir"),file),mode)
 
     def CloseDbmFiles(self):
         Log("recorder","Recorder::CloseDbmFiles()")
