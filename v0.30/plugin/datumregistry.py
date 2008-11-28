@@ -26,11 +26,16 @@ class DatumRegistry:
         self.datums.append((short,format,query))
     def DatumDel(self,short):
         Log("datum","DatumRegistry::DatumDel()")
-    def DatumFormat(self,position):
-        Log("datum*","DatumRegistry::DatumFormat(",position,")")
+    def DatumFormat(self,(lat,lon)):
+        Log("datum*","DatumRegistry::DatumFormat(",lat,lon,")")
+        if lat == None or lon == None:
+            return (u"Position",u"unknown")
         if self.datums:
             short,format,query = self.datums[self.current]
-            return format(position)
+            return format((lat,lon))
+        else:
+            return (str(lat),str(lon))
+
     def DatumQuery(self,position=None):
         Log("datum","DatumRegistry::DatumQuery(",position,")")
         if self.datums:

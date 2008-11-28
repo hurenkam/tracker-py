@@ -499,4 +499,4 @@ class FileSelector:
                     fileselector.files[u'%s' % b] = os.path.join(dir,file)
 
         for d in Defaults["basedirs"]:
-            os.path.walk(d+self.dir,iter,self)
+            os.path.walk(os.path.join(d,self.dir),iter,self)

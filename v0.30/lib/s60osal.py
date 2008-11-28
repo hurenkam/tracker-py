@@ -37,7 +37,7 @@ Color = {
     }
 
 Defaults = {
-        "basedirs": [u"e:\\data\\tracker\\",u"c:\\data\\tracker\\"],
+        "basedirs": ["e:\\data\\tracker\\","c:\\data\\tracker\\"],
         "plugindir": "plugins",
     }
 
@@ -82,9 +82,12 @@ def ConfigQuery(item):
     return
 
 def OpenDbmFile(file,mode):
+    import os
+    import e32dbm as db
     b,e = os.path.splitext(file)
+    #return db.open(Defaults["basedirs"][0]+file,"%sf" % mode)
     for d in Defaults["basedirs"]:
-        p = u"%s%s" % (d,b)
+        p = os.path.join(d,b)
         try:
             return db.open(p,"%sf" % mode)
         except:
@@ -122,7 +125,7 @@ class Widget:
         self.mask.clear(1)
 
     def LoadImage(self,name):
-        self.image = Image.open(u"%s" % name)
+        self.image = Image.open("%s" % name)
         self.size = self.image.size
 
     def GetImage(self):

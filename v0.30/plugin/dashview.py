@@ -20,21 +20,21 @@ class DashView(View):
         from time import time
 
         self.menu = {}
+        self.trip = 0.0
 
         self.positionwidget = PositionWidget((200,15))
-        self.wptgauge    = WaypointGauge(None)
-        self.satgauge    = SatelliteGauge(None)
-        self.clockgauge1 = ClockGauge(None)
-        self.clockgauge2 = ClockGauge(None)
-        self.clockgauge3 = ClockGauge(None)
-        self.clockgauge4 = ClockGauge(None)
-        #self.clockgauge5 = ClockGauge(None)
+        self.wptgauge       = WaypointGauge(None)
+        self.satgauge       = SatelliteGauge(None)
+        self.speedgauge     = SpeedGauge(registry,None)
+        self.altgauge       = AltitudeGauge(registry,None)
+        self.timegauge      = TimeGauge(registry,None)
+        self.distancegauge  = DistanceGauge(registry,None)
         self.gauges = [
                 self.wptgauge,
-                self.clockgauge1,
-                self.clockgauge2,
-                self.clockgauge3,
-                self.clockgauge4,
+                self.timegauge,
+                self.distancegauge,
+                self.altgauge,
+                self.speedgauge,
                 self.satgauge,
             ]
         self.spots = [
@@ -55,14 +55,13 @@ class DashView(View):
         self.satwidget = BarWidget((15,50),bars=5,range=10)
         self.batwidget = BarWidget((15,50),bars=5,range=100)
 
-        #View.__init__(self)
         View.__init__(self,(240,320))
         self.registry.UIViewAdd(self)
-        #self.Resize((240,320))
 
         self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"dash", "handler":self.OnClock } )
         self.registry.Signal( { "type":"timer_start", "id":"dash", "interval":1, "start":time() } )
         self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"position",  "handler":self.OnPosition } )
+        self.registry.Signal( { "type":"gps_start",   "id":"dash",  "tolerance":10 } )
         self.KeyAdd("up",self.MoveUp)
         self.KeyAdd("down",self.MoveDown)
 
@@ -86,11 +85,9 @@ class DashView(View):
 
     def OnClock(self,signal):
         Log("dash*","DashView::OnClock()")
-        self.clockgauge1.UpdateValue(signal["time"])
-        #self.clockgauge2.UpdateValue(signal["time"])
-        #self.clockgauge3.UpdateValue(signal["time"])
-        #self.clockgauge4.UpdateValue(signal["time"])
-        #self.clockgauge5.UpdateValue(signal["time"])
+        t = signal["time"]
+        self.timegauge.UpdateValues(t,t,t,t) # time, trip, remaining, eta
+        #self.clockgauge.UpdateValue(t)
         self.Draw()
         self.RedrawView()
 
@@ -105,12 +102,26 @@ class DashView(View):
 
     def OnPosition(self,position):
         Log("dash*","DashView::OnPosition(",position,")")
-        self.positionwidget.UpdatePosition(self.registry.DatumFormat((position["latitude"],position["longitude"])))
-        self.wptgauge.UpdateValues(position["heading"],0,0)
         self.UpdateSignal(position["used_satellites"],position["satellites"])
+        self.positionwidget.UpdatePosition(self.registry.DatumFormat((position["latitude"],position["longitude"])))
+
         list = position['satlist']
         if len(list) > 0:
             self.satgauge.UpdateList(list)
+
+        if position["ref"] != "dash":
+            return
+
+        lat,lon = position["latitude"],position["longitude"]
+        if lat == None or lon == None:
+            return
+
+        self.wptgauge.UpdateValues(position["heading"],0,0)
+        self.speedgauge.UpdateValue(position["speed"])
+        self.altgauge.UpdateValue(position["altitude"])
+        d = position["distance"]
+        if d != None:
+            self.distancegauge.UpdateValues(d,0)
 
         try:
             self.Draw()

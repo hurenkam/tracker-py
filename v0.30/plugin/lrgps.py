@@ -40,13 +40,13 @@ class LRGps(Gps):
         Log("lrgps*","LRGps::ConvertData()")
         self.previous = self.position
 
-        NaN = 0
+        NaN = None
         self.position["latitude"] = eval(str(data[1]))
         self.position["longitude"] = eval(str(data[2]))
         self.position["altitude"] = eval(str(data[3]))
 
         if len(data) > 8:
-            self.position["speed"] = eval(str(data[8])) / 3.6
+            self.position["speed"] = eval(str(data[8]))
             self.position["heading"] = eval(str(data[10]))
             self.position["time"] = data[12]
             self.position["satellites"] = eval(str(data[13]))

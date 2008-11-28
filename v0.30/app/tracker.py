@@ -11,13 +11,14 @@ loglevels += [
               #"simgps","simgps*",
               #"lrgps","lrgps*",
               #"timer","timer*",
-              "map","map-",#"map#","map*",
+              #"map","map#",#"map-","map*",
               #"dash","dash*",
               #"rd","rd*","utm","utm*",
               #"datastorage","datastorage*",
               #"recorder","recorder*",
               #"ui", "ui*",
-              "landmarks","landmarks*",
+              #"landmarks","landmarks*",
+              #"config","config#",
               ]
 
 from registry import *
@@ -37,7 +38,7 @@ def StartRecording():
     r.UIMenuAdd( StopRecording, "Stop", "Track" )
     r.UIMenuDel( "Start", "Track" )
     r.UIMenuRedraw()
-    r.Signal( { "type":"trk_start", "interval":interval, "name":u"%s" % name } )
+    r.Signal( { "type":"trk_start", "interval":interval, "name":name } )
 
 def StopRecording():
     global r
@@ -104,8 +105,8 @@ def Main():
     for name in [
         "uiregistry",
         "timers",
-        "simgps",
-        #"lrgps",
+        #"simgps",
+        "lrgps",
         "datumregistry",
         "datumwgs84",
         "datumutm",
@@ -119,10 +120,6 @@ def Main():
 
     r.UIMenuAdd( StartRecording,  "Start",   "Track" )
     r.UIMenuAdd( AddWaypoint,     "Add",     "Waypoint" )
-    #r.UIMenuAdd( AddWaypoint,     "Add",     "Waypoint" )
-    #r.UIMenuAdd( MonitorWaypoint, "Monitor", "Waypoint" )
-    #r.UIMenuAdd( MonitorTrack,    "Monitor", "Track" )
-    #r.UIMenuAdd( MonitorRoute,    "Monitor", "Route" )
     r.UIMenuRedraw()
     StartGPS()
     r.UIRun()
