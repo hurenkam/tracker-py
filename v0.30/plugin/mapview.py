@@ -618,8 +618,6 @@ class MapView(View):
         self.satwidget = BarWidget((15,50),bars=5,range=10)
         self.batwidget = BarWidget((15,50),bars=5,range=100)
         self.currentposition = None
-        self.waypoints = {}
-        self.tmpwaypoints = {}
         self.showwaypoints = True
 
         #View.__init__(self)
@@ -710,19 +708,21 @@ class MapView(View):
     def OnWptFound(self,signal):
         Log("map-","MapView::OnWptFound(",signal,")")
         if signal["ref"] == "map_wpt_ref":
-            self.tmpwaypoints[signal["name"]] = Waypoint(
-                signal["name"],signal["latitude"],signal["longitude"],signal["altitude"] )
+            w = Waypoint( signal["name"],signal["latitude"],signal["longitude"],signal["altitude"] )
+            self.mapwidget.ShowWaypoint(w)
 
     def OnWptDone(self,signal):
         Log("map-","MapView::OnWptDone(",signal,")")
         if signal["ref"] == "map_wpt_ref":
-            self.mapwidget.waypoints = self.tmpwaypoints
-            self.tmpwaypoints = {}
             self.mapwidget.Draw()
             self.Draw()
 
     def OnWptShow(self,signal):
         Log("map-","MapView::OnWptShow(",signal,")")
+        w = Waypoint( signal["name"],signal["latitude"],signal["longitude"],signal["altitude"] )
+        self.mapwidget.ShowWaypoint(w)
+        self.mapwidget.Draw()
+        self.Draw()
 
     def OnOpen(self,signal=None):
         Log("map","MapView::OnOpen()")
@@ -945,8 +945,9 @@ class MapView(View):
                     bestmap = map
 
             if bestmap != None:
-                self.mapwidget.SetMap(bestmap)
-                self.GetRecordedTrackPoints()
+                #self.mapwidget.SetMap(bestmap)
+                #self.GetRecordedTrackPoints()
+                self.LoadMap(bestmap.name)
             else:
                 MessageBox("No map found","error")
 

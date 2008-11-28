@@ -55,6 +55,14 @@ class Landmarks:
     def OnWptAdd(self,signal):
         Log("landmarks","Landmarks::OnWptAdd(",signal,")")
         self.LandmarkAdd(Landmark(signal))
+        self.registry.Signal( {
+                "type":"wpt_show",
+                "id":"wpt",
+                "latitude":signal["latitude"],
+                "longitude":signal["longitude"],
+                "altitude":signal["altitude"],
+                "name":signal["name"]
+            } )
 
     def OnWptDel(self,signal):
         Log("landmarks","Landmarks::OnWptDel(",signal,")")
@@ -123,6 +131,7 @@ class Landmarks:
             lon = waypoint.longitude
             alt = waypoint.altitude
             self.waypoints[u"%s" % name] = "(%f,%f,%f)" % (lat,lon,alt)
+            Log("landmarks","Landmarks::LandmarkAdd(): ",self.waypoints[u"%s" % name])
 
 
     def LandmarkDel(self,waypoint):
@@ -170,3 +179,5 @@ class Landmarks:
         self.registry.Signal( { "type":"db_disconnect", "id":"wpt", "signal":"wpt_add" } )
         self.registry.Signal( { "type":"db_disconnect", "id":"wpt", "signal":"wpt_del" } )
         self.registry.Signal( { "type":"db_disconnect", "id":"wpt", "signal":"wpt_search" } )
+        #for key in self.waypoints.keys():
+        #    print key,self.waypoints[key]
