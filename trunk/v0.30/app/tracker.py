@@ -11,13 +11,13 @@ loglevels += [
               #"simgps","simgps*",
               #"lrgps","lrgps*",
               #"timer","timer*",
-              #"map","map-","map#","map*",
+              "map","map-",#"map#","map*",
               #"dash","dash*",
               #"rd","rd*","utm","utm*",
               #"datastorage","datastorage*",
               #"recorder","recorder*",
               #"ui", "ui*",
-              #"landmarks","landmarks*",
+              "landmarks","landmarks*",
               ]
 
 from registry import *
@@ -52,7 +52,26 @@ def ShowWaypoint():
 
 def AddWaypoint():
     global r
-    r.Signal( { "type":"wpt_add", "name":"XYZ", "latitude":51.5431429, "longitude":5.26938448, "altitude":0 } )
+    global e
+    lat = e["latitude"]
+    lon = e["longitude"]
+    alt = e["altitude"]
+    name = SimpleQuery("Waypoint name:","text","default")
+    if name == None:
+        MessageBox("Cancelled!","info")
+        return
+
+    lat = SimpleQuery("Latitude","float",lat)
+    if lat == None:
+        MessageBox("Cancelled!","info")
+        return
+
+    lon = SimpleQuery("Longitude","float",lon)
+    if lon == None:
+        MessageBox("Cancelled!","info")
+        return
+
+    r.Signal( { "type":"wpt_add",  "id":"main", "name":name, "latitude":lat, "longitude":lon, "altitude":alt } )
 
 def MonitorWaypoint():
     pass
@@ -62,6 +81,20 @@ def MonitorTrack():
 
 def MonitorRoute():
     pass
+
+def StartGPS():
+    global r
+    r.Signal( { "type":"gps_start",  "id":"main", "tolerance":10 } )
+    r.Signal( { "type":"db_connect", "id":"main", "signal":"position",  "handler":OnPosition } )
+
+def OnPosition(event):
+    global e
+    e = event
+
+def StopGPS():
+    global r
+    r.Signal( { "type":"gps_stop",  "id":"main" } )
+    r.Signal( { "type":"db_disconnect", "id":"main", "signal":"position" } )
 
 def Main():
     global r
@@ -85,12 +118,15 @@ def Main():
         r.PluginAdd(name)
 
     r.UIMenuAdd( StartRecording,  "Start",   "Track" )
+    r.UIMenuAdd( AddWaypoint,     "Add",     "Waypoint" )
     #r.UIMenuAdd( AddWaypoint,     "Add",     "Waypoint" )
     #r.UIMenuAdd( MonitorWaypoint, "Monitor", "Waypoint" )
     #r.UIMenuAdd( MonitorTrack,    "Monitor", "Track" )
     #r.UIMenuAdd( MonitorRoute,    "Monitor", "Route" )
     r.UIMenuRedraw()
+    StartGPS()
     r.UIRun()
+    StopGPS()
 
     r.Quit()
 
