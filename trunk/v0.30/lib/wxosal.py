@@ -91,8 +91,8 @@ def MessageBox(title,type):
     else:
         s = wx.OK
 
-    dial = wx.MessageBox(title,type,style = s)
-    result = dial.ShowModal()
+    result = wx.MessageBox(title,type,style = s)
+    #result = dial.ShowModal()
     if result == wx.ID_YES or result == wx.ID_OK:
         return True
 

@@ -141,7 +141,8 @@ class Recorder:
 
     def OnPosition(self,signal):
         Log("recorder*","Recorder::OnSignal(",signal,")")
-        self.AppendTrack(signal)
+        if signal["ref"] == "recorder":
+            self.AppendTrack(signal)
 
     def OnResend(self,signal):
         Log("recorder*","Recorder::OnResend(",signal,")")

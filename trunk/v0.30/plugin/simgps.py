@@ -82,6 +82,10 @@ class SimGps(Gps):
         self.position["longitude"] = lon + self.count * self.dlon
         self.position["latitude"]  = lat + self.count * self.dlat
         self.position["altitude"]  = alt + self.count * self.dalt
+        #self.position["longitude"] = None
+        #self.position["latitude"]  = None
+        #self.position["altitude"]  = None
+        #self.position["used_satellites"] = 0
         self.position["time"] = time.time()
         self.count += 1
 

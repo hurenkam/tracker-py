@@ -250,18 +250,31 @@ class TwoHandGauge(Gauge):
         self.factor = divider[1]/divider[0]
         self.scale = scale
         self.value = None
+        self.decimals = 2
+
+    def FormatValue(self):
+        if self.decimals > 0:
+            s = str(float(self.value))
+            pre,post = s.split('.')
+            return "%s.%s" % (pre,post[:self.decimals])
+        else:
+            return str(int(self.value))
+
 
     def Draw(self):
         if self.radius is None:
             return
 
         Gauge.Draw(self)
+        size1 = self.radius / 50.0
+        size2 = 1.2 * size1
+
         self.DrawScale(self.scale[0],self.scale[1])
-        self.DrawText(((self.radius,0.6*self.radius)),u'%s' % self.name,align="center")
+        self.DrawText(((self.radius,0.6*self.radius)),u'%s' % self.name,size=size1,align="center")
         if (self.value != None):
             longhand =  (self.value % self.shortdivider) / self.longdivider * 360/self.factor
             shorthand = (self.value / self.shortdivider)                    * 360/self.factor
-            self.DrawText(((self.radius,1.6*self.radius)), self.units % self.value, size=1.5,align="center")
+            self.DrawText(((self.radius,1.6*self.radius)), self.FormatValue(), size=size2,align="center")
             self.DrawTriangleHand (longhand,  0.7 * self.radius, Color['black'], 4)
             self.DrawTriangleHand (shorthand, 0.5 * self.radius, Color['black'], 4)
 
@@ -413,3 +426,274 @@ class SatelliteGauge(Gauge):
                 self.DrawDotHand(angle,pos,color,handwidth=self.radius/8)
 
 
+class SpeedGauge(TwoHandGauge):
+    def __init__(self,registry,radius=None):
+        TwoHandGauge.__init__(self,radius,'speed',u'%8.2f')
+        self.value = 0
+        self.speed = 0
+        self.interval = 0
+        self.avglist = []
+        self.avgbase = 0
+        self.avgcount = 0
+        self.step = None
+        self.registry = registry
+        self.registry.ConfigAdd( { "setting":"speed_type", "description":u"Type of info the speed gauge should show",
+                                 "default":"speed", "query":None } )
+        self.registry.ConfigAdd( { "setting":"speed_units", "description":u"Units the speed gauge should use",
+                                 "default":"km/h", "query":None } )
+        self.registry.ConfigAdd( { "setting":"speed_interval", "description":u"Interval used in case of average speed",
+                                 "default":10, "query":None } )
+
+    def Draw(self):
+        def sum(l):
+            s = 0
+            for i in l:
+                s += i
+            return s
+
+        value = 0
+        type = self.registry.ConfigGetValue("speed_type")
+        units = self.registry.ConfigGetValue("speed_units")
+        if type == "speed":
+            value = self.speed
+        if type == "avg-speed":
+            l = len(self.avglist)
+            if l > 0:
+                value = sum(self.avglist)/l
+
+        if units == u"km/h":
+            self.value = value
+        else: # units == "mph"
+            self.value = value * 0.621371192237
+
+        TwoHandGauge.Draw(self)
+
+    def UpdateValue(self,value):
+        if str(value) == "NaN":
+            return
+
+        if value < 0:
+            value = 0
+        if value > 9999:
+            value = 9999
+
+        self.speed = value
+
+        interval = self.registry.ConfigGetValue("speed_interval")
+        if self.step == None:
+            self.avglist.append(value)
+            if len(self.avglist)>self.interval:
+                del(self.avglist[0])
+        else:
+            self.avgbase += (value/self.step)
+            self.avgcount += 1
+            if self.avgcount == self.step:
+                self.avglist.append(self.avgcount)
+                if len(self.avglist) > 100:
+                    del(self.avglist[0])
+                self.avgbase = 0
+                self.avgcount = 0
+
+        self.Draw()
+
+
+class AltitudeGauge(TwoHandGauge):
+    def __init__(self,registry,radius=None):
+        TwoHandGauge.__init__(self,radius,'altitude',u'%8.0f',(100,1000))
+        self.value = 0
+        self.altitude = 0
+        self.ascent = 0
+        self.descent = 0
+        self.base = 0
+        self.tolerance = 0
+        self.interval = 0
+        self.avglist = []
+        self.avgbase = 0
+        self.avgcount = 0
+        self.step = None
+        self.registry = registry
+        self.registry.ConfigAdd( { "setting":"alt_type", "description":u"Type of info the altitude gauge should show",
+                                 "default":"alt", "query":None } )
+        self.registry.ConfigAdd( { "setting":"alt_units", "description":u"Units the altitude gauge should use",
+                                 "default":"m", "query":None } )
+        self.registry.ConfigAdd( { "setting":"alt_interval", "description":u"Interval used in case of average altitude",
+                                 "default":15, "query":None } )
+        self.registry.ConfigAdd( { "setting":"alt_tolerance", "description":u"Tolerance used in case of ascent/descent",
+                                 "default":100, "query":None } )
+
+    def UpdateValue(self,value):
+        self.altitude = value
+
+        tolerance = self.registry.ConfigGetValue("alt_tolerance")
+        interval  = self.registry.ConfigGetValue("alt_interval")
+
+        delta = value - self.base
+        if delta > tolerance:
+            self.ascent += delta
+            self.base = value
+        if (-1 * delta) > tolerance:
+            self.descent -= delta
+            self.base = value
+
+        if self.step == None:
+            self.avglist.append(value)
+            if len(self.avglist) > interval:
+                del(self.avglist[0])
+        else:
+            self.avgbase += (value/self.step)
+            self.avgcount += 1
+            if self.avgcount == self.step:
+                self.avglist.append(self.avgcount)
+                if len(self.avglist) > 100:
+                    del(self.avglist[0])
+                self.avgbase = 0
+                self.avgcount = 0
+
+        self.Draw()
+
+    def Draw(self):
+        def sum(l):
+            s = 0
+            for i in l:
+                s += i
+            return s
+
+        value = 0
+        type = self.registry.ConfigGetValue("alt_type")
+        units = self.registry.ConfigGetValue("alt_units")
+        if type == "alt":
+            value = self.altitude
+        if type == "asc":
+            value = self.ascent
+        if type == "desc":
+            value = self.descent
+        if type == "avg-alt":
+            l = len(self.avglist)
+            if l > 0:
+                value = sum(self.avglist)/l
+
+        if units == "m":
+            self.value = value
+        else: # self.units == "ft"
+            self.value = value * 3.2808398950131235
+
+        TwoHandGauge.Draw(self)
+
+class TimeGauge(Gauge):
+
+    def __init__(self,registry,radius=None):
+        self.time = 0
+        self.trip = 0
+        self.remaining = 0
+        self.eta = 0
+        self.registry = registry
+        self.registry.ConfigAdd( { "setting":"time_type", "description":u"Type of info the time gauge should show",
+                                 "default":"clock", "query":None } )
+        Gauge.__init__(self,radius)
+
+    def GetHMS(self,value):
+        h = int(value/3600)
+        m = int((value - h * 3600) / 60)
+        s = int(value - h * 3600 - m * 60)
+        return h,m,s
+
+    def UpdateValues(self,time,trip,remaining,eta):
+        self.time = time
+        self.trip = trip
+        self.remaining = remaining
+        self.eta = eta
+        self.Draw()
+
+    def Draw(self):
+        import time
+        size1 = self.radius / 60.0
+        size2 = 1.2 * size1
+
+        type = self.registry.ConfigGetValue("time_type")
+        if type == "clock":
+            y,m,d,hours,minutes,seconds,d1,d2,d3 = time.localtime(self.time)
+        if type == "eta":
+            y,m,d,hours,minutes,seconds,d1,d2,d3 = time.localtime(self.eta)
+        if type == "trip":
+            hours,minutes,seconds = self.GetHMS(self.trip)
+        if type == "remaining":
+            hours,minutes,seconds = self.GetHMS(self.remaining)
+
+        if self.radius is None:
+            return
+
+        Gauge.Draw(self)
+        self.DrawScale(12,60)
+        if self.radius >= 30:
+            self.DrawText(((self.radius,0.6*self.radius)),u'%s' % type,size=size1,align="center")
+        if ((self.radius != None) and
+            (hours != None) and
+            (minutes != None)):
+
+                hourshand =    hours   * 360/12  + minutes * 360/12/60
+                if seconds != None:
+                    minuteshand =  minutes * 360/60  + seconds * 360/60/60
+                    secondshand =  seconds * 360/60
+                    if self.radius >= 30:
+                        self.DrawText(((self.radius,1.6*self.radius)),u'%2i:%02i:%02i' % (hours,minutes,seconds),size=size2,align="center")
+                    self.DrawLineHand     (secondshand, 0.75 * self.radius, Color['black'], 1)
+                    self.DrawTriangleHand (minuteshand, 0.7  * self.radius, Color['black'], 4)
+                    self.DrawTriangleHand (hourshand,   0.5  * self.radius, Color['black'], 4)
+                else:
+                    minuteshand =  minutes * 360/60
+                    if self.radius >= 30:
+                        self.DrawText(((self.radius,1.6*self.radius)),u'%2i:%02i' % (hours,minutes),size=size2,align="center")
+                    self.DrawTriangleHand (minuteshand, 0.7  * self.radius, Color['black'], 4)
+                    self.DrawTriangleHand (hourshand,   0.5  * self.radius, Color['black'], 4)
+
+
+class DistanceGauge(TwoHandGauge):
+
+    def __init__(self,registry,radius=None):
+        TwoHandGauge.__init__(self,radius)
+        self.value = 0
+        self.total = 0
+        self.trip = 0
+        self.distance = 0
+        self.registry = registry
+        self.registry.ConfigAdd( { "setting":"distance_type", "description":u"Type of info the distance gauge should show",
+                                 "default":"trip", "query":None } )
+        self.registry.ConfigAdd( { "setting":"distance_units", "description":u"Units the distance gauge should use",
+                                 "default":"km", "query":None } )
+        self.registry.ConfigAdd( { "setting":"distance_total", "description":u"Total distance",
+                                 "default":0, "query":None } )
+        #self.registry.ConfigAdd( { "setting":"distance_trip", "description":u"Trip distance",
+        #                         "default":0, "query":None } )
+        self.total = self.registry.ConfigGetValue("distance_total")
+        #self.trip  = self.registry.ConfigGetValue("distance_trip")
+        self.trip = 0
+
+    def Draw(self):
+        type = self.registry.ConfigGetValue("distance_type")
+        units = self.registry.ConfigGetValue("distance_units")
+        if type == "total":
+            distance = self.total
+            self.decimals = 0
+        if type == "trip":
+            distance = self.trip
+            self.decimals = 2
+        if type == "wpt":
+            distance = self.distance
+            self.decimals = 2
+
+        if units == "km":
+            self.value = distance / 1000
+        else: # self.units == "miles"
+            self.value = distance / 1000 * 0.621371192
+
+        self.name = u"%s-%s" % (type,units)
+        TwoHandGauge.Draw(self)
+
+    def UpdateValues(self,delta,wpt):
+        self.total += delta
+        self.trip += delta
+        self.registry.ConfigSetValue("distance_total",self.total)
+        #self.registry.ConfigSetValue("distance_trip",self.trip)
+
+        self.distance = wpt
+        self.Draw()

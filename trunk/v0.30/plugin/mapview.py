@@ -379,7 +379,7 @@ class MapWidget(Widget):
             self.Draw()
 
     def ShowWaypoint(self,waypoint):
-        Log("map","MapWidget::ShowWaypoint(",waypoint,")")
+        Log("map-","MapWidget::ShowWaypoint(",waypoint,")")
         self.waypoints[waypoint.name] = waypoint
         #self.Draw()
 
@@ -436,8 +436,13 @@ class MapWidget(Widget):
         if self.map == None:
             return
 
-        self.mapimage = Widget()
-        self.mapimage.LoadImage(self.map.filename)
+        try:
+            self.mapimage = Widget()
+            self.mapimage.LoadImage(self.map.filename)
+        except:
+            Log("map!","MapWidget::LoadMap(): Failed to load map ", self.map.filename)
+            self.mapimage = None
+            return
 
         self.map.SetSize(self.mapimage.GetSize())
         if self.position != None:
@@ -503,6 +508,9 @@ class MapWidget(Widget):
 
     def DrawArrow(self,coords,color=Color["black"]):
         Log("map*","MapWidget::DrawArrow(",coords,color,")")
+        if self.heading == None:
+            return
+
         r=10.0
         point1 = self.CalculatePoint(self.heading,   coords,r*4)
         point2 = self.CalculatePoint(self.heading+30,coords,r*1.5)
@@ -639,7 +647,7 @@ class MapView(View):
         self.registry.Signal( { "type":"view_register", "id":"map", "view":self } )
 
         self.registry.ConfigAdd( { "setting":"map_dir", "description":u"Directory where map files reside",
-                                 "default":"maps/", "query":None } )
+                                 "default":"maps", "query":None } )
         self.registry.ConfigAdd( { "setting":"map_current", "description":u"Current/Last map shown",
                                  "default":"campus", "query":self.QueryCurrentMap } )
         self.InitMapList(self.registry.ConfigGetValue("map_dir"))
@@ -655,13 +663,13 @@ class MapView(View):
         Log("map","MapView::ZoomIn()")
         self.mapwidget.ZoomIn()
         self.Draw()
-        self.registry.UIViewRedraw()
+        self.RedrawView()
 
     def ZoomOut(self,event=None):
         Log("map","MapView::ZoomOut()")
         self.mapwidget.ZoomOut()
         self.Draw()
-        self.registry.UIViewRedraw()
+        self.RedrawView()
 
     def ToggleWaypoints(self,event=None):
         Log("map","MapView::ToggleWaypoints()")
@@ -761,11 +769,16 @@ class MapView(View):
     def OnPosition(self,position):
         Log("map*","MapView::OnPosition(",position,")")
         heading = position["heading"]
-        self.currentposition = Point(0,position["latitude"],position["longitude"])
-        self.mapwidget.UpdatePosition(self.currentposition,heading)
+        self.UpdateSignal(position["used_satellites"],position["satellites"])
         self.positionwidget.UpdatePosition(
             self.registry.DatumFormat((position["latitude"],position["longitude"])))
-        self.UpdateSignal(position["used_satellites"],position["satellites"])
+
+        lat,lon = position["latitude"],position["longitude"]
+        if lat == None or lon == None:
+            return
+
+        self.currentposition = Point(0,position["latitude"],position["longitude"])
+        self.mapwidget.UpdatePosition(self.currentposition,heading)
 
         try:
             self.Draw()

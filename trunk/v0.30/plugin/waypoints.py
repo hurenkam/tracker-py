@@ -126,12 +126,12 @@ class Landmarks:
                 self.lmdb.UpdateLandmark(landmark)
                 landmark.Close()
         else:
-            name = waypoint.name
+            name = waypoint.name.encode("utf-8")
             lat = waypoint.latitude
             lon = waypoint.longitude
             alt = waypoint.altitude
-            self.waypoints[u"%s" % name] = "(%f,%f,%f)" % (lat,lon,alt)
-            Log("landmarks","Landmarks::LandmarkAdd(): ",self.waypoints[u"%s" % name])
+            self.waypoints[name] = "(%f,%f,%f)" % (lat,lon,alt)
+            Log("landmarks","Landmarks::LandmarkAdd(): ",self.waypoints[name])
 
 
     def LandmarkDel(self,waypoint):
@@ -179,5 +179,5 @@ class Landmarks:
         self.registry.Signal( { "type":"db_disconnect", "id":"wpt", "signal":"wpt_add" } )
         self.registry.Signal( { "type":"db_disconnect", "id":"wpt", "signal":"wpt_del" } )
         self.registry.Signal( { "type":"db_disconnect", "id":"wpt", "signal":"wpt_search" } )
-        #for key in self.waypoints.keys():
-        #    print key,self.waypoints[key]
+        if self.lmdb == None:
+            self.waypoints.close()
