@@ -383,11 +383,12 @@ class MapWidget(Widget):
         self.waypoints[waypoint.name] = waypoint
         #self.Draw()
 
-    def HideWaypoint(self,waypoint):
-        Log("map","MapWidget::HideWaypoint(",waypoint,")")
-        if waypoint.name in self.waypoints.keys():
-            del self.waypoints[waypoint.name]
-            self.Draw()
+    def HideWaypoints(self):
+        Log("map","MapWidget::HideWaypoints()")
+        #if waypoint.name in self.waypoints.keys():
+        #    del self.waypoints[waypoint.name]
+        self.waypoints = {}
+        self.Draw()
 
     def SetRecordingTrack(self,track):
         Log("map","MapWidget::SetRecordingTrack(",track,")")
@@ -666,6 +667,7 @@ class MapView(View):
         Log("map","MapView::ToggleWaypoints()")
         if self.showwaypoints:
             self.showwaypoints = False
+            self.mapwidget.HideWaypoints()
             self.Draw()
         else:
             self.showwaypoints = True

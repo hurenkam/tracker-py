@@ -61,6 +61,7 @@ Key = {
             "enter":wx.WXK_RETURN,
             "tab":wx.WXK_TAB,
             "back":wx.WXK_BACK,
+            "7":wx.WXK_NUMPAD7
     }
 
 def Sleep(sleeptime):
