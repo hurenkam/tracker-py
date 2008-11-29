@@ -23,14 +23,14 @@ def QueryRD((latitude,longitude)):
     from osal import MessageBox, SimpleQuery
 
     rdx,rdy = Wgs2RD(latitude,longitude)
-    rdx = SimpleQuery("RD X:","number",rdx)
+    rdx = SimpleQuery(u"RD X:","number",rdx)
     if rdx == None:
-        MessageBox("Cancelled!","info")
+        MessageBox(u"Cancelled!","info")
         return
 
-    rdy = SimpleQuery("RD Y:","number",rdy)
+    rdy = SimpleQuery(u"RD Y:","number",rdy)
     if rdy == None:
-        MessageBox("Cancelled!","info")
+        MessageBox(u"Cancelled!","info")
         return
 
     return RD2Wgs(rdx,rdy)
