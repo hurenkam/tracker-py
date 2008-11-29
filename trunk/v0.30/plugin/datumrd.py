@@ -20,20 +20,20 @@ def RD2Wgs(rdx,rdy):
 
 def QueryRD((latitude,longitude)):
     Log("rd","QueryRD()")
-    import appuifw
+    from osal import MessageBox, SimpleQuery
 
     rdx,rdy = Wgs2RD(latitude,longitude)
-    rdx = appuifw.query(u"RD X:","float",rdx)
+    rdx = SimpleQuery("RD X:","number",rdx)
     if rdx == None:
-        appuifw.note(u"Cancelled.","info")
-        return None
+        MessageBox("Cancelled!","info")
+        return
 
-    rdy = appuifw.query(u"RD Y:","float",rdy)
+    rdy = SimpleQuery("RD Y:","number",rdy)
     if rdy == None:
-        appuifw.note(u"Cancelled.","info")
-        return None
+        MessageBox("Cancelled!","info")
+        return
 
-    return RD2Wgs(self,rdx,rdy)
+    return RD2Wgs(rdx,rdy)
 
 def FormatRD((latitude,longitude)):
     Log("rd*","FormatRD()")

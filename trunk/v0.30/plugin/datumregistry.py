@@ -16,28 +16,32 @@ class DatumRegistry:
     def __init__(self,registry):
         Log("datum","DatumRegistry::__init__()")
         self.registry = registry
-        self.datums = []
+        self.datums = {}
         self.current = 0
         registry.ConfigAdd(
             { "setting":"datum_current", "description":u"Current datum",
               "default":"RD", "query":self.DatumQuery } )
     def DatumAdd(self,short,format,query):
         Log("datum","DatumRegistry::DatumAdd(",short,")")
-        self.datums.append((short,format,query))
+        self.datums[short]=(format,query)
     def DatumDel(self,short):
         Log("datum","DatumRegistry::DatumDel()")
+        del self.datums[short]
     def DatumFormat(self,(lat,lon)):
         Log("datum*","DatumRegistry::DatumFormat(",lat,lon,")")
         if lat == None or lon == None:
             return (u"Position",u"unknown")
-        if self.datums:
-            short,format,query = self.datums[self.current]
+
+        current = self.registry.ConfigGetValue("datum_current")
+        if current in self.datums.keys():
+            format,query = self.datums[current]
             return format((lat,lon))
         else:
             return (str(lat),str(lon))
 
     def DatumQuery(self,position=None):
         Log("datum","DatumRegistry::DatumQuery(",position,")")
-        if self.datums:
-            short,format,query = self.datums[self.current]
+        current = self.registry.ConfigGetValue("datum_current")
+        if current in self.datums.keys():
+            format,query = self.datums[current]
             return query(position)
