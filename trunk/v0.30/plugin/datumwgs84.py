@@ -59,14 +59,14 @@ class DatumWgs84:
 
     def QueryD(self,(latitude,longitude)):
         Log("wgs84","DatumWgs84::QueryD()")
-        lat = SimpleQuery("Latitude (DD.DDDDDD)","float",latitude)
+        lat = SimpleQuery(u"Latitude (DD.DDDDDD)","float",latitude)
         if lat == None:
-            MessageBox("Cancelled!","info")
+            MessageBox(u"Cancelled!","info")
             return
 
-        lon = SimpleQuery("Longitude (DD.DDDDDD)","float",longitude)
+        lon = SimpleQuery(u"Longitude (DD.DDDDDD)","float",longitude)
         if lon == None:
-            MessageBox("Cancelled!","info")
+            MessageBox(u"Cancelled!","info")
             return
 
         return lat,lon
@@ -77,14 +77,14 @@ class DatumWgs84:
         lat = u"%s %s" % (latm,latd)
         lon = u"%s %s" % (lonm,lond)
 
-        lat = SimpleQuery("Latitude (DD MM.MMMM)","text",lat)
+        lat = SimpleQuery(u"Latitude (DD MM.MMMM)","text",lat)
         if lat == None:
-            MessageBox("Cancelled!","info")
+            MessageBox(u"Cancelled!","info")
             return
 
-        lon = SimpleQuery("Longitude (DD MM.MMMM)","text",lon)
+        lon = SimpleQuery(u"Longitude (DD MM.MMMM)","text",lon)
         if lon == None:
-            MessageBox("Cancelled!","info")
+            MessageBox(u"Cancelled!","info")
             return
 
         latm = eval(lat.split(" ")[0])
@@ -100,14 +100,14 @@ class DatumWgs84:
         lat = u"%s %s %s" % (latm,latd,lats)
         lon = u"%s %s %s" % (lonm,lond,lons)
 
-        lat = SimpleQuery("Latitude (DD MM SS.SS)","text",lat)
+        lat = SimpleQuery(u"Latitude (DD MM SS.SS)","text",lat)
         if lat == None:
-            MessageBox("Cancelled!","info")
+            MessageBox(u"Cancelled!","info")
             return
 
-        lon = SimpleQuery("Longitude (DD MM SS.SS)","text",lon)
+        lon = SimpleQuery(u"Longitude (DD MM SS.SS)","text",lon)
         if lon == None:
-            MessageBox("Cancelled!","info")
+            MessageBox(u"Cancelled!","info")
             return
 
         latm = eval(lat.split(" ")[0])

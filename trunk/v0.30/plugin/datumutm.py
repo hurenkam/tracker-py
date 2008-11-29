@@ -54,29 +54,29 @@ class DatumUTM:
         Log("utm*","DatumUTM::UTM2Wgs()")
         import datums
         ellips = self.GetEllipsoid()
-        return datums.utm_to_latlon(ellips,x,y)
+        return datums.utm_to_latlon(ellips,zone,x,y)
 
     def QueryUTM(self,(latitude,longitude)):
         Log("utm","DatumUTM::QueryUTM()")
-        import appuifw
+        from osal import MessageBox, SimpleQuery
 
         zone,x,y = self.Wgs2UTM(latitude,longitude)
-        zone = appuifw.query(u"UTM Zone:","text",u"%s" % zone)
+        zone = SimpleQuery(u"UTM Zone:","text",u"%s" % zone)
         if zone == None:
-            appuifw.note(u"Cancelled.","info")
-            return None
+            MessageBox(u"Cancelled!","info")
+            return
 
-        x = appuifw.query(u"UTM X:","float",rdx)
+        x = SimpleQuery(u"UTM X:","float",x)
         if x == None:
-            appuifw.note(u"Cancelled.","info")
-            return None
+            MessageBox(u"Cancelled!","info")
+            return
 
-        y = appuifw.query(u"UTM Y:","float",rdy)
+        y = SimpleQuery(u"UTM Y:","float",y)
         if y == None:
-            appuifw.note(u"Cancelled.","info")
-            return None
+            MessageBox(u"Cancelled!","info")
+            return
 
-        return self.UTM2Wgs(self,zone,x,y)
+        return self.UTM2Wgs(zone,x,y)
 
     def FormatUTM(self,(latitude,longitude)):
         Log("utm*","DatumUTM::FormatUTM()")
