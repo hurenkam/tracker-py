@@ -62,15 +62,7 @@ def AddWaypoint():
         MessageBox("Cancelled!","info")
         return
 
-    lat = SimpleQuery("Latitude","float",lat)
-    if lat == None:
-        MessageBox("Cancelled!","info")
-        return
-
-    lon = SimpleQuery("Longitude","float",lon)
-    if lon == None:
-        MessageBox("Cancelled!","info")
-        return
+    lat,lon = r.DatumQuery((lat,lon))
 
     r.Signal( { "type":"wpt_add",  "id":"main", "name":name, "latitude":lat, "longitude":lon, "altitude":alt } )
 

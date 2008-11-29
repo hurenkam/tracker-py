@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: latin-1 -*-
 from helpers import *
+from osal import *
+import datums
 loglevels += ["wgs84!"]
 
 
@@ -57,51 +59,65 @@ class DatumWgs84:
 
     def QueryD(self,(latitude,longitude)):
         Log("wgs84","DatumWgs84::QueryD()")
-        import appuifw
+        lat = SimpleQuery("Latitude (DD.DDDDDD)","float",latitude)
+        if lat == None:
+            MessageBox("Cancelled!","info")
+            return
 
-        latitude = appuifw.query(u"Wgs84 Latitude:","float",latitude)
-        if latitude == None:
-            appuifw.note(u"Cancelled.","info")
-            return None
+        lon = SimpleQuery("Longitude (DD.DDDDDD)","float",longitude)
+        if lon == None:
+            MessageBox("Cancelled!","info")
+            return
 
-        longitude = appuifw.query(u"Wgs84 Longitude:","float",longitude)
-        if longitude == None:
-            appuifw.note(u"Cancelled.","info")
-            return None
-
-        return (latitude,longitude)
+        return lat,lon
 
     def QueryDM(self,(latitude,longitude)):
         Log("wgs84","DatumWgs84::QueryD()")
-        import appuifw
+        (latm,latd),(lonm,lond) = datums.GetDMFromWgs84(latitude,longitude)
+        lat = u"%s %s" % (latm,latd)
+        lon = u"%s %s" % (lonm,lond)
 
-        latitude = appuifw.query(u"Wgs84 Latitude:","float",latitude)
-        if latitude == None:
-            appuifw.note(u"Cancelled.","info")
-            return None
+        lat = SimpleQuery("Latitude (DD MM.MMMM)","text",lat)
+        if lat == None:
+            MessageBox("Cancelled!","info")
+            return
 
-        longitude = appuifw.query(u"Wgs84 Longitude:","float",longitude)
-        if longitude == None:
-            appuifw.note(u"Cancelled.","info")
-            return None
+        lon = SimpleQuery("Longitude (DD MM.MMMM)","text",lon)
+        if lon == None:
+            MessageBox("Cancelled!","info")
+            return
 
-        return (latitude,longitude)
+        latm = eval(lat.split(" ")[0])
+        latd = eval(lat.split(" ")[1])
+        lonm = eval(lon.split(" ")[0])
+        lond = eval(lon.split(" ")[1])
+
+        return datums.GetWgs84FromDM((latm,latd),(lonm,lond))
 
     def QueryDMS(self,(latitude,longitude)):
         Log("wgs84","DatumWgs84::QueryD()")
-        import appuifw
+        (latm,latd,lats),(lonm,lond,lons) = datums.GetDMSFromWgs84(latitude,longitude)
+        lat = u"%s %s %s" % (latm,latd,lats)
+        lon = u"%s %s %s" % (lonm,lond,lons)
 
-        latitude = appuifw.query(u"Wgs84 Latitude:","float",latitude)
-        if latitude == None:
-            appuifw.note(u"Cancelled.","info")
-            return None
+        lat = SimpleQuery("Latitude (DD MM SS.SS)","text",lat)
+        if lat == None:
+            MessageBox("Cancelled!","info")
+            return
 
-        longitude = appuifw.query(u"Wgs84 Longitude:","float",longitude)
-        if longitude == None:
-            appuifw.note(u"Cancelled.","info")
-            return None
+        lon = SimpleQuery("Longitude (DD MM SS.SS)","text",lon)
+        if lon == None:
+            MessageBox("Cancelled!","info")
+            return
 
-        return (latitude,longitude)
+        latm = eval(lat.split(" ")[0])
+        latd = eval(lat.split(" ")[1])
+        lats = eval(lat.split(" ")[2])
+        lonm = eval(lon.split(" ")[0])
+        lond = eval(lon.split(" ")[1])
+        lons = eval(lon.split(" ")[2])
+
+        return datums.GetWgs84FromDMS((latm,latd,lats),(lonm,lond,lons))
 
     def Format(self,(latitude,longitude)):
         format = self.GetFormat()
