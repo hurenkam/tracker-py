@@ -25,12 +25,10 @@ def QueryRD((latitude,longitude)):
     rdx,rdy = Wgs2RD(latitude,longitude)
     rdx = SimpleQuery(u"RD X:","number",rdx)
     if rdx == None:
-        MessageBox(u"Cancelled!","info")
         return
 
     rdy = SimpleQuery(u"RD Y:","number",rdy)
     if rdy == None:
-        MessageBox(u"Cancelled!","info")
         return
 
     return RD2Wgs(rdx,rdy)

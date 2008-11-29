@@ -62,8 +62,12 @@ def AddWaypoint():
         MessageBox("Cancelled!","info")
         return
 
-    lat,lon = r.DatumQuery((lat,lon))
+    pos = r.DatumQuery((lat,lon))
+    if pos == None:
+        MessageBox("Cancelled!","info")
+        return
 
+    lat,lon = pos
     r.Signal( { "type":"wpt_add",  "id":"main", "name":name, "latitude":lat, "longitude":lon, "altitude":alt } )
 
 def MonitorWaypoint():
@@ -114,6 +118,8 @@ def Main():
     r.UIMenuAdd( AddWaypoint,     "Add",     "Waypoint" )
     r.UIMenuRedraw()
     StartGPS()
+    r.ConfigSetValue("datum_current","UTM")
+    #print r.DatumQuery((51.4683229,5.47320258))
     r.UIRun()
     StopGPS()
 

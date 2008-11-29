@@ -63,17 +63,14 @@ class DatumUTM:
         zone,x,y = self.Wgs2UTM(latitude,longitude)
         zone = SimpleQuery(u"UTM Zone:","text",u"%s" % zone)
         if zone == None:
-            MessageBox(u"Cancelled!","info")
             return
 
         x = SimpleQuery(u"UTM X:","float",x)
         if x == None:
-            MessageBox(u"Cancelled!","info")
             return
 
         y = SimpleQuery(u"UTM Y:","float",y)
         if y == None:
-            MessageBox(u"Cancelled!","info")
             return
 
         return self.UTM2Wgs(zone,x,y)
