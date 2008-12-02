@@ -21,6 +21,7 @@ class UserInterface:
         self.mainitems = []
         self.subitems = {}
         self.view = None
+        self.previousview = None
         #self.application = None
         self.application = Application("Tracker",(240,320))
         self.application.RedrawMenu()
@@ -36,10 +37,16 @@ class UserInterface:
 
     def UIViewSelect(self,view):
         Log("ui","UserInterface::UIViewSelect()")
+        if view == self.view:
+            return
+
+        if self.view != None:
+            self.view.OnHide()
+        self.previousview = self.view
         self.view = view
-        #if self.application == None:
-        #    self.application = Application("Tracker",(240,320))
         self.application.SelectView(view)
+        if self.view != None:
+            self.view.OnShow()
 
     def UIViewPrevious(self,key):
         Log("ui","UserInterface::UIViewPrevious()")
@@ -64,9 +71,13 @@ class UserInterface:
 
     def UIViewDel(self,view):
         Log("ui","UserInterface::UIViewDel()")
+        self.views.remove(view)
         if view == self.view:
             self.view = None
-        self.views.remove(view)
+            if self.previousview == None:
+                if self.views:
+                    self.previousview = self.views[0]
+            self.UIViewSelect(self.previousview)
 
     def UIViewRedraw(self):
         Log("ui*","UserInterface::UIViewRedraw()")
@@ -100,4 +111,4 @@ class UserInterface:
 
     def UIQuit(self,key=None):
         Log("ui","UserInterface::UIQuit()")
-        self.application.frame.Destroy()
+        self.application.Exit()

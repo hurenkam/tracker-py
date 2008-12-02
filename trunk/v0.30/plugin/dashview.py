@@ -2,7 +2,7 @@ from helpers import *
 from widgets import *
 from datatypes import *
 
-loglevels += ["dash!"]
+loglevels += ["dash!","dash"]
 
 def Init(registry):
     global d
@@ -50,7 +50,7 @@ class DashView(View):
         self.zoomedgauge = self.registry.ConfigGetValue("dash_zoomedgauge")
 
         self.menuwidget = TextWidget("Menu",fgcolor=Color["white"],bgcolor=Color["darkblue"])
-        self.editwidget = TextWidget("Find map",fgcolor=Color["white"],bgcolor=Color["darkblue"])
+        self.editwidget = TextWidget("Options",fgcolor=Color["white"],bgcolor=Color["darkblue"])
         self.exitwidget = TextWidget("Exit",fgcolor=Color["white"],bgcolor=Color["darkblue"])
         self.satwidget = BarWidget((15,50),bars=5,range=10)
         self.batwidget = BarWidget((15,50),bars=5,range=100)
@@ -64,6 +64,24 @@ class DashView(View):
         self.registry.Signal( { "type":"gps_start",   "id":"dash",  "tolerance":10 } )
         self.KeyAdd("up",self.MoveUp)
         self.KeyAdd("down",self.MoveDown)
+        self.KeyAdd("select",self.GaugeOptions)
+
+    def GaugeOptions(self,key):
+        Log("dash","DashView::GaugeOptions()")
+        t = self.gauges[self.zoomedgauge].tag
+        l = ListView(self.registry,"%s options" % t, [
+                "Time type",
+                "Distance type",
+                "Distance units",
+                "Altitude type",
+                "Altitude units",
+                "Altitude interval",
+                "Altitude tolerance",
+                "Waypoint",
+                "Speed type",
+                "Speed units",
+                "Speed interval",
+                ])
 
     def MoveUp(self,key):
         Log("dash","DashView::MoveUp()")

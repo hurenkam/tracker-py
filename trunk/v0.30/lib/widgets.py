@@ -1,4 +1,5 @@
 import math
+from helpers import *
 try:
     import wxosal
 
@@ -284,7 +285,7 @@ class ClockGauge(Gauge):
         self.hours = 0
         self.minutes = 0
         self.seconds = 0
-        self.tag = tag
+        self.tag = "Clock"
         Gauge.__init__(self,radius)
 
     def UpdateValue(self,value):
@@ -326,9 +327,9 @@ class ClockGauge(Gauge):
 
 class WaypointGauge(Gauge):
 
-    def __init__(self,radius=None,tag="wpt"):
+    def __init__(self,radius=None):
         Gauge.__init__(self,radius)
-        self.tag = tag
+        self.tag = "Monitor"
         self.heading = None
         self.bearing = None
         self.distance = None
@@ -388,6 +389,7 @@ class SatelliteGauge(Gauge):
     def __init__(self,radius=None):
         self.satlist = []
         self.maxstrength = 0
+        self.tag = "Satellite"
         Gauge.__init__(self,radius)
 
     #def SelectOptions(self):
@@ -436,6 +438,7 @@ class SpeedGauge(TwoHandGauge):
         self.avgbase = 0
         self.avgcount = 0
         self.step = None
+        self.tag = "Speed"
         self.registry = registry
         self.registry.ConfigAdd( { "setting":"speed_type", "description":u"Type of info the speed gauge should show",
                                  "default":"speed", "query":None } )
@@ -512,6 +515,7 @@ class AltitudeGauge(TwoHandGauge):
         self.avgcount = 0
         self.step = None
         self.registry = registry
+        self.tag = "Altitude"
         self.registry.ConfigAdd( { "setting":"alt_type", "description":u"Type of info the altitude gauge should show",
                                  "default":"alt", "query":None } )
         self.registry.ConfigAdd( { "setting":"alt_units", "description":u"Units the altitude gauge should use",
@@ -586,6 +590,7 @@ class TimeGauge(Gauge):
         self.trip = 0
         self.remaining = 0
         self.eta = 0
+        self.tag = "Time"
         self.registry = registry
         self.registry.ConfigAdd( { "setting":"time_type", "description":u"Type of info the time gauge should show",
                                  "default":"clock", "query":None } )
@@ -651,6 +656,7 @@ class DistanceGauge(TwoHandGauge):
 
     def __init__(self,registry,radius=None):
         TwoHandGauge.__init__(self,radius)
+        self.tag = "Distance"
         self.value = 0
         self.total = 0
         self.trip = 0
@@ -697,3 +703,134 @@ class DistanceGauge(TwoHandGauge):
 
         self.distance = wpt
         self.Draw()
+
+
+class ListView(View):
+    def __init__(self,registry,title,list):
+        Log("list","ListView::__init__()")
+        self.registry = registry
+        self.title = title
+        self.list = list
+        self.selected = 0
+        self.start = 0
+        self.shown = 11
+        self.space = 23
+        self.pad = 10
+        self.top = 35
+        self.box = ( self.pad - 4, self.top - 4, 240 - self.pad*2 + 4*2, self.shown * self.space + 4*2 )
+        self.textsize = 1.5
+        #self.registry.ConfigAdd( { "setting":"dash_zoomedgauge", "description":u"Enlarged gauge",
+        #                           "default":0, "query":None } )
+        #self.zoomedgauge = self.registry.ConfigGetValue("dash_zoomedgauge")
+
+        self.selectwidget = TextWidget("Select",fgcolor=Color["white"],bgcolor=Color["darkblue"])
+        #self.editwidget = TextWidget("Edit",fgcolor=Color["white"],bgcolor=Color["darkblue"])
+        self.cancelwidget = TextWidget("Cancel",fgcolor=Color["white"],bgcolor=Color["darkblue"])
+
+        View.__init__(self,(240,320))
+        self.registry.UIViewAdd(self)
+
+        #self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"dash", "handler":self.OnClock } )
+        self.KeyAdd("up",self.MoveUp)
+        self.KeyAdd("down",self.MoveDown)
+        self.KeyAdd("left",self.MoveLeft)
+        self.KeyAdd("right",self.MoveRight)
+
+    def Exit(self):
+        self.Quit()
+        return True
+
+    def MoveUp(self,key):
+        Log("list","ListView::MoveUp()")
+        if self.selected > 0:
+            self.selected -= 1
+            if self.start > 0 and self.selected - self.start < int(self.shown/2):
+                self.start -= 1
+
+            self.Draw()
+            self.RedrawView()
+        return True
+
+    def MoveDown(self,key):
+        Log("list","ListView::MoveDown()")
+        last = len(self.list)-1
+        #print self.start, self.selected, last, int(self.shown/2)
+        if self.selected < last:
+            self.selected += 1
+            if self.start + self.shown <= last and self.selected - self.start > int(self.shown/2):
+                self.start += 1
+
+            self.Draw()
+            self.RedrawView()
+        return True
+
+    def MoveLeft(self,key):
+        return True
+
+    def MoveRight(self,key):
+        return True
+
+    def RedrawView(self):
+        Log("list*","ListView::RedrawView()")
+        self.registry.UIViewRedraw()
+
+    def OnResize(self,size):
+        Log("list","ListView::OnResize()")
+
+    def Resize(self,rect=None):
+        Log("list*","ListView::Resize()")
+        View.Resize(self,(240,320))
+
+    def Draw(self,rect=None):
+        Log("list*","ListView::Draw()")
+        Widget.Draw(self)
+
+        self.fgcolor = Color['black']
+        self.DrawText((5,5),u"%s" % self.title,size=1.8)
+
+        #start = 0
+        count = 0
+        x = self.pad
+        y = self.top
+        self.DrawRectangle(self.box,linecolor=Color['black'],fillcolor=Color['gaugebg'])
+        for count in range(0,self.shown):
+            #w,h = self.GetTextSize(u"%s" % item)
+            if count + self.start >= len(self.list):
+                break
+
+            if count + self.start == self.selected:
+                self.DrawRectangle((self.pad,self.top+count*self.space,240-self.pad*2,self.space),linecolor=Color['black'],fillcolor=Color['darkblue'])
+                self.fgcolor = Color['white']
+                self.DrawText((self.pad+3,self.top+1+count*self.space),u"%s" % self.list[count+self.start],size=self.textsize)
+            else:
+                self.fgcolor = Color['black']
+                self.DrawText((self.pad+3,self.top+1+count*self.space),u"%s" % self.list[count+self.start],size=self.textsize)
+
+
+        self.DrawRectangle((0,300,240,50),linecolor=Color["darkblue"],fillcolor=Color["darkblue"])
+        w,h = self.cancelwidget.GetSize()
+        self.Blit(
+            self.cancelwidget,
+            (220-w,320-h,220,320),
+            (0,0,w,h),
+            0)
+
+        #w,h = self.editwidget.GetSize()
+        #self.Blit(
+        #    self.editwidget,
+        #    (120-w/2,320-h,120+w,320),
+        #    (0,0,w,h),
+        #    0)
+
+        w,h = self.selectwidget.GetSize()
+        self.Blit(
+            self.selectwidget,
+            (20,320-h,20+w,320),
+            (0,0,w,h),
+            0)
+
+    def Quit(self):
+        Log("list","ListView::Quit()")
+        #self.registry.Signal( { "type":"db_disconnect", "id":"dash", "signal":"dash" } )
+        self.registry.UIViewDel(self)
+        self.registry = None

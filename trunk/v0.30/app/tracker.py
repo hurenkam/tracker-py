@@ -101,8 +101,8 @@ def Main():
     for name in [
         "uiregistry",
         "timers",
-        #"simgps",
-        "lrgps",
+        "simgps",
+        #"lrgps",
         "datumregistry",
         "datumwgs84",
         "datumutm",
@@ -115,7 +115,7 @@ def Main():
         r.PluginAdd(name)
 
     r.UIMenuAdd( StartRecording,  "Start",   "Track" )
-    r.UIMenuAdd( AddWaypoint,     "Add",     "Waypoint" )
+    #r.UIMenuAdd( AddWaypoint,     "Add",     "Waypoint" )
     r.UIMenuRedraw()
     StartGPS()
     r.ConfigSetValue("datum_current","UTM")

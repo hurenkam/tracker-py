@@ -628,6 +628,7 @@ class MapView(View):
         self.batwidget = BarWidget((15,50),bars=5,range=100)
         self.currentposition = None
         self.showwaypoints = True
+        self.oldaddwpt = None
 
         #View.__init__(self)
         View.__init__(self,(240,320))
@@ -653,6 +654,7 @@ class MapView(View):
         self.InitMapList(self.registry.ConfigGetValue("map_dir"))
         self.LoadMap(self.GetCurrentMap())
         self.registry.UIMenuAdd(self.OnOpen,"Open","Map")
+        self.registry.UIMenuAdd(self.AddWaypoint,"Add","Waypoint")
         self.registry.UIMenuRedraw()
         self.KeyAdd("up",self.ZoomIn)
         self.KeyAdd("down",self.ZoomOut)
@@ -714,6 +716,34 @@ class MapView(View):
     def FindWaypoints(self):
         Log("map-","MapView::FindWaypoints()")
         self.registry.Signal( { "type":"wpt_search", "id":"map", "ref":"map_wpt_ref" } )
+
+    def OnShow(self):
+        #self.oldaddwpt = self.registry.UIMenuAdd(self.AddWaypoint,"Add","Waypoint")
+        pass
+
+    def OnHide(self):
+        #self.registry.UIMenuDel("Add","Waypoint")
+        #if self.oldaddwpt != None:
+        #    self.registry.UIMenuAdd(self.oldaddwpt,"Add","Waypoint")
+        #self.oldaddwpt = None
+        pass
+
+    def AddWaypoint(self):
+        lat = self.currentposition.latitude
+        lon = self.currentposition.longitude
+        alt = self.currentposition.altitude
+        name = SimpleQuery("Waypoint name:","text","default")
+        if name == None:
+            MessageBox("Cancelled!","info")
+            return
+
+        pos = self.registry.DatumQuery((lat,lon))
+        if pos == None:
+            MessageBox("Cancelled!","info")
+            return
+
+        lat,lon = pos
+        self.registry.Signal( { "type":"wpt_add",  "id":"map", "name":name, "latitude":lat, "longitude":lon, "altitude":alt } )
 
     def OnWptFound(self,signal):
         Log("map-","MapView::OnWptFound(",signal,")")
