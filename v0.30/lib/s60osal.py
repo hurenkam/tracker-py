@@ -239,6 +239,12 @@ class View(Widget):
         del self.keylist[key]
     def OnResize(self,size):
         pass
+    def OnHide(self):
+        pass
+    def OnShow(self):
+        pass
+    def Exit(self):
+        return False
 
 class Application(Widget):
     def __init__(self,title,(x,y)):
@@ -264,8 +270,10 @@ class Application(Widget):
             e32.ao_sleep(0.5)
 
     def Exit(self):
-        self.running = False
-        #ui.app.set_exit()
+        if self.view == None:
+            self.running = False
+        else:
+            self.running = self.view.Exit()
 
     def SelectView(self,view):
         self.view = view

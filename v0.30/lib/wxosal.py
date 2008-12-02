@@ -58,7 +58,7 @@ Key = {
             "down":wx.WXK_DOWN,
             "home":wx.WXK_HOME,
             "end":wx.WXK_END,
-            "enter":wx.WXK_RETURN,
+            "select":wx.WXK_RETURN,
             "tab":wx.WXK_TAB,
             "back":wx.WXK_BACK,
             "7":wx.WXK_NUMPAD7
@@ -362,6 +362,12 @@ class View(Widget):
         del self.keylist[key]
     def OnResize(self,size):
         pass
+    def OnHide(self):
+        pass
+    def OnShow(self):
+        pass
+    def Exit(self):
+        return False
 
 class AppFrame(wx.Frame):
     def __init__(self,title="---",size=(210,235)):
@@ -385,6 +391,13 @@ class Application(Widget):
         self.subitems = {}
         self.keylist = {}
         Widget.__init__(self,(x+8,y+6))
+
+    def Exit(self):
+        if self.view == None:
+            self.frame.Destroy()
+        else:
+            if not self.view.Exit():
+                self.frame.Destroy()
 
     def Run(self):
         self.app.MainLoop()
@@ -449,12 +462,19 @@ class Application(Widget):
         print event
 
     def MenuAdd(self,handler,item,sub=None):
+        previous = None
         if sub != None:
             if sub not in self.subitems.keys():
                 self.subitems[sub]={}
+            else:
+                if item in self.subitems[sub].keys():
+                    previous = self.subitems[sub][item]
             self.subitems[sub][item]=handler
         else:
+            if item in self.mainitems.keys():
+                previous = self.mainitems[item]
             self.mainitems[item]=handler
+        return previous
 
     def MenuDel(self,item,sub=None):
         if sub != None:
