@@ -705,12 +705,64 @@ class DistanceGauge(TwoHandGauge):
         self.Draw()
 
 class Dialog(View):
-    def __init__(self,title="",list=[]):
-        Log("list","ListView::__init__()")
+    def __init__(self,title="",left="Ok",right="Cancel"):
+        Log("dialog","Dialog::__init__()")
         self.app = None
         self.title = title
+        self.result = None
+        self.selectwidget = TextWidget(left,fgcolor=Color["white"],bgcolor=Color["darkblue"])
+        self.cancelwidget = TextWidget(right,fgcolor=Color["white"],bgcolor=Color["darkblue"])
+        View.__init__(self,(240,320))
+        self.KeyAdd("end",self.Cancel)
+        self.KeyAdd("select",self.Select)
+
+    def Cancel(self,key):
+        Log("dialog","Dialog::Cancel()")
+        self.OnExit()
+        self.result = None
+        return True
+
+    def Select(self,key):
+        Log("dialog","Dialog::Select()")
+        self.OnExit()
+        return True
+
+    def OnResize(self,size):
+        Log("dialog","Dialog::OnResize()")
+
+    def Resize(self,rect=None):
+        Log("dialog","Dialog::Resize()")
+        View.Resize(self,(240,320))
+
+    def Draw(self,rect=None):
+        Log("dialog*","Dialog::Draw()")
+        Widget.Draw(self)
+
+        self.fgcolor = Color['black']
+        self.DrawText((5,5),u"%s" % self.title,size=1.8)
+
+        self.DrawRectangle((0,298,240,50),linecolor=Color["darkblue"],fillcolor=Color["darkblue"])
+        w,h = self.cancelwidget.GetSize()
+        self.Blit(
+            self.cancelwidget,
+            (220-w,320-h,220,320),
+            (0,0,w,h),
+            0)
+
+        w,h = self.selectwidget.GetSize()
+        self.Blit(
+            self.selectwidget,
+            (20,320-h,20+w,320),
+            (0,0,w,h),
+            0)
+
+class Listbox(Dialog):
+    def __init__(self,title,list,selected=0):
         self.list = list
-        self.selected = 0
+        if selected < len(list):
+            self.selected = selected
+        else:
+            self.selected = 0
         self.start = 0
         self.shown = 11
         self.space = 22
@@ -718,15 +770,15 @@ class Dialog(View):
         self.top = 40
         self.box = ( self.pad - 4, self.top - 4, 240 - self.pad*2 + 4*2, self.shown * self.space + 4*2 )
         self.textsize = 1.2
-        self.selectwidget = TextWidget("Select",fgcolor=Color["white"],bgcolor=Color["darkblue"])
-        self.cancelwidget = TextWidget("Cancel",fgcolor=Color["white"],bgcolor=Color["darkblue"])
-        View.__init__(self,(240,320))
+        Dialog.__init__(self,title,left="Select")
         self.KeyAdd("up",self.MoveUp)
         self.KeyAdd("down",self.MoveDown)
         self.KeyAdd("left",self.MoveLeft)
         self.KeyAdd("right",self.MoveRight)
-        self.KeyAdd("end",self.Cancel)
-        self.KeyAdd("select",self.Select)
+
+    def Select(self,key):
+        self.result = self.selected
+        return Dialog.Select(self,key)
 
     def MoveUp(self,key):
         Log("list","ListView::MoveUp()")
@@ -755,30 +807,8 @@ class Dialog(View):
     def MoveRight(self,key):
         return True
 
-    def Cancel(self,key):
-        print "cancel"
-        self.OnExit()
-        return True
-
-    def Select(self,key):
-        print "select"
-        self.OnExit()
-        return True
-
-    def OnResize(self,size):
-        Log("list","ListView::OnResize()")
-
-    def Resize(self,rect=None):
-        Log("list*","ListView::Resize()")
-        View.Resize(self,(240,320))
-
-    def Draw(self,rect=None):
-        Log("list*","ListView::Draw()")
-        Widget.Draw(self)
-
-        self.fgcolor = Color['black']
-        self.DrawText((5,5),u"%s" % self.title,size=1.8)
-
+    def Draw(self):
+        Dialog.Draw(self)
         count = 0
         x = self.pad
         y = self.top
@@ -794,22 +824,6 @@ class Dialog(View):
             else:
                 self.fgcolor = Color['black']
                 self.DrawText((self.pad+3,self.top+1+count*self.space),u"%s" % self.list[count+self.start],size=self.textsize)
-
-
-        self.DrawRectangle((0,298,240,50),linecolor=Color["darkblue"],fillcolor=Color["darkblue"])
-        w,h = self.cancelwidget.GetSize()
-        self.Blit(
-            self.cancelwidget,
-            (220-w,320-h,220,320),
-            (0,0,w,h),
-            0)
-
-        w,h = self.selectwidget.GetSize()
-        self.Blit(
-            self.selectwidget,
-            (20,320-h,20+w,320),
-            (0,0,w,h),
-            0)
 
         if self._redrawview:
             self._redrawview(self)

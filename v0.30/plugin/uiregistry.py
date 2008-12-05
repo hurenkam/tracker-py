@@ -33,12 +33,22 @@ class UserInterface:
         self.registry.Signal({ "type":"ui_active", "id":"ui" })
         self.dialog = None
 
-    def UIShowDialog(self,dialog):
+    def UIShowDialog(self,dialog,callback = None):
+        class DialogWrapper:
+            def __init__(self,ui,callback,dialog):
+                self.callback = callback
+                self.dialog = dialog
+                self.ui = ui
+            def Execute(self,*args,**kw):
+                self.ui.UIExitDialog(self.dialog)
+                if self.callback != None:
+                    self.callback(self.dialog)
+
         if self.dialog != None:
             return False
 
         self.dialog = dialog
-        self.application.ShowDialog(dialog,self.UIExitDialog)
+        self.application.ShowDialog(dialog,DialogWrapper(self,callback,dialog).Execute)
         return True
 
     def UIExitDialog(self,dialog):
@@ -130,8 +140,7 @@ class UserInterface:
     def UIQuit(self,key=None):
         Log("ui","UserInterface::UIQuit()")
         if self.dialog != None:
-            self.dialog.Exit()
-            self.UIViewDel(self.dialog)
-            self.dialog = None
+            if not self.dialog.OnKey("end"):
+                self.UIExitDialog(self.dialog)
         else:
             self.application.Exit()

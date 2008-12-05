@@ -449,6 +449,7 @@ class MapWidget(Widget):
             self.UpdatePosition(self.position,0)
         self.lastarea = None
         self.DrawOpenTracks()
+        self.Draw()
 
     def ClearMap(self):
         Log("map","MapWidget::ClearMap()")
@@ -766,7 +767,23 @@ class MapView(View):
 
     def OnOpen(self,signal=None):
         Log("map","MapView::OnOpen()")
-        self.LoadMap("campus")
+    #    self.LoadMap("campus")
+    #def ShowMapDialog(self,key):
+    #    Log("map","MapView::SelectMap()")
+        list = self.maps.keys()
+        list.sort()
+        l = Listbox("Select Map", list)
+        self.registry.UIShowDialog(l,self.LoadMapFromDialog)
+
+    def LoadMapFromDialog(self,l):
+        if l.result == None:
+            return
+
+        key = l.list[l.result]
+        print "LoadMap", key
+        self.mapwidget.SetMap(self.maps[key])
+        self.RedrawView()
+
 
     def OnClose(self,signal=None):
         Log("map","MapView::OnClose()")
