@@ -717,16 +717,16 @@ class MapView(View):
         Log("map-","MapView::FindWaypoints()")
         self.registry.Signal( { "type":"wpt_search", "id":"map", "ref":"map_wpt_ref" } )
 
-    def OnShow(self):
-        #self.oldaddwpt = self.registry.UIMenuAdd(self.AddWaypoint,"Add","Waypoint")
-        pass
+    #def OnShow(self):
+    #    #self.oldaddwpt = self.registry.UIMenuAdd(self.AddWaypoint,"Add","Waypoint")
+    #    pass
 
-    def OnHide(self):
-        #self.registry.UIMenuDel("Add","Waypoint")
-        #if self.oldaddwpt != None:
-        #    self.registry.UIMenuAdd(self.oldaddwpt,"Add","Waypoint")
-        #self.oldaddwpt = None
-        pass
+    #def OnHide(self):
+    #    #self.registry.UIMenuDel("Add","Waypoint")
+    #    #if self.oldaddwpt != None:
+    #    #    self.registry.UIMenuAdd(self.oldaddwpt,"Add","Waypoint")
+    #    #self.oldaddwpt = None
+    #    pass
 
     def AddWaypoint(self):
         lat = self.currentposition.latitude
@@ -803,7 +803,7 @@ class MapView(View):
         self.positionwidget.UpdatePosition(
             self.registry.DatumFormat((position["latitude"],position["longitude"])))
 
-        lat,lon = position["latitude"],position["longitude"]
+        lat,lon = position ["latitude"], position["longitude"]
         if lat == None or lon == None:
             return
 

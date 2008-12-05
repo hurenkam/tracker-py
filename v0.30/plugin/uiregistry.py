@@ -1,6 +1,8 @@
 from helpers import *
 from widgets import *
 
+loglevels += [ "ui" ]
+
 def Init(r):
     global registry
     global ui
@@ -29,6 +31,21 @@ class UserInterface:
         self.application.KeyAdd("right",self.UIViewNext)
         self.application.KeyAdd("end",self.UIQuit)
         self.registry.Signal({ "type":"ui_active", "id":"ui" })
+        self.dialog = None
+
+    def UIShowDialog(self,dialog):
+        if self.dialog != None:
+            return False
+
+        self.dialog = dialog
+        self.application.ShowDialog(dialog,self.UIExitDialog)
+        return True
+
+    def UIExitDialog(self,dialog):
+        self.dialog = None
+        if self.view != None:
+            self.application.ShowView(self.view)
+        self.UIViewRedraw()
 
     def UIRun(self):
         Log("ui","UserInterface::UIRun()")
@@ -40,13 +57,13 @@ class UserInterface:
         if view == self.view:
             return
 
-        if self.view != None:
-            self.view.OnHide()
+        #if self.view != None:
+            #self.view.OnHide()
         self.previousview = self.view
         self.view = view
-        self.application.SelectView(view)
-        if self.view != None:
-            self.view.OnShow()
+        self.application.ShowView(view)
+        #if self.view != None:
+            #self.view.OnShow()
 
     def UIViewPrevious(self,key):
         Log("ui","UserInterface::UIViewPrevious()")
@@ -71,7 +88,8 @@ class UserInterface:
 
     def UIViewDel(self,view):
         Log("ui","UserInterface::UIViewDel()")
-        self.views.remove(view)
+        if view in self.views:
+            self.views.remove(view)
         if view == self.view:
             self.view = None
             if self.previousview == None:
@@ -111,4 +129,9 @@ class UserInterface:
 
     def UIQuit(self,key=None):
         Log("ui","UserInterface::UIQuit()")
-        self.application.Exit()
+        if self.dialog != None:
+            self.dialog.Exit()
+            self.UIViewDel(self.dialog)
+            self.dialog = None
+        else:
+            self.application.Exit()

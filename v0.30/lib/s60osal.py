@@ -10,6 +10,7 @@ def RGBColor(r,g,b):
 Color = {
           "black":0x000000,
           "white":0xffffff,
+          "yellow":0xffffc0,
           "darkblue":0x0000ff,
           "darkgreen":0x00ff00,
           "green": 0x40c040,
@@ -56,7 +57,7 @@ Key = {
             "down":EKeyDownArrow,
             #"home":wx.WXK_HOME,
             #"end":wx.WXK_END,
-            "enter":EKeySelect,
+            "select":EKeySelect,
             #"tab":wx.WXK_TAB,
             #"back":wx.WXK_BACK,
     }
@@ -147,7 +148,7 @@ class Widget:
     def GetTextSize(self,text):
         (bbox,advance,ichars) = self.image.measure_text(text,font=self.font)
         w,h = (bbox[2]-bbox[0],bbox[3]-bbox[1])
-        return (w,h)
+        return (w,self.fontsize)
 
     def DrawText(self,coords,text,size=None,align=None):
         if self.size == None or self.image == None:
@@ -162,9 +163,9 @@ class Widget:
         x,y = coords
         y += h
         if x < 0:
-           x = size[0] + x - w
+           x = self.size[0] + x - w
         if y < 0:
-           y = size[1] + y - h
+           y = self.size[1] + y - h
 
         if align == "center":
             x -= w/2.0
@@ -225,7 +226,7 @@ class Widget:
                 scale = scale )
 
 
-class View(Widget):
+class _View(Widget):
     def __init__(self,size=None):
         self.keylist = {}
         Widget.__init__(self,size)
@@ -243,10 +244,12 @@ class View(Widget):
         pass
     def OnShow(self):
         pass
+    def OnRedraw(self,view=None):
+        pass
     def Exit(self):
         return False
 
-class Application(Widget):
+class _Application(Widget):
     def __init__(self,title,(x,y)):
         self.view = None
         self.mainitems = {}
@@ -338,6 +341,196 @@ class Application(Widget):
 
     def OnS60Resize(self,size):
         self.Resize(size)
+
+    def RedrawMenu(self):
+
+        menu = []
+
+        for item in self.mainitems.keys():
+            menu.append((u"%s" % item, self.mainitems[item]))
+
+        for sub in self.subitems.keys():
+            submenu = []
+            for item in self.subitems[sub].keys():
+                submenu.append((u"%s" % item, self.subitems[sub][item]))
+            menu.append((u"%s" % sub, tuple(submenu)))
+
+        ui.app.menu = menu
+
+
+
+
+
+
+
+class View(Widget):
+    def __init__(self,size=None):
+        self._keylist = {}
+        self._visible = False
+        self._onexit = None
+        self._redrawmenu = None
+        self._redrawview = None
+        Widget.__init__(self,size)
+
+    def OnKey(self,key):
+        if self._visible:
+            if key in self._keylist.keys():
+                return self._keylist[key](key)
+        return False
+
+    def OnResize(self,size):
+        pass
+
+    def OnHide(self):
+        self._visible = False
+        self._redrawmenu = None
+        self._redrawview = None
+        self._onexit = None
+
+    def OnShow(self,redrawview=None,redrawmenu=None,onexit=None):
+        print "onshow" , onexit
+        self._redrawview = redrawview
+        self._redrawmenu = redrawmenu
+        self._onexit = onexit
+        self._visible = True
+
+    def OnRedraw(self):
+        if self._redraw != None:
+            self._redraw(self)
+
+    def OnExit(self):
+        print "onexit" , self._onexit
+        if self._onexit != None:
+            self._onexit(self)
+
+    def KeyAdd(self,key,handler):
+        self._keylist[key]=handler
+
+    def KeyDel(self,key):
+        del self._keylist[key]
+
+
+
+class Application(View):
+    def __init__(self,title,(x,y)):
+        self.view = None
+        self.mainitems = {}
+        self.subitems = {}
+        self.keylist = {}
+        View.__init__(self,(x+8,y+6))
+        ui.app.screen='full'
+        ui.app.title = u"Tracker v0.20a"
+        canvas = ui.Canvas(
+            event_callback=self.OnS60Key,
+            redraw_callback=self.OnS60Redraw,
+            resize_callback=self.OnS60Resize
+            )
+        ui.app.body = canvas
+        ui.app.exit_key_handler=self.OnS60Exit
+
+    def Run(self):
+        self.running = True
+        while self.running:
+            #e32.reset_inactivity()
+            e32.ao_sleep(0.5)
+
+    def OnViewExit(self,view):
+        print "onviewexit"
+        self.view = None
+        self.Redraw()
+
+    def Exit(self):
+        if self.view != None:
+            self.running = self.view.OnExit()
+
+        self.OnExit()
+        self.running = False
+
+    def ShowView(self,view):
+        if self.view != None:
+            self.view.OnHide()
+        self.view = view
+        if self.view != None:
+            self.view.OnShow(self.Redraw,self.RedrawMenu,self.OnViewExit)
+        self.Redraw()
+
+    def ShowDialog(self,dialog,onexit=None):
+        if self.view != None:
+            self.view.OnHide()
+        self.view = dialog
+        if self.view != None:
+            self.view.OnShow(self.Redraw,self.RedrawMenu,onexit)
+        self.Redraw()
+
+    def Redraw(self):
+        try:
+            if self.view == None:
+                return
+
+            if self.view.image == None:
+                return
+
+            ui.app.body.blit(self.view.image)
+        except:
+            pass
+
+    def OnS60Redraw(self,event):
+        self.Redraw()
+
+    def OnS60Resize(self,size):
+        self.Resize(size)
+
+    def OnS60Exit(self):
+        self.OnKey("end")
+
+    def KeyAdd(self,key,handler):
+        self.keylist[key]=handler
+
+    def KeyDel(self,key):
+        del self.keylist[key]
+
+    def OnKey(self,key):
+        if self.view != None:
+            if self.view.OnKey(key):
+                return True
+
+        if key in self.keylist.keys():
+            return self.keylist[key](key)
+
+        return False
+
+    def OnS60Key(self,event):
+        keycode = event['keycode']
+        if keycode in Key.values():
+            key = FindKey(keycode)
+            self.OnKey(key)
+
+    def Handler(self,event):
+        print event
+
+    def MenuAdd(self,handler,item,sub=None):
+        previous = None
+        if sub != None:
+            if sub not in self.subitems.keys():
+                self.subitems[sub]={}
+            else:
+                if item in self.subitems[sub].keys():
+                    previous = self.subitems[sub][item]
+            self.subitems[sub][item]=handler
+        else:
+            if item in self.mainitems.keys():
+                previous = self.mainitems[item]
+            self.mainitems[item]=handler
+        return previous
+
+    def MenuDel(self,item,sub=None):
+        if sub != None:
+            if sub in self.subitems.keys():
+                del self.subitems[sub][item]
+                if len(self.subitems[sub]) == 0:
+                    del self.subitems[sub]
+        else:
+            del self.mainitems[item]
 
     def RedrawMenu(self):
 
