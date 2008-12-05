@@ -350,29 +350,6 @@ class Widget:
         else:
             self.dc.Blit(x1,y1,w,h,widget.dc,x3,y3)
 
-class _View(Widget):
-    def __init__(self,size=None):
-        self.keylist = {}
-        Widget.__init__(self,size)
-    def OnKey(self,key):
-        if key in self.keylist.keys():
-            return self.keylist[key](key)
-        return False
-    def KeyAdd(self,key,handler):
-        self.keylist[key]=handler
-    def KeyDel(self,key):
-        del self.keylist[key]
-    def OnResize(self,size):
-        pass
-    def OnHide(self):
-        pass
-    def OnShow(self):
-        pass
-    def OnRedraw(self,view=None):
-        pass
-    def Exit(self):
-        return False
-
 class AppFrame(wx.Frame):
     def __init__(self,title="---",size=(210,235)):
         wx.Frame.__init__(self,None,wx.ID_ANY, title, size=size)
@@ -391,6 +368,9 @@ class View(Widget):
         self._redrawview = None
         Widget.__init__(self,size)
 
+    def Exit(self):
+        pass
+
     def OnKey(self,key):
         if self._visible:
             if key in self._keylist.keys():
@@ -407,7 +387,6 @@ class View(Widget):
         self._onexit = None
 
     def OnShow(self,redrawview=None,redrawmenu=None,onexit=None):
-        print "onshow" , onexit
         self._redrawview = redrawview
         self._redrawmenu = redrawmenu
         self._onexit = onexit
@@ -418,7 +397,6 @@ class View(Widget):
             self._redraw(self)
 
     def OnExit(self):
-        print "onexit" , self._onexit
         if self._onexit != None:
             self._onexit(self)
 
@@ -446,7 +424,6 @@ class Application(View):
 
 
     def OnViewExit(self,view):
-        print "onviewexit"
         self.view = None
         self.Redraw()
 

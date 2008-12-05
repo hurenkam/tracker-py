@@ -12,23 +12,6 @@ def Done():
     global d
     d.Quit()
 
-class MyListbox(Dialog):
-    #def __init__(self,title,list,selected,cancelled):
-    def __init__(self,title,list):
-        #self._selected = selected
-        #self._cancelled = cancelled
-        Dialog.__init__(self,title,list)
-
-    def Select(self,key):
-        #self._selected(self)
-        return Dialog.Select(self,key)
-
-    def Cancel(self,key):
-        #self._cancelled(self)
-        return Dialog.Cancel(self,key)
-
-
-
 class DashView(View):
     def __init__(self,registry):
         Log("dash","DashView::__init__()")
@@ -85,7 +68,7 @@ class DashView(View):
     def GaugeOptions(self,key):
         Log("dash","DashView::GaugeOptions()")
         t = self.gauges[self.zoomedgauge].tag
-        l = MyListbox("%s options" % t, [
+        l = Listbox("%s options" % t, [
                 "Time type",
                 "Distance type",
                 "Distance units",
@@ -98,7 +81,10 @@ class DashView(View):
                 "Speed units",
                 "Speed interval",
                 ])
-        self.registry.UIShowDialog(l)
+        self.registry.UIShowDialog(l,self.ProcessGaugeOptions)
+
+    def ProcessGaugeOptions(self,l):
+        print "ListDialog result:", l.result
 
     def MoveUp(self,key):
         Log("dash","DashView::MoveUp()")
