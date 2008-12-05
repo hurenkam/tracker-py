@@ -704,41 +704,29 @@ class DistanceGauge(TwoHandGauge):
         self.distance = wpt
         self.Draw()
 
-
-class ListView(View):
-    def __init__(self,registry,title,list):
+class Dialog(View):
+    def __init__(self,title="",list=[]):
         Log("list","ListView::__init__()")
-        self.registry = registry
+        self.app = None
         self.title = title
         self.list = list
         self.selected = 0
         self.start = 0
         self.shown = 11
-        self.space = 23
+        self.space = 22
         self.pad = 10
-        self.top = 35
+        self.top = 40
         self.box = ( self.pad - 4, self.top - 4, 240 - self.pad*2 + 4*2, self.shown * self.space + 4*2 )
-        self.textsize = 1.5
-        #self.registry.ConfigAdd( { "setting":"dash_zoomedgauge", "description":u"Enlarged gauge",
-        #                           "default":0, "query":None } )
-        #self.zoomedgauge = self.registry.ConfigGetValue("dash_zoomedgauge")
-
+        self.textsize = 1.2
         self.selectwidget = TextWidget("Select",fgcolor=Color["white"],bgcolor=Color["darkblue"])
-        #self.editwidget = TextWidget("Edit",fgcolor=Color["white"],bgcolor=Color["darkblue"])
         self.cancelwidget = TextWidget("Cancel",fgcolor=Color["white"],bgcolor=Color["darkblue"])
-
         View.__init__(self,(240,320))
-        self.registry.UIViewAdd(self)
-
-        #self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"dash", "handler":self.OnClock } )
         self.KeyAdd("up",self.MoveUp)
         self.KeyAdd("down",self.MoveDown)
         self.KeyAdd("left",self.MoveLeft)
         self.KeyAdd("right",self.MoveRight)
-
-    def Exit(self):
-        self.Quit()
-        return True
+        self.KeyAdd("end",self.Cancel)
+        self.KeyAdd("select",self.Select)
 
     def MoveUp(self,key):
         Log("list","ListView::MoveUp()")
@@ -748,20 +736,17 @@ class ListView(View):
                 self.start -= 1
 
             self.Draw()
-            self.RedrawView()
         return True
 
     def MoveDown(self,key):
         Log("list","ListView::MoveDown()")
         last = len(self.list)-1
-        #print self.start, self.selected, last, int(self.shown/2)
         if self.selected < last:
             self.selected += 1
             if self.start + self.shown <= last and self.selected - self.start > int(self.shown/2):
                 self.start += 1
 
             self.Draw()
-            self.RedrawView()
         return True
 
     def MoveLeft(self,key):
@@ -770,9 +755,15 @@ class ListView(View):
     def MoveRight(self,key):
         return True
 
-    def RedrawView(self):
-        Log("list*","ListView::RedrawView()")
-        self.registry.UIViewRedraw()
+    def Cancel(self,key):
+        print "cancel"
+        self.OnExit()
+        return True
+
+    def Select(self,key):
+        print "select"
+        self.OnExit()
+        return True
 
     def OnResize(self,size):
         Log("list","ListView::OnResize()")
@@ -788,13 +779,11 @@ class ListView(View):
         self.fgcolor = Color['black']
         self.DrawText((5,5),u"%s" % self.title,size=1.8)
 
-        #start = 0
         count = 0
         x = self.pad
         y = self.top
-        self.DrawRectangle(self.box,linecolor=Color['black'],fillcolor=Color['gaugebg'])
+        self.DrawRectangle(self.box,linecolor=Color['black'],fillcolor=Color['yellow'])
         for count in range(0,self.shown):
-            #w,h = self.GetTextSize(u"%s" % item)
             if count + self.start >= len(self.list):
                 break
 
@@ -807,20 +796,13 @@ class ListView(View):
                 self.DrawText((self.pad+3,self.top+1+count*self.space),u"%s" % self.list[count+self.start],size=self.textsize)
 
 
-        self.DrawRectangle((0,300,240,50),linecolor=Color["darkblue"],fillcolor=Color["darkblue"])
+        self.DrawRectangle((0,298,240,50),linecolor=Color["darkblue"],fillcolor=Color["darkblue"])
         w,h = self.cancelwidget.GetSize()
         self.Blit(
             self.cancelwidget,
             (220-w,320-h,220,320),
             (0,0,w,h),
             0)
-
-        #w,h = self.editwidget.GetSize()
-        #self.Blit(
-        #    self.editwidget,
-        #    (120-w/2,320-h,120+w,320),
-        #    (0,0,w,h),
-        #    0)
 
         w,h = self.selectwidget.GetSize()
         self.Blit(
@@ -829,8 +811,5 @@ class ListView(View):
             (0,0,w,h),
             0)
 
-    def Quit(self):
-        Log("list","ListView::Quit()")
-        #self.registry.Signal( { "type":"db_disconnect", "id":"dash", "signal":"dash" } )
-        self.registry.UIViewDel(self)
-        self.registry = None
+        if self._redrawview:
+            self._redrawview(self)

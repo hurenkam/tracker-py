@@ -2,7 +2,7 @@ from helpers import *
 from widgets import *
 from datatypes import *
 
-loglevels += ["dash!","dash"]
+loglevels += ["dash!"]
 
 def Init(registry):
     global d
@@ -11,6 +11,22 @@ def Init(registry):
 def Done():
     global d
     d.Quit()
+
+class MyListbox(Dialog):
+    #def __init__(self,title,list,selected,cancelled):
+    def __init__(self,title,list):
+        #self._selected = selected
+        #self._cancelled = cancelled
+        Dialog.__init__(self,title,list)
+
+    def Select(self,key):
+        #self._selected(self)
+        return Dialog.Select(self,key)
+
+    def Cancel(self,key):
+        #self._cancelled(self)
+        return Dialog.Cancel(self,key)
+
 
 
 class DashView(View):
@@ -69,7 +85,7 @@ class DashView(View):
     def GaugeOptions(self,key):
         Log("dash","DashView::GaugeOptions()")
         t = self.gauges[self.zoomedgauge].tag
-        l = ListView(self.registry,"%s options" % t, [
+        l = MyListbox("%s options" % t, [
                 "Time type",
                 "Distance type",
                 "Distance units",
@@ -82,6 +98,7 @@ class DashView(View):
                 "Speed units",
                 "Speed interval",
                 ])
+        self.registry.UIShowDialog(l)
 
     def MoveUp(self,key):
         Log("dash","DashView::MoveUp()")

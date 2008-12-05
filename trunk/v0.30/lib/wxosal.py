@@ -2,6 +2,7 @@ import wx
 import os
 import math
 import time
+from helpers import *
 
 ID_MENU_FIRST=101
 
@@ -11,6 +12,7 @@ def RGBColor(r,g,b):
 Color = {
           "black":'#000000',
           "white":'#ffffff',
+          "yellow":'#ffffc0',
           "darkblue":'#0000ff',
           "darkgreen":'#00ff00',
           "green": '#40c040',
@@ -348,7 +350,7 @@ class Widget:
         else:
             self.dc.Blit(x1,y1,w,h,widget.dc,x3,y3)
 
-class View(Widget):
+class _View(Widget):
     def __init__(self,size=None):
         self.keylist = {}
         Widget.__init__(self,size)
@@ -366,6 +368,8 @@ class View(Widget):
         pass
     def OnShow(self):
         pass
+    def OnRedraw(self,view=None):
+        pass
     def Exit(self):
         return False
 
@@ -378,35 +382,101 @@ class AppFrame(wx.Frame):
 
         self.Show(True)
 
-class Application(Widget):
+class View(Widget):
+    def __init__(self,size=None):
+        self._keylist = {}
+        self._visible = False
+        self._onexit = None
+        self._redrawmenu = None
+        self._redrawview = None
+        Widget.__init__(self,size)
+
+    def OnKey(self,key):
+        if self._visible:
+            if key in self._keylist.keys():
+                return self._keylist[key](key)
+        return False
+
+    def OnResize(self,size):
+        pass
+
+    def OnHide(self):
+        self._visible = False
+        self._redrawmenu = None
+        self._redrawview = None
+        self._onexit = None
+
+    def OnShow(self,redrawview=None,redrawmenu=None,onexit=None):
+        print "onshow" , onexit
+        self._redrawview = redrawview
+        self._redrawmenu = redrawmenu
+        self._onexit = onexit
+        self._visible = True
+
+    def OnRedraw(self):
+        if self._redraw != None:
+            self._redraw(self)
+
+    def OnExit(self):
+        print "onexit" , self._onexit
+        if self._onexit != None:
+            self._onexit(self)
+
+    def KeyAdd(self,key,handler):
+        self._keylist[key]=handler
+
+    def KeyDel(self,key):
+        del self._keylist[key]
+
+
+
+class Application(View):
     def __init__(self,title,(x,y)):
         self.app = wx.PySimpleApp()
         self.frame = AppFrame(u"%s" % title,(x+8,y+66))
         self.control = wx.PyControl(self.frame)
         self.panel = wx.Panel(self.frame,size=(x+8,y+6), style=wx.WANTS_CHARS)
-        self.panel.Bind(wx.EVT_PAINT,self.OnPaint)
+        self.panel.Bind(wx.EVT_PAINT,self.OnWxPaint)
         self.panel.Bind(wx.EVT_KEY_DOWN,self.OnWxKey)
         self.view = None
         self.mainitems = {}
         self.subitems = {}
         self.keylist = {}
-        Widget.__init__(self,(x+8,y+6))
+        View.__init__(self,(x+8,y+6))
+
+
+    def OnViewExit(self,view):
+        print "onviewexit"
+        self.view = None
+        self.Redraw()
 
     def Exit(self):
-        if self.view == None:
-            self.frame.Destroy()
-        else:
-            if not self.view.Exit():
-                self.frame.Destroy()
+        if self.view != None:
+            self.view.OnExit()
+
+        self.OnExit()
+        self.frame.Destroy()
 
     def Run(self):
         self.app.MainLoop()
 
-    def SelectView(self,view):
+    def ShowView(self,view):
+        if self.view != None:
+            self.view.OnHide()
         self.view = view
+        if self.view != None:
+            self.view.OnShow(self.Redraw,self.RedrawMenu,self.OnViewExit)
         self.Redraw()
 
-    def Redraw(self):
+    def ShowDialog(self,dialog,onexit=None):
+        if self.view != None:
+            self.view.OnHide()
+        self.view = dialog
+        if self.view != None:
+            self.view.OnShow(self.Redraw,self.RedrawMenu,onexit)
+        self.Redraw()
+
+    def Redraw(self,view=None):
         try:
             dc = wx.ClientDC(self.panel)
             if self.view == None:
@@ -443,7 +513,7 @@ class Application(Widget):
             key = FindKey(keycode)
             self.OnKey(key)
 
-    def OnPaint(self,event):
+    def OnWxPaint(self,event):
         try:
             dc = wx.PaintDC(self.panel)
             if self.view == None:
@@ -507,3 +577,5 @@ class Application(Widget):
                 wxid += 1
             menuBar.Append(submenu,sub) # Adding the "filemenu" to the MenuBar
         self.frame.SetMenuBar(menuBar)  # Adding the MenuBar to the Frame content.
+
+
