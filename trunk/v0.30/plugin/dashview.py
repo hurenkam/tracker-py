@@ -36,6 +36,14 @@ class DashView(View):
                 self.speedgauge,
                 self.satgauge,
             ]
+        self.dialogs = [
+                Dialog("Monitor Options","Apply","Cancel"),
+                Dialog("Time Options","Apply","Cancel"),
+                DistanceOptions(),
+                AltitudeOptions(),
+                Dialog("Speed Options","Apply","Cancel"),
+                Dialog("Satellite Options","Apply","Cancel"),
+            ]
         self.spots = [
                 ((0,80),    (160,160)),
                 ((0,0),     (80,80)),
@@ -67,24 +75,12 @@ class DashView(View):
 
     def GaugeOptions(self,key):
         Log("dash","DashView::GaugeOptions()")
-        t = self.gauges[self.zoomedgauge].tag
-        l = Listbox("%s options" % t, [
-                "Time type",
-                "Distance type",
-                "Distance units",
-                "Altitude type",
-                "Altitude units",
-                "Altitude interval",
-                "Altitude tolerance",
-                "Waypoint",
-                "Speed type",
-                "Speed units",
-                "Speed interval",
-                ])
-        self.registry.UIShowDialog(l,self.ProcessGaugeOptions)
+        #d = AltitudeOptions()
+        d = self.dialogs[self.zoomedgauge]
+        self.registry.UIShowDialog(d,self.ProcessGaugeOptions)
 
-    def ProcessGaugeOptions(self,l):
-        print "ListDialog result:", l.result
+    def ProcessGaugeOptions(self,d):
+        print "Dialog result:", d.result
 
     def MoveUp(self,key):
         Log("dash","DashView::MoveUp()")

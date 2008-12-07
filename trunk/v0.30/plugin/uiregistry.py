@@ -1,7 +1,7 @@
 from helpers import *
 from widgets import *
 
-loglevels += [ "ui" ]
+loglevels += [ "ui!" ]
 
 def Init(r):
     global registry
