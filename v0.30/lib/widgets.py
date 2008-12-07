@@ -827,3 +827,248 @@ class Listbox(Dialog):
 
         if self._redrawview:
             self._redrawview(self)
+
+
+
+class OptionForm(Dialog):
+    def __init__(self,title,list,selected=0):
+        print list
+        self.list = list
+        if selected < len(list):
+            self.selected = selected
+        else:
+            self.selected = 0
+
+        self.start = 0
+        self.shown = 11
+        self.space = 22
+        self.pad = 10
+        self.left = 80
+        self.top = 40
+        self.textsize = 1.2
+        self.CalculateBox()
+        Dialog.__init__(self,title,left="Apply")
+        self.KeyAdd("up",self.MoveUp)
+        self.KeyAdd("down",self.MoveDown)
+        self.KeyAdd("left",self.MoveLeft)
+        self.KeyAdd("right",self.MoveRight)
+
+    def GetValue(self,index = None):
+        if index == None:
+            index = self.selected
+
+        s = self.list[index]
+        v = s["value"]
+        if s["type"] != "list":
+            return v
+        return s["list"][v]
+
+    def ItemChanged(self):
+        pass
+
+    def AddItem(self,item,index=None):
+        if index == None:
+            index = len(self.list)
+        self.list.insert(index,item)
+        self.CalculateBox()
+        self.ItemChanged()
+
+    def DelItem(self,index=None):
+        if index ==None:
+            index = len(self.list)-1
+        self.list.pop(index)
+        self.CalculateBox()
+        self.ItemChanged()
+
+    def CalculateBox(self):
+        l = len(self.list)
+        if l > self.shown:
+            l = self.shown
+        self.box = ( self.pad - 4, self.top - 4, 240 - self.pad*2 + 4*2, l * self.space + 4*2 )
+
+    def Select(self,key):
+        self.result = self.selected
+        return Dialog.Select(self,key)
+
+    def MoveUp(self,key):
+        Log("list","ListView::MoveUp()")
+        if self.selected > 0:
+            self.selected -= 1
+            if self.start > 0 and self.selected - self.start < int(self.shown/2):
+                self.start -= 1
+
+            self.Draw()
+        return True
+
+    def MoveDown(self,key):
+        Log("list","ListView::MoveDown()")
+        last = len(self.list)-1
+        if self.selected < last:
+            self.selected += 1
+            if self.start + self.shown <= last and self.selected - self.start > int(self.shown/2):
+                self.start += 1
+
+            self.Draw()
+        return True
+
+    def ValueIndexOfSelectedItem(self):
+        selected = self.list[self.selected]
+        type = selected["type"]
+        value = selected["value"]
+        index = None
+        if type == "list":
+            list = selected["list"]
+            if value in list:
+                index = list.index(value)
+            else:
+                index = 0
+        return index
+
+    def MoveLeft(self,key):
+        Log("list","ListView::MoveLeft()")
+        t = self.list[self.selected]["type"]
+        if t == "list":
+            i = self.list[self.selected]["value"]
+            if i > 0:
+                self.list[self.selected]["value"]=i-1
+                self.ItemChanged()
+                self.Draw()
+        return True
+
+    def EditValue(self):
+        pass
+
+    def MoveRight(self,key):
+        Log("list","ListView::MoveRight()")
+        t = self.list[self.selected]["type"]
+        if t == "list":
+            i = self.list[self.selected]["value"]
+            if i < len(self.list[self.selected]["list"]) - 1:
+                self.list[self.selected]["value"]=i+1
+                self.ItemChanged()
+                self.Draw()
+        return True
+
+    def Draw(self):
+        Dialog.Draw(self)
+        count = 0
+        x = self.pad
+        y = self.top
+        self.DrawRectangle(self.box,linecolor=Color['black'],fillcolor=Color['yellow'])
+        for count in range(0,self.shown):
+            if count + self.start >= len(self.list):
+                break
+
+            i = count + self.start
+            s = self.list[i]
+            if "label" not in s:
+                break
+
+            l = s["label"]
+            if s["type"] == "list":
+                print s
+                v = s["list"][s["value"]]
+            else:
+                v = s["value"]
+
+            self.fgcolor = Color['black']
+            self.DrawText((self.pad+3,self.top+1+count*self.space),u"%s" % l,size=self.textsize)
+            if count + self.start == self.selected:
+                self.DrawRectangle((self.left,self.top+count*self.space,240-self.pad-self.left,self.space),linecolor=Color['black'],fillcolor=Color['darkblue'])
+                self.fgcolor = Color['white']
+                self.DrawText((self.left+3,self.top+1+count*self.space),u"%s" % v,size=self.textsize)
+            else:
+                self.fgcolor = Color['black']
+                self.DrawText((self.left+3,self.top+1+count*self.space),u"%s" % v,size=self.textsize)
+
+        if self._redrawview:
+            self._redrawview(self)
+
+
+
+class AltitudeOptions(OptionForm):
+    def __init__(self,registry=None):
+        Log("dash","DashView::GaugeOptions()")
+        self.tolerance = [ [10,20, 50,100,200, 500,1000,2000, 5000],
+                           [30,60,150,300,600,1500,3000,6000,15000] ]
+        self.interval =    [1,5,15,30,60,120,240,480,960]
+        OptionForm.__init__(self,"Altitude Options",[
+                 { "label":"Type",      "type":"list", "value":0, "list":["alt","avg-alt","ascent","descent"] },
+                 { "label":"Units",     "type":"list", "value":0, "list":["meters","feet"] },
+                 {}
+            ])
+
+    def GetType(self):
+        return self.GetValue(0)
+
+    def GetUnits(self):
+        return self.GetValue(1)
+
+    def GetTolerance(self):
+        if "label" not in self.list[2] or self.list[2]["label"] != "Tolerance":
+            return
+        else:
+            return self.GetValue(2)
+
+    def GetInterval(self):
+        if "label" not in self.list[2] or self.list[2]["label"] != "Interval":
+            return
+        else:
+            return self.GetValue(2)
+
+    def ItemChanged(self):
+
+        if self.selected == 0: # Type changed
+            t = self.GetType()
+            if t=="alt":
+                self.list[2] = {}
+            elif t=="avg-alt":
+                if "label" not in self.list[2] or self.list[2]["label"] != "Interval":
+                    u = self.list[1]["value"]
+                    self.list[2] = { "label":"Interval", "type":"list", "value":2, "list":self.interval }
+            elif t=="ascent" or t=="descent":
+                if "label" not in self.list[2] or self.list[2]["label"] != "Tolerance":
+                    u = self.list[1]["value"]
+                    self.list[2] = { "label":"Tolerance", "type":"list", "value":3, "list":self.tolerance[u] }
+
+        elif self.selected == 1: # Units changed
+            u = self.list[1]["value"]
+            self.list[2]["list"] = self.tolerance[u]
+
+class DistanceOptions(OptionForm):
+    def __init__(self,registry=None):
+        Log("dash","DashView::GaugeOptions()")
+        self.tolerance = [ [1, 3,10, 30,100, 300,1000, 3000,10000],
+                           [3,10,30,100,300,1000,3000,10000,30000] ]
+        OptionForm.__init__(self,"Distance Options",[
+                 { "label":"Type",      "type":"list", "value":0, "list":["trip","total","waypoint"] },
+                 { "label":"Units",     "type":"list", "value":0, "list":["meters","feet"] },
+                 { "label":"Tolerance", "type":"list", "value":3, "list":self.tolerance[0] }
+            ])
+
+    def GetType(self):
+        return self.GetValue(0)
+
+    def GetUnits(self):
+        return self.GetValue(1)
+
+    def GetTolerance(self):
+        if "label" not in self.list[2] or self.list[2]["label"] != "Tolerance":
+            return
+        else:
+            return self.GetValue(2)
+
+    def ItemChanged(self):
+
+        if self.selected == 0: # Type changed
+            t = self.GetType()
+            if t=="waypoint":
+                self.list[2] = {}
+            elif t=="trip" or t=="total":
+                if "label" not in self.list[2] or self.list[2]["label"] != "Tolerance":
+                    u = self.list[1]["value"]
+                    self.list[2] = { "label":"Tolerance", "type":"list", "value":3, "list":self.tolerance[u] }
+
+        elif self.selected == 1: # Units changed
+            u = self.list[1]["value"]
+            self.list[2]["list"] = self.tolerance[u]

@@ -325,7 +325,7 @@ class Application(View):
             self.view.OnShow(self.Redraw,self.RedrawMenu,onexit)
         self.Redraw()
 
-    def Redraw(self):
+    def Redraw(self,view=None):
         try:
             if self.view == None:
                 return

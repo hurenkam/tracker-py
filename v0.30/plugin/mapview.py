@@ -659,7 +659,7 @@ class MapView(View):
         self.registry.UIMenuRedraw()
         self.KeyAdd("up",self.ZoomIn)
         self.KeyAdd("down",self.ZoomOut)
-        self.KeyAdd("enter",self.SelectMap)
+        self.KeyAdd("select",self.SelectMap)
         self.KeyAdd("7",self.ToggleWaypoints)
 
     def ZoomIn(self,event=None):
