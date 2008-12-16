@@ -279,52 +279,6 @@ class TwoHandGauge(Gauge):
             self.DrawTriangleHand (longhand,  0.7 * self.radius, Color['black'], 4)
             self.DrawTriangleHand (shorthand, 0.5 * self.radius, Color['black'], 4)
 
-class ClockGauge(Gauge):
-
-    def __init__(self,radius=None,tag="clock"):
-        self.hours = 0
-        self.minutes = 0
-        self.seconds = 0
-        self.tag = "Clock"
-        Gauge.__init__(self,radius)
-
-    def UpdateValue(self,value):
-        import time
-        y,m,d, self.hours, self.minutes, self.seconds, a,b,c = time.localtime(value)
-        self.Draw()
-
-    def Draw(self):
-        if self.radius is None:
-            return
-
-        size1 = self.radius / 50.0
-        size2 = 1.2 * size1
-
-        Gauge.Draw(self)
-        self.DrawScale(12,60)
-        if self.radius >= 30:
-            self.DrawText(((self.radius,0.6*self.radius)),u'%s' % self.tag,size=size1,align="center")
-        if ((self.radius != None) and
-            (self.hours != None) and
-            (self.minutes != None)):
-
-                hourshand =    self.hours   * 360/12  + self.minutes * 360/12/60
-                if self.seconds != None:
-                    minuteshand =  self.minutes * 360/60  + self.seconds * 360/60/60
-                    secondshand =  self.seconds * 360/60
-                    if self.radius >= 30:
-                        self.DrawText(((self.radius,1.6*self.radius)),u'%2i:%02i:%02i' % (self.hours,self.minutes,self.seconds),size=size1,align="center")
-                    self.DrawLineHand     (secondshand, 0.75 * self.radius, Color['black'], 1)
-                    self.DrawTriangleHand (minuteshand, 0.7  * self.radius, Color['black'], 4)
-                    self.DrawTriangleHand (hourshand,   0.5  * self.radius, Color['black'], 4)
-                else:
-                    minuteshand =  self.minutes * 360/60
-                    if self.radius >= 30:
-                        self.DrawText(((self.radius,1.6*self.radius)),u'%2i:%02i' % (self.hours,self.minutes),size=size2,align="center")
-                    self.DrawTriangleHand (minuteshand, 0.7  * self.radius, Color['black'], 4)
-                    self.DrawTriangleHand (hourshand,   0.5  * self.radius, Color['black'], 4)
-
-
 class WaypointGauge(Gauge):
 
     def __init__(self,radius=None):
@@ -469,6 +423,7 @@ class SpeedGauge(TwoHandGauge):
         else: # units == "mph"
             self.value = value * 0.621371192237
 
+        self.name = u"%s-%s" % (type,units)
         TwoHandGauge.Draw(self)
 
     def UpdateValue(self,value):
@@ -581,6 +536,7 @@ class AltitudeGauge(TwoHandGauge):
         else: # self.units == "ft"
             self.value = value * 3.2808398950131235
 
+        self.name = u"%s-%s" % (type,units)
         TwoHandGauge.Draw(self)
 
 class TimeGauge(Gauge):
@@ -662,30 +618,33 @@ class DistanceGauge(TwoHandGauge):
         self.trip = 0
         self.distance = 0
         self.registry = registry
-        self.registry.ConfigAdd( { "setting":"distance_type", "description":u"Type of info the distance gauge should show",
+        self.registry.ConfigAdd( { "setting":"dist_type", "description":u"Type of info the distance gauge should show",
                                  "default":"trip", "query":None } )
-        self.registry.ConfigAdd( { "setting":"distance_units", "description":u"Units the distance gauge should use",
+        self.registry.ConfigAdd( { "setting":"dist_units", "description":u"Units the distance gauge should use",
                                  "default":"km", "query":None } )
-        self.registry.ConfigAdd( { "setting":"distance_total", "description":u"Total distance",
+        self.registry.ConfigAdd( { "setting":"dist_total", "description":u"Total distance",
                                  "default":0, "query":None } )
         #self.registry.ConfigAdd( { "setting":"distance_trip", "description":u"Trip distance",
         #                         "default":0, "query":None } )
-        self.total = self.registry.ConfigGetValue("distance_total")
+        self.total = self.registry.ConfigGetValue("dist_total")
         #self.trip  = self.registry.ConfigGetValue("distance_trip")
         self.trip = 0
 
     def Draw(self):
-        type = self.registry.ConfigGetValue("distance_type")
-        units = self.registry.ConfigGetValue("distance_units")
+        type = self.registry.ConfigGetValue("dist_type")
+        units = self.registry.ConfigGetValue("dist_units")
+        distance = 0
         if type == "total":
             distance = self.total
             self.decimals = 0
-        if type == "trip":
+        elif type == "trip":
             distance = self.trip
             self.decimals = 2
-        if type == "wpt":
+        elif type == "wpt":
             distance = self.distance
             self.decimals = 2
+        else:
+            print "unknown distance type"
 
         if units == "km":
             self.value = distance / 1000
@@ -698,7 +657,7 @@ class DistanceGauge(TwoHandGauge):
     def UpdateValues(self,delta,wpt):
         self.total += delta
         self.trip += delta
-        self.registry.ConfigSetValue("distance_total",self.total)
+        self.registry.ConfigSetValue("dist_total",self.total)
         #self.registry.ConfigSetValue("distance_trip",self.trip)
 
         self.distance = wpt
@@ -863,7 +822,7 @@ class OptionForm(Dialog):
             return v
         return s["list"][v]
 
-    def ItemChanged(self):
+    def ItemChanged(self,index=None):
         pass
 
     def AddItem(self,item,index=None):
@@ -903,6 +862,9 @@ class OptionForm(Dialog):
     def MoveDown(self,key):
         Log("list","ListView::MoveDown()")
         last = len(self.list)-1
+        while len(self.list[last]) == 0:
+            last -= 1
+
         if self.selected < last:
             self.selected += 1
             if self.start + self.shown <= last and self.selected - self.start > int(self.shown/2):
@@ -983,92 +945,3 @@ class OptionForm(Dialog):
 
         if self._redrawview:
             self._redrawview(self)
-
-
-
-class AltitudeOptions(OptionForm):
-    def __init__(self,registry=None):
-        Log("dash","DashView::GaugeOptions()")
-        self.tolerance = [ [10,20, 50,100,200, 500,1000,2000, 5000],
-                           [30,60,150,300,600,1500,3000,6000,15000] ]
-        self.interval =    [1,5,15,30,60,120,240,480,960]
-        OptionForm.__init__(self,"Altitude Options",[
-                 { "label":"Type",      "type":"list", "value":0, "list":["alt","avg-alt","ascent","descent"] },
-                 { "label":"Units",     "type":"list", "value":0, "list":["meters","feet"] },
-                 {}
-            ])
-
-    def GetType(self):
-        return self.GetValue(0)
-
-    def GetUnits(self):
-        return self.GetValue(1)
-
-    def GetTolerance(self):
-        if "label" not in self.list[2] or self.list[2]["label"] != "Tolerance":
-            return
-        else:
-            return self.GetValue(2)
-
-    def GetInterval(self):
-        if "label" not in self.list[2] or self.list[2]["label"] != "Interval":
-            return
-        else:
-            return self.GetValue(2)
-
-    def ItemChanged(self):
-
-        if self.selected == 0: # Type changed
-            t = self.GetType()
-            if t=="alt":
-                self.list[2] = {}
-            elif t=="avg-alt":
-                if "label" not in self.list[2] or self.list[2]["label"] != "Interval":
-                    u = self.list[1]["value"]
-                    self.list[2] = { "label":"Interval", "type":"list", "value":2, "list":self.interval }
-            elif t=="ascent" or t=="descent":
-                if "label" not in self.list[2] or self.list[2]["label"] != "Tolerance":
-                    u = self.list[1]["value"]
-                    self.list[2] = { "label":"Tolerance", "type":"list", "value":3, "list":self.tolerance[u] }
-
-        elif self.selected == 1: # Units changed
-            u = self.list[1]["value"]
-            self.list[2]["list"] = self.tolerance[u]
-
-class DistanceOptions(OptionForm):
-    def __init__(self,registry=None):
-        Log("dash","DashView::GaugeOptions()")
-        self.tolerance = [ [1, 3,10, 30,100, 300,1000, 3000,10000],
-                           [3,10,30,100,300,1000,3000,10000,30000] ]
-        OptionForm.__init__(self,"Distance Options",[
-                 { "label":"Type",      "type":"list", "value":0, "list":["trip","total","waypoint"] },
-                 { "label":"Units",     "type":"list", "value":0, "list":["meters","feet"] },
-                 { "label":"Tolerance", "type":"list", "value":3, "list":self.tolerance[0] }
-            ])
-
-    def GetType(self):
-        return self.GetValue(0)
-
-    def GetUnits(self):
-        return self.GetValue(1)
-
-    def GetTolerance(self):
-        if "label" not in self.list[2] or self.list[2]["label"] != "Tolerance":
-            return
-        else:
-            return self.GetValue(2)
-
-    def ItemChanged(self):
-
-        if self.selected == 0: # Type changed
-            t = self.GetType()
-            if t=="waypoint":
-                self.list[2] = {}
-            elif t=="trip" or t=="total":
-                if "label" not in self.list[2] or self.list[2]["label"] != "Tolerance":
-                    u = self.list[1]["value"]
-                    self.list[2] = { "label":"Tolerance", "type":"list", "value":3, "list":self.tolerance[u] }
-
-        elif self.selected == 1: # Units changed
-            u = self.list[1]["value"]
-            self.list[2]["list"] = self.tolerance[u]
