@@ -12,6 +12,337 @@ def Done():
     global d
     d.Quit()
 
+
+
+class AltitudeOptions(OptionForm):
+    def __init__(self,registry):
+        Log("dash","DashView::GaugeOptions()")
+        self.tolerance = [ [10,20, 50,100,200, 500,1000,2000, 5000],
+                           [30,60,150,300,600,1500,3000,6000,15000] ]
+        self.interval =    [1,5,15,30,60,120,240,480,960]
+        OptionForm.__init__(self,"Altitude Options",[])
+        self.registry = registry
+        self.registry.ConfigAdd( { "setting":"alt_type", "description":u"Altitude gauge type",
+                                   "default":"alt", "query":None } )
+        self.registry.ConfigAdd( { "setting":"alt_units", "description":u"Units used for altitude gauge",
+                                   "default":"meters", "query":None } )
+        self.registry.ConfigAdd( { "setting":"alt_tolerance", "description":u"Tolerance used for ascent/descent calculation",
+                                   "default":100, "query":None } )
+        self.registry.ConfigAdd( { "setting":"alt_interval", "description":u"Interval (in minutes) used to calculate average altitude",
+                                   "default":5, "query":None } )
+        self.LoadOptions()
+        self.Draw()
+
+    def LoadOptions(self):
+        self.list = [
+                 { "label":"Type",      "type":"list", "value":0, "list":["alt","avg-alt","ascent","descent"] },
+                 { "label":"Units",     "type":"list", "value":0, "list":["meters","feet"] },
+                 {}
+            ]
+
+        list = self.list[0]["list"]
+        type = self.registry.ConfigGetValue("alt_type")
+        if type not in list:
+            index = 0
+        else:
+            index = list.index(type)
+        if self.list[0]["value"] != index:
+            self.list[0]["value"] = index
+            self.ItemChanged(0)
+
+        list = self.list[1]["list"]
+        units = self.registry.ConfigGetValue("alt_units")
+        if units not in list:
+            index = 0
+        else:
+            index = list.index(units)
+        if self.list[1]["value"] != index:
+            self.list[1]["value"] = index
+            self.ItemChanged(1)
+
+        self.CalculateBox()
+
+    def SaveOptions(self):
+        t = self.GetType()
+        u = self.GetUnits()
+        self.registry.ConfigSetValue("alt_type",t)
+        self.registry.ConfigSetValue("alt_units",u)
+        if t == "ascent" or t == "descent":
+            self.registry.ConfigSetValue("alt_tolerance",self.GetTolerance())
+        if t == "avg-alt":
+            self.registry.ConfigSetValue("alt_interval",self.GetInterval())
+
+    def GetType(self):
+        return self.GetValue(0)
+
+    def GetUnits(self):
+        return self.GetValue(1)
+
+    def GetTolerance(self):
+        if "label" not in self.list[2] or self.list[2]["label"] != "Tolerance":
+            return
+        else:
+            return self.GetValue(2)
+
+    def GetInterval(self):
+        if "label" not in self.list[2] or self.list[2]["label"] != "Interval":
+            return
+        else:
+            return self.GetValue(2)
+
+    def ItemChanged(self,index=None):
+        if index == None:
+            index = self.selected
+
+        if index == 0: # Type changed
+            t = self.GetType()
+            if t=="alt":
+                self.list[2] = {}
+            elif t=="avg-alt":
+                if "label" not in self.list[2] or self.list[2]["label"] != "Interval":
+                    u = self.list[1]["value"]
+                    self.list[2] = { "label":"Interval", "type":"list", "value":2, "list":self.interval }
+            elif t=="ascent" or t=="descent":
+                if "label" not in self.list[2] or self.list[2]["label"] != "Tolerance":
+                    u = self.list[1]["value"]
+                    self.list[2] = { "label":"Tolerance", "type":"list", "value":3, "list":self.tolerance[u] }
+
+        elif index == 1: # Units changed
+            u = self.list[1]["value"]
+            self.list[2]["list"] = self.tolerance[u]
+
+    def Select(self,key):
+        self.SaveOptions()
+        OptionForm.Select(self,key)
+
+
+
+class DistanceOptions(OptionForm):
+    def __init__(self,registry):
+        Log("dash","DashView::GaugeOptions()")
+        self.tolerance = [ [1, 3,10, 30,100, 300,1000, 3000,10000],
+                           [3,10,30,100,300,1000,3000,10000,30000] ]
+        OptionForm.__init__(self,"Distance Options",[])
+        self.registry = registry
+        self.registry.ConfigAdd( { "setting":"dist_type", "description":u"Distance gauge type",
+                                   "default":"trip", "query":None } )
+        self.registry.ConfigAdd( { "setting":"dist_units", "description":u"Units used for distance gauge",
+                                   "default":"km", "query":None } )
+        self.registry.ConfigAdd( { "setting":"dist_tolerance", "description":u"Tolerance used for trip/total calculation",
+                                   "default":10, "query":None } )
+        self.registry.ConfigAdd( { "setting":"dist_tolunits", "description":u"Units used for distance tolerance",
+                                   "default":"meters", "query":None } )
+        self.LoadOptions()
+        self.Draw()
+
+    def LoadOptions(self):
+        self.list = [
+                 { "label":"Type",      "type":"list", "value":0, "list":["trip","total","wpt"] },
+                 { "label":"Units",     "type":"list", "value":0, "list":["km","miles"] },
+                 { "label":"Tolerance", "type":"list", "value":3, "list":self.tolerance[0] },
+                 { "label":"Tol.Units", "type":"list", "value":0, "list":["meters","feet"] },
+            ]
+
+        list = self.list[0]["list"]
+        type = self.registry.ConfigGetValue("dist_type")
+        if type not in list:
+            index = 0
+        else:
+            index = list.index(type)
+        if self.list[0]["value"] != index:
+            self.list[0]["value"] = index
+            self.ItemChanged(0)
+
+        list = self.list[1]["list"]
+        units = self.registry.ConfigGetValue("dist_units")
+        if units not in list:
+            index = 0
+        else:
+            index = list.index(units)
+        if self.list[1]["value"] != index:
+            self.list[1]["value"] = index
+            self.ItemChanged(1)
+
+        if len(self.list[3]):
+            list = self.list[3]["list"]
+            units = self.registry.ConfigGetValue("dist_tolunits")
+            if units not in list:
+                index = 0
+            else:
+                index = list.index(units)
+            if self.list[3]["value"] != index:
+                self.list[3]["value"] = index
+                self.ItemChanged(3)
+
+        self.CalculateBox()
+
+    def SaveOptions(self):
+        t = self.GetType()
+        u = self.GetUnits()
+        self.registry.ConfigSetValue("dist_type",t)
+        self.registry.ConfigSetValue("dist_units",u)
+        if t == "total" or t == "trip":
+            self.registry.ConfigSetValue("dist_tolerance",self.GetTolerance())
+
+    def GetType(self):
+        return self.GetValue(0)
+
+    def GetUnits(self):
+        return self.GetValue(1)
+
+    def GetTolerance(self):
+        if "label" not in self.list[2] or self.list[2]["label"] != "Tolerance":
+            return
+        else:
+            return self.GetValue(2)
+
+    def ItemChanged(self,index=None):
+        if index == None:
+            index = self.selected
+
+        if index == 0: # Type changed
+            t = self.GetType()
+            if t=="wpt":
+                self.list[2] = {}
+                self.list[3] = {}
+            elif t=="trip" or t=="total":
+                if "label" not in self.list[2] or self.list[2]["label"] != "Tolerance":
+                    self.list[3] = { "label":"Tol.Units", "type":"list", "value":0, "list":["meters","feet"] }
+                    self.list[2] = { "label":"Tolerance", "type":"list", "value":3, "list":self.tolerance[0] }
+
+        elif index == 3: # Tolerance Units changed
+            u = self.list[3]["value"]
+            self.list[2]["list"] = self.tolerance[u]
+
+    def Select(self,key):
+        self.SaveOptions()
+        OptionForm.Select(self,key)
+
+
+class TimeOptions(OptionForm):
+    def __init__(self,registry):
+        Log("dash","TimeOptions::__init__()")
+        OptionForm.__init__(self,"Time Options",[])
+        self.registry = registry
+        self.registry.ConfigAdd( { "setting":"time_type", "description":u"Altitude gauge type",
+                                   "default":"clock", "query":None } )
+        self.LoadOptions()
+        self.Draw()
+
+    def LoadOptions(self):
+        self.list = [
+                 { "label":"Type",      "type":"list", "value":0, "list":["clock","trip","remaining","eta"] },
+            ]
+        self.CalculateBox()
+
+    def SaveOptions(self):
+        t = self.GetType()
+        self.registry.ConfigSetValue("time_type",t)
+
+    def GetType(self):
+        return self.GetValue(0)
+
+    def Select(self,key):
+        self.SaveOptions()
+        OptionForm.Select(self,key)
+
+
+class SpeedOptions(OptionForm):
+    def __init__(self,registry):
+        Log("dash","DashView::GaugeOptions()")
+        OptionForm.__init__(self,"Distance Options",[])
+        self.registry = registry
+        self.registry.ConfigAdd( { "setting":"speed_type", "description":u"Speed gauge type",
+                                   "default":"trip", "query":None } )
+        self.registry.ConfigAdd( { "setting":"speed_units", "description":u"Units used for speed gauge",
+                                   "default":"km", "query":None } )
+        self.registry.ConfigAdd( { "setting":"speed_interval", "description":u"Interval used for average speed calculation",
+                                   "default":300, "query":None } )
+        self.intervals = [ 5, 15, 30, 60, 120, 300, 900, 1800, 3600, 7200, 18000 ]
+        self.LoadOptions()
+        self.Draw()
+
+    def LoadOptions(self):
+        self.list = [
+                 { "label":"Type",      "type":"list", "value":0, "list":["speed","avg-speed"] },
+                 { "label":"Units",     "type":"list", "value":0, "list":["km/h","mph"] },
+                 {}
+            ]
+
+        list = self.list[0]["list"]
+        type = self.registry.ConfigGetValue("speed_type")
+        if type not in list:
+            index = 0
+        else:
+            index = list.index(type)
+        if self.list[0]["value"] != index:
+            self.list[0]["value"] = index
+            self.ItemChanged(0)
+
+        list = self.list[1]["list"]
+        units = self.registry.ConfigGetValue("speed_units")
+        if units not in list:
+            index = 0
+        else:
+            index = list.index(units)
+        if self.list[1]["value"] != index:
+            self.list[1]["value"] = index
+            self.ItemChanged(1)
+
+        if len(self.list[2]):
+            list = self.list[2]["list"]
+            interval = self.registry.ConfigGetValue("speed_interval")
+            if interval not in self.intervals:
+                index = 6
+            else:
+                index = list.index(self.intervals)
+            if self.list[2]["value"] != index:
+                self.list[2]["value"] = index
+                self.ItemChanged(2)
+
+        self.CalculateBox()
+
+    def SaveOptions(self):
+        t = self.GetType()
+        u = self.GetUnits()
+        self.registry.ConfigSetValue("speed_type",t)
+        self.registry.ConfigSetValue("speed_units",u)
+        if t == "avg-speed":
+            list = self.list[2]["list"]
+            index = list.index(self.GetInterval())
+            self.registry.ConfigSetValue("speed_interval",self.intervals[index])
+
+    def GetType(self):
+        return self.GetValue(0)
+
+    def GetUnits(self):
+        return self.GetValue(1)
+
+    def GetInterval(self):
+        if "label" not in self.list[2] or self.list[2]["label"] != "Interval":
+            return
+        else:
+            return self.GetValue(2)
+
+    def ItemChanged(self,index=None):
+        if index == None:
+            index = self.selected
+
+        if index == 0: # Type changed
+            t = self.GetType()
+            if t=="speed":
+                self.list[2] = {}
+            elif t=="avg-speed":
+                if "label" not in self.list[2] or self.list[2]["label"] != "Interval":
+                    self.list[2] = { "label":"Interval", "type":"list", "value":5, "list":[
+                        u'5 seconds', u'15 seconds', u'30 seconds', u'1 minute', u'2 minutes', u'5 minutes',
+                        u'15 minutes', u'30 minutes', u'1 hour', u'2 hours', u'5 hours'] }
+
+    def Select(self,key):
+        self.SaveOptions()
+        OptionForm.Select(self,key)
+
+
 class DashView(View):
     def __init__(self,registry):
         Log("dash","DashView::__init__()")
@@ -20,6 +351,7 @@ class DashView(View):
 
         self.menu = {}
         self.trip = 0.0
+        self.starttime = time()
 
         self.positionwidget = PositionWidget((200,15))
         self.wptgauge       = WaypointGauge(None)
@@ -38,10 +370,10 @@ class DashView(View):
             ]
         self.dialogs = [
                 Dialog("Monitor Options","Apply","Cancel"),
-                Dialog("Time Options","Apply","Cancel"),
-                DistanceOptions(),
-                AltitudeOptions(),
-                Dialog("Speed Options","Apply","Cancel"),
+                TimeOptions(registry),
+                DistanceOptions(registry),
+                AltitudeOptions(registry),
+                SpeedOptions(registry),
                 Dialog("Satellite Options","Apply","Cancel"),
             ]
         self.spots = [
@@ -103,7 +435,7 @@ class DashView(View):
     def OnClock(self,signal):
         Log("dash*","DashView::OnClock()")
         t = signal["time"]
-        self.timegauge.UpdateValues(t,t,t,t) # time, trip, remaining, eta
+        self.timegauge.UpdateValues(t,t-self.starttime,t-self.starttime,t) # time, trip, remaining, eta
         #self.clockgauge.UpdateValue(t)
         self.Draw()
         self.RedrawView()
