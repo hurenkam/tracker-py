@@ -531,9 +531,9 @@ class AltitudeGauge(TwoHandGauge):
             if l > 0:
                 value = sum(self.avglist)/l
 
-        if units == "m":
+        if units == "meters":
             self.value = value
-        else: # self.units == "ft"
+        else: # self.units == "feet"
             self.value = value * 3.2808398950131235
 
         self.name = u"%s-%s" % (type,units)

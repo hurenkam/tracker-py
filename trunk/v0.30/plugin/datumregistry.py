@@ -21,6 +21,8 @@ class DatumRegistry:
         registry.ConfigAdd(
             { "setting":"datum_current", "description":u"Current datum",
               "default":"RD", "query":self.DatumQuery } )
+        registry.UIMenuAdd( self.DatumSelect,  "Datum", "GPS" )
+        registry.UIMenuRedraw()
     def DatumAdd(self,short,format,query):
         Log("datum","DatumRegistry::DatumAdd(",short,")")
         self.datums[short]=(format,query)
@@ -38,10 +40,25 @@ class DatumRegistry:
             return format((lat,lon))
         else:
             return (str(lat),str(lon))
-
     def DatumQuery(self,position=None):
         Log("datum","DatumRegistry::DatumQuery(",position,")")
         current = self.registry.ConfigGetValue("datum_current")
         if current in self.datums.keys():
             format,query = self.datums[current]
             return query(position)
+    def DatumSelect(self):
+        from widgets import Listbox
+        list = self.datums.keys()
+        list.sort()
+        l = Listbox("Select Datum", list)
+        self.registry.UIShowDialog(l,self.DatumSelected)
+    def DatumSelected(self,l):
+        if l.result == None:
+            return
+
+        key = l.list[l.result]
+        #print "DatumSelected", key
+        self.registry.ConfigSetValue("datum_current",key)
+        self.registry.UIViewRedraw()
+
+

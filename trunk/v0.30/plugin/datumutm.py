@@ -17,6 +17,8 @@ class DatumUTM:
         self.registry = registry
         self.data = None
         self.meta = None
+        registry.UIMenuAdd( self.EllipsoidSelect,  "UTM Ellipsoid", "GPS" )
+        registry.UIMenuRedraw()
         self.Register()
 
     def Quit(self):
@@ -79,4 +81,21 @@ class DatumUTM:
         Log("utm*","DatumUTM::FormatUTM()")
         zone,x,y = self.Wgs2UTM(latitude,longitude)
         return (u"UTM", u"%s" % zone, u"%s" % int(x), u"%s" % int(y) )
+
+    def EllipsoidSelect(self):
+        from widgets import Listbox
+        from datums import Ellipsoid
+        list = Ellipsoid.keys()
+        list.sort()
+        l = Listbox("Select Ellipsoid", list)
+        self.registry.UIShowDialog(l,self.EllipsoidSelected)
+
+    def EllipsoidSelected(self,l):
+        if l.result == None:
+            return
+
+        key = l.list[l.result]
+        #print "DatumSelected", key
+        self.registry.ConfigSetValue("utm_ellipsoid",key)
+        self.registry.UIViewRedraw()
 

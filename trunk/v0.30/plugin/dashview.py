@@ -295,7 +295,7 @@ class SpeedOptions(OptionForm):
             if interval not in self.intervals:
                 index = 6
             else:
-                index = list.index(self.intervals)
+                index = self.intervals.index(interval)
             if self.list[2]["value"] != index:
                 self.list[2]["value"] = index
                 self.ItemChanged(2)
@@ -343,6 +343,86 @@ class SpeedOptions(OptionForm):
         OptionForm.Select(self,key)
 
 
+class MonitorOptions(OptionForm):
+    def __init__(self,registry):
+        Log("dash","DashView::GaugeOptions()")
+        OptionForm.__init__(self,"Monitor Options",[])
+        self.registry = registry
+        self.registry.ConfigAdd( { "setting":"mon_type", "description":u"Monitor gauge type",
+                                   "default":"wpt", "query":None } )
+        self.registry.ConfigAdd( { "setting":"mon_wpt", "description":u"Monitor gauge selected waypoint",
+                                   "default":"home", "query":None } )
+        self.registry.ConfigAdd( { "setting":"mon_rte", "description":u"Monitor gauge selected route",
+                                   "default":"home", "query":None } )
+        self.LoadOptions()
+        self.Draw()
+
+    def LoadOptions(self):
+        self.list = [
+                 { "label":"Type",      "type":"list", "value":0, "list":["waypoint","route","track"] },
+                 { "label":"Route",     "type":"list", "value":0, "list":["return"] },
+                 { "label":"Waypoint",  "type":"list", "value":0, "list":["home","work"] },
+            ]
+
+        list = self.list[0]["list"]
+        type = self.registry.ConfigGetValue("mon_type")
+        if type not in list:
+            index = 0
+        else:
+            index = list.index(type)
+        if self.list[0]["value"] != index:
+            self.list[0]["value"] = index
+            self.ItemChanged(0)
+
+        list = self.list[1]["list"]
+        rte = self.registry.ConfigGetValue("mon_rte")
+        if rte not in list:
+            index = 0
+        else:
+            index = list.index(rte)
+        if self.list[1]["value"] != index:
+            self.list[1]["value"] = index
+            self.ItemChanged(1)
+
+        list = self.list[2]["list"]
+        wpt = self.registry.ConfigGetValue("mon_wpt")
+        if wpt not in list:
+            index = 0
+        else:
+            index = list.index(wpt)
+        if self.list[2]["value"] != index:
+            self.list[2]["value"] = index
+            self.ItemChanged(2)
+
+        self.CalculateBox()
+
+    def SaveOptions(self):
+        self.registry.ConfigSetValue("mon_type",self.GetType())
+        self.registry.ConfigSetValue("mon_wpt",self.GetWaypoint())
+        self.registry.ConfigSetValue("mon_rte",self.GetRoute())
+
+    def GetType(self):
+        return self.GetValue(0)
+
+    def GetRoute(self):
+        return self.GetValue(1)
+
+    def GetWaypoint(self):
+        return self.GetValue(2)
+
+    def ItemChanged(self,index=None):
+        if index == None:
+            index = self.selected
+
+        if index == 0: # Type changed, select appropriate list(s)
+            pass
+
+    def Select(self,key):
+        self.SaveOptions()
+        OptionForm.Select(self,key)
+
+
+
 class DashView(View):
     def __init__(self,registry):
         Log("dash","DashView::__init__()")
@@ -369,7 +449,7 @@ class DashView(View):
                 self.satgauge,
             ]
         self.dialogs = [
-                Dialog("Monitor Options","Apply","Cancel"),
+                MonitorOptions(registry),
                 TimeOptions(registry),
                 DistanceOptions(registry),
                 AltitudeOptions(registry),
