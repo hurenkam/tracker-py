@@ -348,11 +348,26 @@ class MapWidget(Widget):
         self.heading = 0
         self.zoom = 2
         self.cursor = None
+        self.onmap = None
         #self.position = self.storage.GetValue("app_lastknownposition")
         self.position = Point(0,51.5431429,5.26938448,0)
         Widget.__init__(self,None)
         self.UpdatePosition(self.position,0)
         self.Resize(size)
+
+    def GetMap(self):
+        return self.map
+
+    def GetCursor(self):
+        if self.cursor == None:
+            if self.onmap == None:
+                mw,mh = self.map.size
+                return (mw/2, mh/2)
+            return self.onmap
+        return self.cursor
+
+    def GetWaypoints(self):
+        return self.waypoints
 
     def ShowTrack(self,track,color=Color["darkblue"]):
         Log("map","MapWidget::ShowTrack(",track,color,")")
@@ -553,6 +568,40 @@ class MapWidget(Widget):
             self.zoom += 1
             self.Draw()
 
+    def ScrollLeft(self,event=None):
+        Log("map","MapWidget::ScrollLeft()")
+        x,y = self.GetCursor()
+        if x > 10:
+            x -= 10
+            self.cursor = x,y
+
+    def ScrollRight(self,event=None):
+        Log("map","MapWidget::ScrollRight()")
+        x,y = self.GetCursor()
+        w,h = self.map.size
+        if x < w-10:
+            x += 10
+            self.cursor = x,y
+
+    def ScrollUp(self,event=None):
+        Log("map","MapWidget::ScrollUp()")
+        x,y = self.GetCursor()
+        if y > 10:
+            y -= 10
+            self.cursor = x,y
+
+    def ScrollDown(self,event=None):
+        Log("map","MapWidget::ScrollDown()")
+        x,y = self.GetCursor()
+        w,h = self.map.size
+        if y < h-10:
+            y += 10
+            self.cursor = x,y
+
+    def FollowGPS(self,event=None):
+        Log("map","MapWidget::FollowGPS()")
+        self.cursor = None
+
     def SaneAreas(self,target,source,zoom=1.0):
         x1,y1,x2,y2 = target
         x3,y3,x4,y4 = source
@@ -654,13 +703,21 @@ class MapView(View):
                                  "default":"campus", "query":self.QueryCurrentMap } )
         self.InitMapList(self.registry.ConfigGetValue("map_dir"))
         self.LoadMap(self.GetCurrentMap())
-        self.registry.UIMenuAdd(self.OnOpen,"Open","Map")
+        self.registry.UIMenuAdd(self.OnOpen,     "Open",     "Map")
+        self.registry.UIMenuAdd(self.OnAddRef,   "AddRef",   "Map")
+        self.registry.UIMenuAdd(self.OnAddRefWpt,"AddRefWpt","Map")
+        self.registry.UIMenuAdd(self.OnClearRef, "ClearRef", "Map")
         self.registry.UIMenuAdd(self.AddWaypoint,"Add","Waypoint")
         self.registry.UIMenuRedraw()
         self.KeyAdd("up",self.ZoomIn)
         self.KeyAdd("down",self.ZoomOut)
         self.KeyAdd("select",self.SelectMap)
         self.KeyAdd("7",self.ToggleWaypoints)
+        self.KeyAdd("4",self.ScrollLeft)
+        self.KeyAdd("6",self.ScrollRight)
+        self.KeyAdd("2",self.ScrollUp)
+        self.KeyAdd("8",self.ScrollDown)
+        self.KeyAdd("5",self.FollowGPS)
 
     def ZoomIn(self,event=None):
         Log("map","MapView::ZoomIn()")
@@ -671,6 +728,36 @@ class MapView(View):
     def ZoomOut(self,event=None):
         Log("map","MapView::ZoomOut()")
         self.mapwidget.ZoomOut()
+        self.Draw()
+        self.RedrawView()
+
+    def ScrollLeft(self,event=None):
+        Log("map","MapView::ScrollLeft()")
+        self.mapwidget.ScrollLeft()
+        self.Draw()
+        self.RedrawView()
+
+    def ScrollRight(self,event=None):
+        Log("map","MapView::ScrollRight()")
+        self.mapwidget.ScrollRight()
+        self.Draw()
+        self.RedrawView()
+
+    def ScrollUp(self,event=None):
+        Log("map","MapView::ScrollUp()")
+        self.mapwidget.ScrollUp()
+        self.Draw()
+        self.RedrawView()
+
+    def ScrollDown(self,event=None):
+        Log("map","MapView::ScrollDown()")
+        self.mapwidget.ScrollDown()
+        self.Draw()
+        self.RedrawView()
+
+    def FollowGPS(self,event=None):
+        Log("map","MapView::FollowGPS()")
+        self.mapwidget.FollowGPS()
         self.Draw()
         self.RedrawView()
 
@@ -767,13 +854,74 @@ class MapView(View):
 
     def OnOpen(self,signal=None):
         Log("map","MapView::OnOpen()")
-    #    self.LoadMap("campus")
-    #def ShowMapDialog(self,key):
-    #    Log("map","MapView::SelectMap()")
         list = self.maps.keys()
         list.sort()
         l = Listbox("Select Map", list)
         self.registry.UIShowDialog(l,self.LoadMapFromDialog)
+
+    def OnAddRef(self,signal=None):
+        Log("map","MapView::OnAddRef()")
+        lat = self.currentposition.latitude
+        lon = self.currentposition.longitude
+        alt = self.currentposition.altitude
+        name = SimpleQuery("Refpoint name:","text","default")
+        if name == None:
+            MessageBox("Cancelled!","info")
+            return
+
+        pos = self.registry.DatumQuery((lat,lon))
+        if pos == None:
+            MessageBox("Cancelled!","info")
+            return
+
+        lat,lon = pos
+        try:
+            map = self.mapwidget.GetMap()
+            x,y = self.mapwidget.GetCursor()
+            ref = RefPoint(name,lat,lon,x,y)
+            map.AddRefpoint(ref)
+        except: # Most likely, there is no map, or no cursor position
+            pass
+
+    def OnAddRefWpt(self,signal=None):
+        Log("map","MapView::OnAddRefWpt()")
+
+        list = self.mapwidget.GetWaypoints().keys()
+        list.sort()
+        l = Listbox("Select Waypoint", list)
+        self.registry.UIShowDialog(l,self.AddRefFromWpt)
+
+
+    def AddRefFromWpt(self,l):
+        if l.result == None:
+            return
+
+        try:
+            wpt = self.mapwidget.GetWaypoints()[l.list[l.result]]
+        except: # Most likely waypoint has been deleted while showing dialog
+            return
+
+        name = wpt.name
+        lat = wpt.latitude
+        lon = wpt.longitude
+
+        try:
+            map = self.mapwidget.GetMap()
+            x,y = self.mapwidget.GetCursor()
+            ref = RefPoint(name,lat,lon,x,y)
+            map.AddRefpoint(ref)
+        except: # Most likely, there is no map, or no cursor position
+            pass
+
+        Log("map","MapView::AddRefFromWpt()")
+
+
+    def OnClearRef(self,signal=None):
+        Log("map","MapView::OnClearRef()")
+        try:
+            self.mapwidget.GetMap().ClearRefpoints()
+        except: # Most likely there's no map loaded
+            pass
 
     def LoadMapFromDialog(self,l):
         if l.result == None:
@@ -787,12 +935,6 @@ class MapView(View):
 
     def OnClose(self,signal=None):
         Log("map","MapView::OnClose()")
-
-    def OnRefPt(self,signal):
-        Log("map","MapView::OnRefPt()")
-
-    def OnRefWpt(self,signal):
-        Log("map","MapView::OnRefWpt()")
 
     def OnSave(self,signal):
         Log("map","MapView::OnSave()")
