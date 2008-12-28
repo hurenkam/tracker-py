@@ -269,6 +269,14 @@ class Map:
 
             self.iscalibrated = True
             self.area = self.WgsArea()
+            self.SaveCalibrationData()
+
+    def SaveCalibrationData(self):
+        file = MapFile(self.filename,"w")
+        file.writeResolution(self.size)
+        for r in self.refpoints:
+            file.writeRefpoint(r)
+        file.close()
 
     def WgsArea(self):
         if self.iscalibrated:
