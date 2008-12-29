@@ -55,6 +55,12 @@ Key = {
             "right":EKeyRightArrow,
             "up":EKeyUpArrow,
             "down":EKeyDownArrow,
+            "2":EKey2,
+            "4":EKey4,
+            "5":EKey5,
+            "6":EKey6,
+            "7":EKey7,
+            "8":EKey8,
             #"home":wx.WXK_HOME,
             #"end":wx.WXK_END,
             "select":EKeySelect,
@@ -251,7 +257,7 @@ class View(Widget):
         self._onexit = None
 
     def OnShow(self,redrawview=None,redrawmenu=None,onexit=None):
-        print "onshow" , onexit
+        #print "onshow" , onexit
         self._redrawview = redrawview
         self._redrawmenu = redrawmenu
         self._onexit = onexit
@@ -262,7 +268,7 @@ class View(Widget):
             self._redraw(self)
 
     def OnExit(self):
-        print "onexit" , self._onexit
+        #print "onexit" , self._onexit
         if self._onexit != None:
             self._onexit(self)
 
@@ -298,7 +304,7 @@ class Application(View):
             e32.ao_sleep(0.5)
 
     def OnViewExit(self,view):
-        print "onviewexit"
+        #print "onviewexit"
         self.view = None
         self.Redraw()
 
@@ -369,7 +375,8 @@ class Application(View):
             self.OnKey(key)
 
     def Handler(self,event):
-        print event
+        #print event
+        pass
 
     def MenuAdd(self,handler,item,sub=None):
         previous = None

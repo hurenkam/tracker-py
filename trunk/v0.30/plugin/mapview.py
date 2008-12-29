@@ -706,8 +706,9 @@ class MapView(View):
         self.registry.UIMenuAdd(self.OnOpen,     "Open",     "Map")
         self.registry.UIMenuAdd(self.OnAddRef,   "AddRef",   "Map")
         self.registry.UIMenuAdd(self.OnAddRefWpt,"AddRefWpt","Map")
+        self.registry.UIMenuAdd(self.OnSaveRef,  "SaveRef",  "Map")
         self.registry.UIMenuAdd(self.OnClearRef, "ClearRef", "Map")
-        self.registry.UIMenuAdd(self.AddWaypoint,"Add","Waypoint")
+        self.registry.UIMenuAdd(self.AddWaypoint,"Add", "Waypoint")
         self.registry.UIMenuRedraw()
         self.KeyAdd("up",self.ZoomIn)
         self.KeyAdd("down",self.ZoomOut)
@@ -915,6 +916,14 @@ class MapView(View):
 
         Log("map","MapView::AddRefFromWpt()")
 
+    def OnSaveRef(self):
+        Log("map","MapView::OnSaveRef()")
+        map = self.mapwidget.GetMap()
+        file = MapFile(map.filename,"w")
+        file.writeResolution(self.size)
+        for r in map.refpoints:
+            file.writeRefpoint(r)
+        file.close()
 
     def OnClearRef(self,signal=None):
         Log("map","MapView::OnClearRef()")
