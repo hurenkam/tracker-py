@@ -574,6 +574,7 @@ class MapWidget(Widget):
         if x > 10:
             x -= 10
             self.cursor = x,y
+            self.Draw()
 
     def ScrollRight(self,event=None):
         Log("map","MapWidget::ScrollRight()")
@@ -582,6 +583,7 @@ class MapWidget(Widget):
         if x < w-10:
             x += 10
             self.cursor = x,y
+            self.Draw()
 
     def ScrollUp(self,event=None):
         Log("map","MapWidget::ScrollUp()")
@@ -589,6 +591,7 @@ class MapWidget(Widget):
         if y > 10:
             y -= 10
             self.cursor = x,y
+            self.Draw()
 
     def ScrollDown(self,event=None):
         Log("map","MapWidget::ScrollDown()")
@@ -597,10 +600,12 @@ class MapWidget(Widget):
         if y < h-10:
             y += 10
             self.cursor = x,y
+            self.Draw()
 
     def FollowGPS(self,event=None):
         Log("map","MapWidget::FollowGPS()")
         self.cursor = None
+        self.Draw()
 
     def SaneAreas(self,target,source,zoom=1.0):
         x1,y1,x2,y2 = target
