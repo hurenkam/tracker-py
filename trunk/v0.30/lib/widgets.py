@@ -368,7 +368,7 @@ class SatelliteGauge(Gauge):
                 s = info['strength']
                 if s > self.maxstrength:
                     self.maxstrength = s
-                    print "strength: ", s
+                    #print "strength: ", s
 
                 angle = info['azimuth']
                 pos = self.radius * ((90.0 - info['elevation'])/100)
@@ -644,7 +644,8 @@ class DistanceGauge(TwoHandGauge):
             distance = self.distance
             self.decimals = 2
         else:
-            print "unknown distance type"
+            #print "unknown distance type"
+            pass
 
         if units == "km":
             self.value = distance / 1000
@@ -791,7 +792,7 @@ class Listbox(Dialog):
 
 class OptionForm(Dialog):
     def __init__(self,title,list,selected=0):
-        print list
+        #print list
         self.list = list
         if selected < len(list):
             self.selected = selected
@@ -928,7 +929,7 @@ class OptionForm(Dialog):
 
             l = s["label"]
             if s["type"] == "list":
-                print s
+                #print s
                 v = s["list"][s["value"]]
             else:
                 v = s["value"]
