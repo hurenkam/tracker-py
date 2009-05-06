@@ -708,12 +708,14 @@ class MapView(View):
                                  "default":"campus", "query":self.QueryCurrentMap } )
         self.InitMapList(self.registry.ConfigGetValue("map_dir"))
         self.LoadMap(self.GetCurrentMap())
-        self.registry.UIMenuAdd(self.OnOpen,     "Open",     "Map")
-        self.registry.UIMenuAdd(self.OnAddRef,   "AddRef",   "Map")
-        self.registry.UIMenuAdd(self.OnAddRefWpt,"AddRefWpt","Map")
-        self.registry.UIMenuAdd(self.OnSaveRef,  "SaveRef",  "Map")
-        self.registry.UIMenuAdd(self.OnClearRef, "ClearRef", "Map")
-        self.registry.UIMenuAdd(self.AddWaypoint,"Add", "Waypoint")
+        self.registry.UIMenuAdd(self.OnOpen,            "Open",     "Map")
+        self.registry.UIMenuAdd(self.OnAddRef,          "AddRef",   "Map")
+        self.registry.UIMenuAdd(self.OnAddRefWpt,       "AddRefWpt","Map")
+        self.registry.UIMenuAdd(self.OnSaveRef,         "SaveRef",  "Map")
+        self.registry.UIMenuAdd(self.OnClearRef,        "ClearRef", "Map")
+        self.registry.UIMenuAdd(self.OnAddWaypoint,     "Add",      "Waypoint")
+        self.registry.UIMenuAdd(self.OnDelWaypoint,     "Del",      "Waypoint")
+        self.registry.UIMenuAdd(self.OnMonitorWaypoint, "Monitor",  "Waypoint")
         self.registry.UIMenuRedraw()
         self.KeyAdd("up",self.ZoomIn)
         self.KeyAdd("down",self.ZoomOut)
@@ -822,7 +824,7 @@ class MapView(View):
     #    #self.oldaddwpt = None
     #    pass
 
-    def AddWaypoint(self):
+    def OnAddWaypoint(self):
         lat = self.currentposition.latitude
         lon = self.currentposition.longitude
         alt = self.currentposition.altitude
@@ -838,6 +840,35 @@ class MapView(View):
 
         lat,lon = pos
         self.registry.Signal( { "type":"wpt_add",  "id":"map", "name":name, "latitude":lat, "longitude":lon, "altitude":alt } )
+
+    def OnDelWaypoint(self):
+        Log("map","MapView::DelWaypoint()")
+        list = self.mapwidget.GetWaypoints().keys()
+        list.sort()
+        l = Listbox("Select Waypoint", list)
+        self.registry.UIShowDialog(l,self.DeleteWaypoint)
+
+    def DeleteWaypoint(self,l):
+        Log("map","MapView::DelWaypointProceed()")
+        if l.result == None:
+            return
+        name = l.list[l.result]
+        wpt = self.mapwidget.GetWaypoints()[name]
+        del self.mapwidget.waypoints[name]
+        self.registry.Signal( { "type":"wpt_del",  "id":"map", "name":wpt.name, "latitude":wpt.latitude, "longitude":wpt.longitude, "altitude":wpt.altitude } )
+
+    def OnMonitorWaypoint(self):
+        Log("map","MapView::MonitorWaypoint()")
+        list = self.mapwidget.GetWaypoints().keys()
+        list.sort()
+        l = Listbox("Select Waypoint", list)
+        self.registry.UIShowDialog(l,self.MonitorWaypoint)
+
+    def MonitorWaypoint(self,l):
+        if l.result == None:
+            return
+        Log("map","MapView::MonitorWaypointProceed()")
+        self.registry.Signal( { "type":"wpt_monitor",  "id":"map", "name":l.list[l.result] } )
 
     def OnWptFound(self,signal):
         Log("map-","MapView::OnWptFound(",signal,")")
