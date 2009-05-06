@@ -2,7 +2,7 @@ from helpers import *
 import datums
 
 posevent = {
-    'id':'lrgps-pos',
+    'id':'gps-pos',
     'type':'position',
     'distance':0,
     'horizontal_dop': 2.34999990463257,
