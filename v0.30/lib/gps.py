@@ -65,13 +65,22 @@ class Gps:
                 else:
                     distance,bearing = None,None
 
-                if distance == None or r["tolerance"] <= distance:
-                    Log("gps#","Gps::SignalExpiredRequests(): distance %s > tolerance %s" % (str(distance),str(r["tolerance"])))
-                    p = self.position.copy()
+                if r["tolerance"] == None:
                     p["distance"] = distance
+                    p = self.position.copy()
                     p["ref"] = k
                     self.registry.Signal( p )
                     r["previous"] = p
+                else:
+                    if distance == None or distance >= r["tolerance"]:
+                        Log("gps#","Gps::SignalExpiredRequests(): distance %s > tolerance %s" % (str(distance),str(r["tolerance"])))
+                        p = self.position.copy()
+                        p["distance"] = distance
+                        p["ref"] = k
+                        self.registry.Signal( p )
+                        r["previous"] = p
+
+
             else:
                 p = self.position.copy()
                 p["ref"] = k
@@ -106,4 +115,5 @@ class Gps:
 
     def OnStop(self,signal):
         Log("gps","Gps::OnStop(",signal,")")
-        del self.requests[signal["id"]]
+        if signal["id"] in self.requests:
+            del self.requests[signal["id"]]
