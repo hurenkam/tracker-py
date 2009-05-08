@@ -1,5 +1,6 @@
 from helpers import *
 from datatypes import *
+from waypoints import Waypoints
 
 loglevels += ["simwpt!","simwpt","simwpt*"]
 
@@ -12,69 +13,35 @@ def Done():
     l.Quit()
 
 
-class SimWaypoints:
+class SimWaypoints(Waypoints):
     def __init__(self,registry):
         Log("simwpt","SimWaypoints::__init__()")
         self.waypoints = OpenDbmFile("waypoints","c")
+        Waypoints.__init__(self,registry)
 
-        self.registry = registry
-        self.registry.Signal( { "type":"db_connect", "id":"wpt", "signal":"wpt_add",    "handler":self.OnWptAdd } )
-        self.registry.Signal( { "type":"db_connect", "id":"wpt", "signal":"wpt_del",    "handler":self.OnWptDel } )
-        self.registry.Signal( { "type":"db_connect", "id":"wpt", "signal":"wpt_search", "handler":self.OnWptSearch } )
-        self.registry.Signal( { "type":"db_connect", "id":"wpt", "signal":"wpt_monitor","handler":self.OnWptMonitor } )
+    def GetMonitor(self):
+        mon = Waypoints.GetMonitor(self)
+        if mon is not None:
+            name,tolerance = mon
+            return self.waypoints[name]
 
-    def OnWptAdd(self,signal):
-        Log("simwpt","SimWaypoints::OnWptAdd(",signal,")")
-        self.WaypointAdd(Waypoint(signal["name"],signal["latitude"],signal["longitude"],signal["altitude"]))
-        self.registry.Signal( {
-                "type":"wpt_show",
-                "id":"wpt",
-                "latitude":signal["latitude"],
-                "longitude":signal["longitude"],
-                "altitude":signal["altitude"],
-                "name":signal["name"]
-            } )
+    def SetMonitor(self,waypoint):
+        Waypoints.SetMonitor(self,(waypoint.name,10))
 
-    def OnWptDel(self,signal):
-        Log("simwpt","SimWaypoints::OnWptDel(",signal,")")
-        self.WaypointDel(Waypoint(signal["name"],signal["latitude"],signal["longitude"],signal["altitude"]))
+    def GetWaypoint(self,signal):
+        Log("simwpt","SimWaypoints::GetWaypoint()")
+        wpt = Waypoint(signal["name"],signal["latitude"],signal["longitude"],signal["altitude"])
+        return wpt
 
-    def OnWptSearch(self,signal):
-        Log("simwpt","SimWaypoints::OnWptFind(",signal,")")
-        list = self.WaypointSearch()
-        for waypoint in list:
-            self.SignalWaypointFound(waypoint,signal["ref"])
-        self.SignalWaypointDone(signal["ref"])
-
-    def OnWptMonitor(self,signal):
-        Log("simwpt","SimWaypoints::OnWptMonitor(",signal,")")
-
-    def SignalWaypointDone(self,ref):
-        Log("simwpt*","SimWaypoints::SignalWaypointDone()")
-        self.registry.Signal( {
-                "type":"wpt_done",
-                "id":"wpt",
-                "ref":ref
-            } )
-
-    def SignalWaypointFound(self,landmark,ref):
-        Log("simwpt*","SimWaypoints::SignalWaypointFound(",landmark.name,ref,")")
-
+    def GetSignal(self,waypoint,**keys):
         signal = {
-                "type":"wpt_found",
-                "id":"wpt",
-                "ref":ref,
-                "latitude":landmark.latitude,
-                "longitude":landmark.longitude,
-                "altitude":landmark.altitude,
-                "name":landmark.name
-            }
-
-        if "lmid" in landmark.__dict__:
-            signal["handle"] = { "type":"lmid", "id":landmark.lmid }
-
-        self.registry.Signal(signal)
-
+            "latitude":waypoint.latitude,
+            "longitude":waypoint.longitude,
+            "altitude":waypoint.altitude,
+            "name":waypoint.name
+        }
+        signal.update(keys)
+        return signal
 
     def WaypointAdd(self,waypoint,categories=None):
         Log("simwpt","SimWaypoints::WaypointAdd()")
@@ -104,11 +71,7 @@ class SimWaypoints:
 
         return list
 
-
     def Quit(self):
         Log("simwpt","SimWaypoints::Quit()")
-        self.registry.Signal( { "type":"db_disconnect", "id":"wpt", "signal":"wpt_add" } )
-        self.registry.Signal( { "type":"db_disconnect", "id":"wpt", "signal":"wpt_del" } )
-        self.registry.Signal( { "type":"db_disconnect", "id":"wpt", "signal":"wpt_search" } )
-        self.registry.Signal( { "type":"db_disconnect", "id":"wpt", "signal":"wpt_monitor" } )
+        Waypoints.Quit(self)
         self.waypoints.close()
