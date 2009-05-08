@@ -104,7 +104,8 @@ class SignalRegistry:
         Log("databus","DataBus::Disconnect(",signal,")")
         s  = signal["signal"]
         id = signal["id"]
-        del self.subscriptions[s][id]
+        if s in self.subscriptions and id in self.subscriptions[s]:
+            del self.subscriptions[s][id]
 
     def Signal(self,signal):
         Log("databus*","DataBus::DeliverSignal(",signal,")")
