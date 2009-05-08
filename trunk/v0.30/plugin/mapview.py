@@ -868,7 +868,9 @@ class MapView(View):
         if l.result == None:
             return
         Log("map","MapView::MonitorWaypointProceed()")
-        self.registry.Signal( { "type":"wpt_monitor",  "id":"map", "name":l.list[l.result] } )
+        name = l.list[l.result]
+        wpt = self.mapwidget.GetWaypoints()[name]
+        self.registry.Signal( { "type":"wpt_monitor",  "id":"map", "name":wpt.name, "latitude":wpt.latitude, "longitude":wpt.longitude, "altitude":wpt.altitude } )
 
     def OnWptFound(self,signal):
         Log("map-","MapView::OnWptFound(",signal,")")
