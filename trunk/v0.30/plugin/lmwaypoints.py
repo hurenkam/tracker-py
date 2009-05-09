@@ -4,7 +4,7 @@ import landmarks
 
 def Init(registry):
     global l
-    l = Landmarks(registry)
+    l = LmWaypoints(registry)
 
 def Done():
     global l
@@ -38,71 +38,28 @@ class Area:
             if rect is not None:
                 self.north, self.west, self.south, self.east = rect
 
-class Landmarks:
+class LmWaypoints(Waypoints):
     def __init__(self,registry):
-        Log("landmarks","Landmarks::__init__()")
-        self.lmdb = landmarks.OpenDefaultDatabase()
+        Log("lmwpt","LmWaypoints::__init__()")
+        self.waypoints = OpenDbmFile("waypoints","c")
+        Waypoints.__init__(self,registry)
 
-        self.registry = registry
-        self.registry.Signal( { "type":"db_connect", "id":"wpt", "signal":"wpt_add",    "handler":self.OnWptAdd } )
-        self.registry.Signal( { "type":"db_connect", "id":"wpt", "signal":"wpt_del",    "handler":self.OnWptDel } )
-        self.registry.Signal( { "type":"db_connect", "id":"wpt", "signal":"wpt_search", "handler":self.OnWptSearch } )
-        self.registry.Signal( { "type":"db_connect", "id":"wpt", "signal":"wpt_monitor","handler":self.OnWptMonitor } )
+    def GetWaypoint(self,signal):
+        wpt = Landmark(signal)
+        return wpt
 
-    def OnWptAdd(self,signal):
-        Log("landmarks","Landmarks::OnWptAdd(",signal,")")
-        landmark = Landmark(signal)
-        self.LandmarkAdd(landmark)
-        self.registry.Signal( {
-                "type":"wpt_show",
-                "id":"wpt",
-                "latitude":signal["latitude"],
-                "longitude":signal["longitude"],
-                "altitude":signal["altitude"],
-                "name":signal["name"],
-                "handle":landmark.lmid
-            } )
-
-    def OnWptDel(self,signal):
-        Log("landmarks","Landmarks::OnWptDel(",signal,")")
-        self.LandmarkDel(Landmark(signal))
-
-    def OnWptSearch(self,signal):
-        Log("landmarks","Landmarks::OnWptFind(",signal,")")
-        #list = self.LandmarkSearch(Area(signal))
-        list = self.LandmarkSearch()
-        for landmark in list:
-            self.SignalLandmarkFound(landmark,signal["ref"])
-        self.SignalLandmarkDone(signal["ref"])
-
-    def OnWptMonitor(self,signal):
-        Log("landmarks","Landmarks::OnWptMonitor(",signal,")")
-
-    def SignalLandmarkDone(self,ref):
-        Log("landmarks*","Landmarks::SignalLandmarkDone()")
-        self.registry.Signal( {
-                "type":"wpt_done",
-                "id":"wpt",
-                "ref":ref
-            } )
-
-    def SignalLandmarkFound(self,landmark,ref):
-        Log("landmarks*","Landmarks::SignalLandmarkFound(",landmark.name,ref,")")
-
+    def GetSignal(self,waypoint,**keys):
         signal = {
-                "type":"wpt_found",
-                "id":"wpt",
-                "ref":ref,
-                "latitude":landmark.latitude,
-                "longitude":landmark.longitude,
-                "altitude":landmark.altitude,
-                "name":landmark.name
-            }
+            "latitude":waypoint.latitude,
+            "longitude":waypoint.longitude,
+            "altitude":waypoint.altitude,
+            "name":waypoint.name
+        }
+        if waypoint.lmid is not None:
+            signal["handle"]=waypoint.lmid
 
-        signal["handle"] = landmark.lmid
-
-        self.registry.Signal(signal)
-
+        signal.update(keys)
+        return signal
 
     def GetDefaultCategoryId(self):
         tsc = landmarks.CreateCatNameCriteria(u'Waypoint')
@@ -114,8 +71,8 @@ class Landmarks:
         else:
             return None
 
-    def LandmarkAdd(self,waypoint,categories=None):
-        Log("landmarks","Landmarks::LandmarkAdd()")
+    def WaypointAdd(self,waypoint,categories=None):
+        Log("lmwpt","LmWaypoints::WaypointAdd()")
 
         if waypoint.lmid is None:
             landmark = landmarks.CreateLandmark()
@@ -134,12 +91,14 @@ class Landmarks:
             landmark.Close()
 
 
-    def LandmarkDel(self,waypoint):
-        Log("landmarks","Landmarks::LandmarkDel()")
-        self.lmdb.RemoveLandmark(waypoint.lmid)
+    def WaypointDel(self,waypoint):
+        Log("lmwpt","LmWaypoints::WaypointDel()")
+        if waypoint.lmid is not None:
+            self.lmdb.RemoveLandmark(waypoint.lmid)
 
-    def LandmarkSearch(self,area=None,categories=None):
-        Log("landmarks","Landmarks::LandmarkSearch()")
+
+    def WaypointSearch(self,area=None,categories=None):
+        Log("lmwpt","LmWaypoints::WaypointSearch()")
 
         list = []
         tsc = landmarks.CreateCategoryCriteria(0,0,u'Waypoint')
@@ -157,10 +116,3 @@ class Landmarks:
                 list.append(landmark)
 
         return list
-
-    def Quit(self):
-        Log("landmarks","Landmarks::Quit()")
-        self.registry.Signal( { "type":"db_disconnect", "id":"wpt", "signal":"wpt_add" } )
-        self.registry.Signal( { "type":"db_disconnect", "id":"wpt", "signal":"wpt_del" } )
-        self.registry.Signal( { "type":"db_disconnect", "id":"wpt", "signal":"wpt_search" } )
-        self.registry.Signal( { "type":"db_disconnect", "id":"wpt", "signal":"wpt_monitor" } )
