@@ -30,7 +30,12 @@ class SimWaypoints(Waypoints):
 
     def GetWaypoint(self,signal):
         Log("simwpt","SimWaypoints::GetWaypoint()")
-        wpt = Waypoint(signal["name"],signal["latitude"],signal["longitude"],signal["altitude"])
+        if "latitude" not in signal:
+            lat,lon,alt = eval(self.waypoints[signal["name"]])
+            wpt = Waypoint(signal["name"],lat,lon,alt)
+        else:
+            wpt = Waypoint(signal["name"],signal["latitude"],signal["longitude"],signal["altitude"])
+
         return wpt
 
     def GetSignal(self,waypoint,**keys):

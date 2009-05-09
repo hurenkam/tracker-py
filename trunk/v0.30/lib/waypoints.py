@@ -1,7 +1,7 @@
 from helpers import *
 from datatypes import *
 
-loglevels += ["wpt!","wpt","wpt*"]
+loglevels += ["wpt!"]
 
 
 class Waypoints:
@@ -12,16 +12,16 @@ class Waypoints:
         self.registry.Signal( { "type":"db_connect", "id":"wpt", "signal":"wpt_del",    "handler":self.OnWptDel } )
         self.registry.Signal( { "type":"db_connect", "id":"wpt", "signal":"wpt_search", "handler":self.OnWptSearch } )
         self.registry.Signal( { "type":"db_connect", "id":"wpt", "signal":"wpt_monitor","handler":self.OnWptMonitor } )
-        self.registry.ConfigAdd( { "setting":"wpt_monitor", "description":u"Waypoint to be monitored",
+        self.registry.ConfigAdd( { "setting":"mon_wpt", "description":u"Waypoint to be monitored",
                                    "default":None, "query":None } )
         self.monitor = None
         self.tolerance = None
 
     def GetMonitor(self):
-        return self.registry.ConfigGetValue("wpt_monitor")
+        return self.registry.ConfigGetValue("mon_wpt")
 
     def SetMonitor(self,waypoint):
-        self.registry.ConfigSetValue("wpt_monitor",waypoint)
+        self.registry.ConfigSetValue("mon_wpt",waypoint)
 
     def GetWaypoint(self,signal):
         pass
@@ -31,12 +31,12 @@ class Waypoints:
 
     def OnWptAdd(self,signal):
         Log("wpt","Waypoints::OnWptAdd(",signal,")")
-        wpt = GetWaypoint(signal)
+        wpt = self.GetWaypoint(signal)
         self.WaypointAdd(wpt)
-        self.registry.Signal(self.GetSignal(wpt),
+        self.registry.Signal(self.GetSignal(wpt,
                 type="wpt_show",
                 id="wpt"
-            )
+            ))
 
     def OnWptDel(self,signal):
         Log("wpt","Waypoints::OnWptDel(",signal,")")
@@ -66,6 +66,7 @@ class Waypoints:
             signal = {
                 "type":"monitor",
                 "id":"wpt",
+                "name":self.monitor.name,
                 "distance":distance,
                 "bearing":bearing
             }

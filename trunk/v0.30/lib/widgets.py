@@ -283,15 +283,17 @@ class WaypointGauge(Gauge):
 
     def __init__(self,radius=None):
         Gauge.__init__(self,radius)
-        self.tag = "Monitor"
+        self.tag = "North"
         self.heading = None
         self.bearing = None
-        self.distance = None
 
-    def UpdateValues(self,heading,bearing,distance):
-        self.heading = heading
-        self.bearing = bearing
-        self.distance = distance
+    def UpdateValues(self,heading,bearing,name):
+        if heading is not None:
+            self.heading = heading
+        if bearing is not None:
+            self.bearing = bearing
+        if name is not None:
+            self.tag = name
         self.Draw()
 
     def _sanevalues(self):
@@ -299,8 +301,6 @@ class WaypointGauge(Gauge):
             self.heading = 0
         if self.bearing is None or str(self.bearing) is 'NaN':
             self.bearing = 0
-        if self.distance is None or str(self.distance) is'NaN':
-            self.distance = 0
 
         north = 0 - self.heading
         bearing = north + self.bearing
@@ -323,7 +323,7 @@ class WaypointGauge(Gauge):
         size2 = 1.2 * size1
         if (self.radius >= 40):
             self.DrawText(((self.radius,0.5*self.radius)),u'%s' %self.tag,size=size1,align="center")
-            self.DrawText(((self.radius,1.5*self.radius-10)),u'%8.0f' % self.distance,size=size1,align="center")
+            self.DrawText(((self.radius,1.5*self.radius-10)),u'%05.1f' % self.heading,size=size1,align="center")
             self.DrawText(((self.radius,1.5*self.radius+10)),u'%05.1f' % self.bearing,size=size1,align="center")
 
     def Draw(self):
@@ -656,12 +656,14 @@ class DistanceGauge(TwoHandGauge):
         TwoHandGauge.Draw(self)
 
     def UpdateValues(self,delta,wpt):
-        self.total += delta
-        self.trip += delta
+        if delta is not None:
+            self.total += delta
+            self.trip += delta
+        if wpt is not None:
+            self.distance = wpt
+
         self.registry.ConfigSetValue("dist_total",self.total)
         #self.registry.ConfigSetValue("distance_trip",self.trip)
-
-        self.distance = wpt
         self.Draw()
 
 class Dialog(View):
