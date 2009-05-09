@@ -345,7 +345,7 @@ class SpeedOptions(OptionForm):
 
 class MonitorOptions(OptionForm):
     def __init__(self,registry):
-        Log("dash","DashView::GaugeOptions()")
+        Log("dash","MonitorOptions::__init__()")
         OptionForm.__init__(self,"Monitor Options",[])
         self.registry = registry
         self.registry.ConfigAdd( { "setting":"mon_type", "description":u"Monitor gauge type",
@@ -358,10 +358,10 @@ class MonitorOptions(OptionForm):
         self.Draw()
 
     def LoadOptions(self):
+        Log("dash","MonitorOptions::LoadOptions()")
         self.list = [
                  { "label":"Type",      "type":"list", "value":0, "list":["waypoint","route","track"] },
-                 { "label":"Route",     "type":"list", "value":0, "list":["return"] },
-                 { "label":"Waypoint",  "type":"list", "value":0, "list":["home","work"] },
+                 { }
             ]
 
         list = self.list[0]["list"]
@@ -370,52 +370,66 @@ class MonitorOptions(OptionForm):
             index = 0
         else:
             index = list.index(type)
-        if self.list[0]["value"] != index:
-            self.list[0]["value"] = index
-            self.ItemChanged(0)
+
+        self.list[0]["value"] = index
+        self.ItemChanged(0)
+        self.CalculateBox()
+
+    def OnWptFound(self,signal):
+        Log("dash*","MonitorOptions::OnWptFound(",signal,")")
+        if signal["ref"] == "monitor_wpt_ref":
+            self.list[1]["list"].append(signal["name"])
+
+    def OnWptDone(self,signal):
+        Log("dash*","MonitorOptions::OnWptDone()")
+        self.registry.Signal( { "type":"db_disconnect", "id":"monitor", "signal":"wpt_found" } )
+        self.registry.Signal( { "type":"db_disconnect", "id":"monitor", "signal":"wpt_done" } )
 
         list = self.list[1]["list"]
-        rte = self.registry.ConfigGetValue("mon_rte")
-        if rte not in list:
-            index = 0
-        else:
-            index = list.index(rte)
-        if self.list[1]["value"] != index:
-            self.list[1]["value"] = index
-            self.ItemChanged(1)
-
-        list = self.list[2]["list"]
         wpt = self.registry.ConfigGetValue("mon_wpt")
         if wpt not in list:
             index = 0
         else:
             index = list.index(wpt)
-        if self.list[2]["value"] != index:
-            self.list[2]["value"] = index
-            self.ItemChanged(2)
+
+        if self.list[1]["value"] != index:
+            self.list[1]["value"] = index
+            self.ItemChanged(1)
 
         self.CalculateBox()
 
     def SaveOptions(self):
         self.registry.ConfigSetValue("mon_type",self.GetType())
-        self.registry.ConfigSetValue("mon_wpt",self.GetWaypoint())
-        self.registry.ConfigSetValue("mon_rte",self.GetRoute())
+        if self.GetType() == "waypoint":
+            name = self.GetWaypoint()
+            self.registry.ConfigSetValue("mon_wpt",name)
+            self.registry.Signal( { "type":"wpt_monitor",  "id":"map", "name":name } )
 
     def GetType(self):
         return self.GetValue(0)
 
+    def GetWaypoint(self):
+        return self.GetValue(1)
+
     def GetRoute(self):
         return self.GetValue(1)
 
-    def GetWaypoint(self):
-        return self.GetValue(2)
+    def GetTrack(self):
+        return self.GetValue(1)
 
     def ItemChanged(self,index=None):
         if index == None:
             index = self.selected
 
         if index == 0: # Type changed, select appropriate list(s)
-            pass
+            t = self.GetType()
+            if t == "waypoint":
+                self.list[1] = { "label":"Waypoint", "type":"list", "value":0, "list":[] }
+                self.registry.Signal( { "type":"db_connect", "id":"monitor", "signal":"wpt_found", "handler":self.OnWptFound } )
+                self.registry.Signal( { "type":"db_connect", "id":"monitor", "signal":"wpt_done",  "handler":self.OnWptDone } )
+                self.registry.Signal( { "type":"wpt_search", "id":"monitor", "ref":"monitor_wpt_ref" } )
+            else:
+                self.list[1] = { }
 
     def Select(self,key):
         self.SaveOptions()
@@ -480,7 +494,8 @@ class DashView(View):
         self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"dash", "handler":self.OnClock } )
         self.registry.Signal( { "type":"timer_start", "id":"dash", "interval":1, "start":time() } )
         self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"position",  "handler":self.OnPosition } )
-        self.registry.Signal( { "type":"gps_start",   "id":"dash",  "tolerance":10 } )
+        self.registry.Signal( { "type":"gps_start",   "id":"dash", "tolerance":10 } )
+        self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"monitor",  "handler":self.OnMonitor } )
         self.KeyAdd("up",self.MoveUp)
         self.KeyAdd("down",self.MoveDown)
         self.KeyAdd("select",self.GaugeOptions)
@@ -545,18 +560,24 @@ class DashView(View):
         if lat == None or lon == None:
             return
 
-        self.wptgauge.UpdateValues(position["heading"],0,0)
+        self.wptgauge.UpdateValues(position["heading"],None,None)
         self.speedgauge.UpdateValue(position["speed"])
         self.altgauge.UpdateValue(position["altitude"])
         d = position["distance"]
         if d != None:
-            self.distancegauge.UpdateValues(d,0)
+            self.distancegauge.UpdateValues(d,None)
 
         try:
             self.Draw()
             self.RedrawView()
         except:
             DumpExceptionInfo()
+
+    def OnMonitor(self,signal):
+        Log("dash*","DashView::OnMonitor(",signal,")")
+        if signal["id"] == "wpt":
+            self.wptgauge.UpdateValues(None,signal["bearing"],signal["name"])
+            self.distancegauge.UpdateValues(None,signal["distance"])
 
     def Resize(self,rect=None):
         Log("dash*","DashView::Resize()")
