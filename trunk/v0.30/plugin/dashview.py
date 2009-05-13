@@ -388,7 +388,8 @@ class MonitorOptions(OptionForm):
         list = self.list[1]["list"]
         NaN = None
         nan = None
-        wpt = eval(self.registry.ConfigGetValue("mon_wpt"))
+        wpt = self.registry.ConfigGetValue("mon_wpt")
+
         if wpt not in list:
             index = 0
         else:

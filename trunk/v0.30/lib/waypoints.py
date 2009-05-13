@@ -18,12 +18,17 @@ class Waypoints:
         self.tolerance = None
 
     def GetMonitor(self):
-        return self.registry.ConfigGetValue("mon_wpt")
+        name = self.registry.ConfigGetValue("mon_wpt")
+        return self.GetWaypointByName(name)
 
     def SetMonitor(self,waypoint):
-        self.registry.ConfigSetValue("mon_wpt",waypoint)
+        self.monitor = waypoint
+        self.registry.ConfigSetValue("mon_wpt",waypoint.name)
 
     def GetWaypoint(self,signal):
+        pass
+
+    def GetWaypointByName(self,name):
         pass
 
     def GetSignal(self,waypoint,**keys):
@@ -107,7 +112,6 @@ class Waypoints:
             self.SetMonitor(None)
         else:
             self.SubscribePositionSignals()
-            self.monitor = waypoint
             self.SetMonitor(waypoint)
 
     def SubscribePositionSignals(self):

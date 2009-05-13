@@ -933,11 +933,11 @@ class OptionForm(Dialog):
 
             l = s["label"]
             if s["type"] == "list":
-                #v = s["list"][s["value"]]
-                if s["value"] > len(s["list"]):
-                    v = s["list"][s["value"]]
-                else:
-                    v = None
+                v = s["list"][s["value"]]
+                #if s["value"] > len(s["list"]):
+                #    v = s["list"][s["value"]]
+                #else:
+                #    v = None
             else:
                 v = s["value"]
 
