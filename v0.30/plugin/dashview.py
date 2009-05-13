@@ -386,7 +386,9 @@ class MonitorOptions(OptionForm):
         self.registry.Signal( { "type":"db_disconnect", "id":"monitor", "signal":"wpt_done" } )
 
         list = self.list[1]["list"]
-        wpt = self.registry.ConfigGetValue("mon_wpt")
+        NaN = None
+        nan = None
+        wpt = eval(self.registry.ConfigGetValue("mon_wpt"))
         if wpt not in list:
             index = 0
         else:
