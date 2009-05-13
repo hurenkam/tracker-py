@@ -126,4 +126,3 @@ class Waypoints:
         self.registry.Signal( { "type":"db_disconnect", "id":"wpt", "signal":"wpt_del" } )
         self.registry.Signal( { "type":"db_disconnect", "id":"wpt", "signal":"wpt_search" } )
         self.registry.Signal( { "type":"db_disconnect", "id":"wpt", "signal":"wpt_monitor" } )
-        self.waypoints.close()

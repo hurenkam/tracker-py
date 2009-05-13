@@ -41,6 +41,7 @@ class LRGps(Gps):
         self.previous = self.position
 
         NaN = None
+        nan = None
         self.position["latitude"] = eval(str(data[1]))
         self.position["longitude"] = eval(str(data[2]))
         self.position["altitude"] = eval(str(data[3]))
