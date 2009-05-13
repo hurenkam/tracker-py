@@ -1,5 +1,6 @@
 from helpers import *
 from datatypes import *
+from waypoints import Waypoints
 import landmarks
 
 def Init(registry):
@@ -12,20 +13,22 @@ def Done():
 
 class Landmark(Waypoint):
     def __init__(self,signal=None,lm=None):
-        Waypoint.__init__(self)
-        self.lmid = None
+        lmid,name,lat,lon,alt = ( None,'',0,0,0 )
         if lm is not None:
-            self.lmid = lm.LandmarkId()
-            self.name = lm.GetLandmarkName()
-            self.latitude, self.longitude, self.altitude, d1,d2 = lm.GetPosition()
+            name = lm.GetLandmarkName()
+            lat,lon,alt, d1,d2 = lm.GetPosition()
+            lmid = lm.LandmarkId()
         else:
             if signal is not None:
-                self.name = signal["name"]
-                self.latitude = signal["latitude"]
-                self.longitude = signal["longitude"]
-                self.altitude = signal["altitude"]
+                name = signal["name"]
+                lat = signal["latitude"]
+                lon = signal["longitude"]
+                alt = signal["altitude"]
                 if "handle" in signal.keys():
-                    self.lmid = signal["handle"]
+                    lmid = signal["handle"]
+					
+        Waypoint.__init__(self,name,lat,lon,alt)
+        self.lmid = lmid
 
 class Area:
     def __init__(self,signal=None,rect=None):
@@ -41,7 +44,7 @@ class Area:
 class LmWaypoints(Waypoints):
     def __init__(self,registry):
         Log("lmwpt","LmWaypoints::__init__()")
-        self.waypoints = OpenDbmFile("waypoints","c")
+        self.lmdb = landmarks.OpenDefaultDatabase()
         Waypoints.__init__(self,registry)
 
     def GetWaypoint(self,signal):
