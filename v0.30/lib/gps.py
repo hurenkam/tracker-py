@@ -66,8 +66,8 @@ class Gps:
                     distance,bearing = None,None
 
                 if r["tolerance"] == None:
-                    p["distance"] = distance
                     p = self.position.copy()
+                    p["distance"] = distance
                     p["ref"] = k
                     self.registry.Signal( p )
                     r["previous"] = p

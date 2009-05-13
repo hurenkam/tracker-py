@@ -26,16 +26,18 @@ class SimWaypoints(Waypoints):
             return self.waypoints[name]
 
     def SetMonitor(self,waypoint):
-        Waypoints.SetMonitor(self,(waypoint.name,10))
+        Waypoints.SetMonitor(self,waypoint)
 
     def GetWaypoint(self,signal):
         Log("simwpt","SimWaypoints::GetWaypoint()")
         if "latitude" not in signal:
-            lat,lon,alt = eval(self.waypoints[signal["name"]])
-            wpt = Waypoint(signal["name"],lat,lon,alt)
+            return self.GetWaypointByName(signal["name"])
         else:
-            wpt = Waypoint(signal["name"],signal["latitude"],signal["longitude"],signal["altitude"])
+            return Waypoint(signal["name"],signal["latitude"],signal["longitude"],signal["altitude"])
 
+    def GetWaypointByName(self,name):
+        lat,lon,alt = eval(self.waypoints[name])
+        wpt = Waypoint(name,lat,lon,alt)
         return wpt
 
     def GetSignal(self,waypoint,**keys):

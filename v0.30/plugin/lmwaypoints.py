@@ -26,7 +26,7 @@ class Landmark(Waypoint):
                 alt = signal["altitude"]
                 if "handle" in signal.keys():
                     lmid = signal["handle"]
-					
+
         Waypoint.__init__(self,name,lat,lon,alt)
         self.lmid = lmid
 
@@ -48,8 +48,26 @@ class LmWaypoints(Waypoints):
         Waypoints.__init__(self,registry)
 
     def GetWaypoint(self,signal):
-        wpt = Landmark(signal)
-        return wpt
+        if "latitude" not in signal:
+            return self.GetWaypointByName(signal["name"])
+        else:
+            return Landmark(signal)
+
+    def GetWaypointByName(self,name):
+        #lat,lon,alt = eval(self.waypoints[name])
+        #wpt = Waypoint(name,lat,lon,alt)
+        #return wpt
+        tsc = landmarks.CreateTextCriteria(name,landmarks.ELandmarkName,[])
+        search = self.lmdb.CreateSearch()
+        operation = search.StartLandmarkSearch(tsc, landmarks.ENoAttribute, 0, 0)
+        operation.Execute()
+        operation.Close()
+
+        if search.NumOfMatches() > 0:
+            lmid = search.MatchIterator().Next()
+            return Landmark(lm=self.lmdb.ReadLandmark(lmid))
+        else:
+            return None
 
     def GetSignal(self,waypoint,**keys):
         signal = {
