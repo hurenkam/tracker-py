@@ -72,7 +72,15 @@ class ConfigRegistry:
     def ConfigGetValue(self,item):
         Log("config*","ConfigRegistry::ConfigGetValue(",item,")")
         NaN = None
-        return eval(self.settings[item])
+        try:
+            return eval(self.settings[item])
+        except:
+            pass
+        try:
+            return self.settings[item]
+        except:
+            pass
+        return None
 
     def ConfigSetValue(self,item,value):
         Log("config*","ConfigRegistry::ConfigSetValue(",item,value,")")

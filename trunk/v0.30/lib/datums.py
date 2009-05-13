@@ -39,6 +39,7 @@
 #       Port matlab code to python for RD<->WGS84 calculations
 #
 
+from helpers import *
 import math
 deg2rad =  math.pi / 180
 rad2deg = 180 /  math.pi
@@ -529,8 +530,8 @@ def CalculateDistanceAndBearing(fromwgs,towgs):
                 math.cos(from_theta) * math.cos(to_theta) * math.cos(to_landa-from_landa)
 		    ) * earths_radius
     except:
+        #DumpExceptionInfo()
         distance = 0
-        print "Exception while calculating distance in datums.py@358"
 
     bearing = math.atan2(
                 math.sin(to_landa-from_landa) * math.cos(to_theta),

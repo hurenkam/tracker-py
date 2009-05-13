@@ -627,6 +627,8 @@ class DistanceGauge(TwoHandGauge):
         #self.registry.ConfigAdd( { "setting":"distance_trip", "description":u"Trip distance",
         #                         "default":0, "query":None } )
         self.total = self.registry.ConfigGetValue("dist_total")
+        if self.total == None:
+            self.total = 0
         #self.trip  = self.registry.ConfigGetValue("distance_trip")
         self.trip = 0
 
