@@ -2,25 +2,14 @@
 # -*- coding: latin-1 -*-
 
 import sys
-sys.path.append("../lib")
+import os
+sys.path = [ os.path.join(os.getcwd,"lib") ] + sys.path
+
+from trace import safe_call as XWrap
+from trace import dump_exceptions as XSave
+
 from helpers import *
 from osal import *
-loglevels += [
-              #"databus","databus*",
-              #"gps","gps#","gps*",
-              #"simgps","simgps*",
-              #"lrgps","lrgps*",
-              #"timer","timer*",
-              #"map","map#",#"map-","map*",
-              #"dash","dash*",
-              #"rd","rd*","utm","utm*",
-              #"datastorage","datastorage*",
-              #"recorder","recorder*",
-              #"ui", "ui*",
-              #"landmarks","landmarks*",
-              #"config","config#",
-              ]
-
 from registry import *
 
 def StartRecording():
@@ -55,7 +44,6 @@ def Main():
     for name in [
         "uiregistry",
         "timers",
-        #"simgps",
         "lrgps",
         "datumregistry",
         "datumwgs84",
@@ -74,4 +62,6 @@ def Main():
 
     r.Quit()
 
-Main()
+if __name__ == '__main__':
+    XWrap(Main)()
+    XSave("c:\\data\\tracker030.log")
