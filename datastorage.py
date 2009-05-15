@@ -873,8 +873,8 @@ class NTDataStorage(DataStorage):
 
 
 s60locations = [
-    u"e:\\data\\tracker\\config",
-    u"c:\\data\\tracker\\config"
+    u"e:\\data\\tracker020\\config",
+    u"c:\\data\\tracker020\\config"
     ]
 
 s60defaults = {
@@ -894,11 +894,11 @@ s60defaults = {
         "app_ellips":"\"International\"",
 
         # Map settings
-        "map_dir":"u\"\\\\data\\\\tracker\\\\maps\"",
+        "map_dir":"u\"\\\\data\\\\tracker020\\\\maps\"",
         "map_refname":"u\"Tracker-\"",
 
         # Waypoint settings
-        "wpt_dir":"u\"\\\\data\\\\tracker\"",
+        "wpt_dir":"u\"\\\\data\\\\tracker020\"",
         "wpt_name":"u\"Tracker-\"",
         "wpt_type":"u\"wpt-dist\"",
         "wpt_distunits":"u\"meters\"",
@@ -906,22 +906,22 @@ s60defaults = {
         "wpt_monitor":"None",
 
         # Route settings
-        "rte_dir":"u\"\\\\data\\\\tracker\\\\routes\"",
+        "rte_dir":"u\"\\\\data\\\\tracker020\\\\routes\"",
         "rte_name":"u\"Tracker-\"",
         "rte_monitor":"None",
 
         # Track settings
-        "trk_dir":"u\"\\\\data\\\\tracker\\\\tracks\"",
+        "trk_dir":"u\"\\\\data\\\\tracker020\\\\tracks\"",
         "trk_name":"u\"Tracker-\"",
         "trk_interval":"25",
         "trk_recording":"None",
 
         # GPX settings
-        "gpx_dir":"u\"\\\\data\\\\tracker\\\\gpx\"",
+        "gpx_dir":"u\"\\\\data\\\\tracker020\\\\gpx\"",
         "gpx_name":"u\"Tracker-\"",
 
         # Event settings
-        "event_dir":"u\"\\\\data\\\\tracker\\\\events\"",
+        "event_dir":"u\"\\\\data\\\\tracker020\\\\events\"",
 
         # View settings
         "dashview_zoom":"0",
@@ -977,10 +977,11 @@ class S60DataStorage(DataStorage):
             # does not currently exist.
             # So, let's create the data directories in c:\data\tracker
             dirs = [
-                u"c:\\data\\tracker\\gpx",
-                u"c:\\data\\tracker\\maps",
-                u"c:\\data\\tracker\\tracks",
-                u"c:\\data\\tracker\\routes",
+                u"c:\\data\\tracker020\\gpx",
+                u"c:\\data\\tracker020\\maps",
+                u"c:\\data\\tracker020\\tracks",
+                u"c:\\data\\tracker020\\routes",
+                u"c:\\data\\tracker020\\events",
                 ]
             try:
                 for d in dirs:

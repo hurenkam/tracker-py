@@ -17,16 +17,24 @@ from s60widgets import *
 
 
 def SetSystemApp(value):
+#    try:
+#        import envy
+#        envy.set_app_system(value)
+#    except:
+#        pass
     try:
-        import envy
-        envy.set_app_system(value)
+        import miso
+        if value==1:
+            miso.set_system_app()
+        else:
+            miso.unset_system_app()
     except:
         pass
 
 def Vibrate(time,volume):
     try:
-        import misty
-        misty.vibrate(time,volume)
+        import miso
+        miso.vibrate(time,volume)
     except:
         pass
 
@@ -974,8 +982,8 @@ class S60Application(Application, AlarmResponder):
         self.provider.SetAlarm(self.positionalarm)
 
         self.monitorwaypoint = None
-	self.monitorroute = None
-	self.monitorroutetime = None
+        self.monitorroute = None
+        self.monitorroutetime = None
         wpt = self.storage.GetValue("wpt_monitor")
         rte = self.storage.GetValue("rte_monitor")
         self.eta = 0
@@ -1117,7 +1125,7 @@ class S60Application(Application, AlarmResponder):
         self.storage.CloseAll()
         SetSystemApp(0)
         Application.Exit(self)
-        #appuifw.app.set_exit()
+        appuifw.app.set_exit()
 
 
 
@@ -1642,7 +1650,7 @@ class S60Application(Application, AlarmResponder):
         self.UpdateMenu()
 
     def About(self):
-        appuifw.note(u"Tracker v0.20.x\n(c) 2007,2008 by Mark Hurenkamp\nThis program is licensed under GPLv2.", "info")
+        appuifw.note(u"Tracker v0.20.x\n(c) 2007,2008 by Mark Hurenkamp\nhttp:\\\\tracker-py.googlecode.com", "info")
 
     def Dummy(self):
         appuifw.note(u"Not yet implemented.", "info")

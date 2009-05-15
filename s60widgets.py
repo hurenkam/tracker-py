@@ -1733,6 +1733,7 @@ class WaypointGauge(Gauge):
         self.bearing = None
         self.distance = None
         self.eta = 0
+        self.route = None
         self.GetOptions()
 
     def SetMonitor(self,name,tolerance):
