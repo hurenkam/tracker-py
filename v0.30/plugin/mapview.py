@@ -680,7 +680,7 @@ class MapView(View):
         self.editwidget = TextWidget("Find map",fgcolor=Color["white"],bgcolor=Color["darkblue"])
         self.exitwidget = TextWidget("Exit",fgcolor=Color["white"],bgcolor=Color["darkblue"])
         self.satwidget = BarWidget((15,50),bars=5,range=10)
-        self.batwidget = BarWidget((15,50),bars=5,range=100)
+        self.batwidget = BarWidget((15,50),bars=5,range=7)
         self.currentposition = None
         self.showwaypoints = True
         self.oldaddwpt = None
@@ -697,6 +697,7 @@ class MapView(View):
         self.registry.Signal( { "type":"db_connect", "id":"map", "signal":"wpt_show",  "handler":self.OnWptShow } )
         self.registry.Signal( { "type":"db_connect", "id":"map", "signal":"wpt_found", "handler":self.OnWptFound } )
         self.registry.Signal( { "type":"db_connect", "id":"map", "signal":"wpt_done",  "handler":self.OnWptDone } )
+        self.registry.Signal( { "type":"db_connect", "id":"map", "signal":"battery",   "handler":self.OnBattery } )
 
         self.registry.Signal( { "type":"gps_start",  "id":"map", "tolerance":10 } )
 
@@ -823,6 +824,21 @@ class MapView(View):
     #    #    self.registry.UIMenuAdd(self.oldaddwpt,"Add","Waypoint")
     #    #self.oldaddwpt = None
     #    pass
+
+    def OnBattery(self,batterystatus):
+        Log("dash","DashView::OnBattery(",batterystatus,")")
+        ch = batterystatus["chargingstatus"]
+        lv = batterystatus["batterylevel"]
+        st = batterystatus["batterystatus"]
+        if ch < 1:
+            self.registry.UISetScreensaver(True)
+            if st == 0:
+                self.batwidget.UpdateValues(lv,0)
+            else:
+                self.batwidget.UpdateValues(0,lv)
+        else:
+            self.registry.UISetScreensaver(False)
+            self.batwidget.UpdateValues(0,7)
 
     def OnAddWaypoint(self):
         lat = self.currentposition.latitude
