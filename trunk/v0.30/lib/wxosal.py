@@ -425,6 +425,7 @@ class Application(View):
         self.mainitems = {}
         self.subitems = {}
         self.keylist = {}
+        self.screensaver = True
         View.__init__(self,(x+8,y+6))
 
 

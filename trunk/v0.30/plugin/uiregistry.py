@@ -144,3 +144,6 @@ class UserInterface:
                 self.UIExitDialog(self.dialog)
         else:
             self.application.Exit()
+
+    def UISetScreensaver(self,status):
+        self.application.screensaver = status

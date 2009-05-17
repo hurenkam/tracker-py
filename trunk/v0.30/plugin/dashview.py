@@ -2,7 +2,7 @@ from helpers import *
 from widgets import *
 from datatypes import *
 
-loglevels += ["dash!"]
+loglevels += ["dash!","dash"]
 
 def Init(registry):
     global d
@@ -489,7 +489,7 @@ class DashView(View):
         self.editwidget = TextWidget("Options",fgcolor=Color["white"],bgcolor=Color["darkblue"])
         self.exitwidget = TextWidget("Exit",fgcolor=Color["white"],bgcolor=Color["darkblue"])
         self.satwidget = BarWidget((15,50),bars=5,range=10)
-        self.batwidget = BarWidget((15,50),bars=5,range=100)
+        self.batwidget = BarWidget((15,50),bars=5,range=7)
 
         View.__init__(self,(240,320))
         self.registry.UIViewAdd(self)
@@ -499,6 +499,7 @@ class DashView(View):
         self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"position",  "handler":self.OnPosition } )
         self.registry.Signal( { "type":"gps_start",   "id":"dash", "tolerance":10 } )
         self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"monitor",  "handler":self.OnMonitor } )
+        self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"battery",  "handler":self.OnBattery } )
         self.KeyAdd("up",self.MoveUp)
         self.KeyAdd("down",self.MoveDown)
         self.KeyAdd("select",self.GaugeOptions)
@@ -575,6 +576,21 @@ class DashView(View):
             self.RedrawView()
         except:
             DumpExceptionInfo()
+
+    def OnBattery(self,batterystatus):
+        Log("dash","DashView::OnBattery(",batterystatus,")")
+        ch = batterystatus["chargingstatus"]
+        lv = batterystatus["batterylevel"]
+        st = batterystatus["batterystatus"]
+        if ch < 1:
+            self.registry.UISetScreensaver(True)
+            if st == 0:
+                self.batwidget.UpdateValues(lv,0)
+            else:
+                self.batwidget.UpdateValues(0,lv)
+        else:
+            self.registry.UISetScreensaver(False)
+            self.batwidget.UpdateValues(0,7)
 
     def OnMonitor(self,signal):
         Log("dash*","DashView::OnMonitor(",signal,")")

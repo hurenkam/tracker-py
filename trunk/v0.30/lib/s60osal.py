@@ -296,11 +296,13 @@ class Application(View):
             )
         ui.app.body = canvas
         ui.app.exit_key_handler=self.OnS60Exit
+        self.screensaver = True
 
     def Run(self):
         self.running = True
         while self.running:
-            #e32.reset_inactivity()
+            if not self.screensaver:
+                e32.reset_inactivity()
             e32.ao_sleep(0.5)
 
     def OnViewExit(self,view):
