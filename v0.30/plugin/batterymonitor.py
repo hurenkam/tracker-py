@@ -21,6 +21,12 @@ signal = {
 
 try:
     from properties import *
+    def GetBatteryLevel():
+        return GetInt(KPSUidHWRMPowerState,KHWRMBatteryLevel)
+    def GetBatteryStatus():
+        return GetInt(KPSUidHWRMPowerState,KHWRMBatteryStatus)
+    def GetChargingStatus():
+        return GetInt(KPSUidHWRMPowerState,KHWRMChargingStatus)
 except:
     Log("bat!","BatteryMonitor::__init__(): Unable to load properties extension")
     def GetBatteryLevel():
