@@ -1,0 +1,14 @@
+
+PRJ_PLATFORMS
+#ifdef EKA2
+gcce winscw
+#else
+wins armi
+#endif
+
+PRJ_MMPFILES
+#ifdef EKA2 // S60 3rd Ed
+properties_3rd.mmp
+#else // S60 1st and 2nd Ed
+properties_2nd.mmp
+#endif
