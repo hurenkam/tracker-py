@@ -12,7 +12,7 @@
 #include <e32base.h>
 #include <e32property.h>
 #include <aknappui.h>
-/*
+
 class CPropertyNotifier: public CActive
 {
 public:
@@ -83,7 +83,7 @@ void CPropertyNotifier::DoCancel()
 {
     iProperty.Cancel();
 }
-*/
+
 
 
 
@@ -150,7 +150,7 @@ DeleteInt(PyObject *self, PyObject *args)
 	}	
     return NULL;
 }
-/*
+
 extern "C" PyObject * 
 SubscribeInt(PyObject* self, PyObject* args) 
 {
@@ -173,7 +173,7 @@ SubscribeInt(PyObject* self, PyObject* args)
     );
     RETURN_ERROR_OR_PYNONE(error);
 }
-*/
+
 extern "C" {
 
   static const PyMethodDef properties_methods[] = {
@@ -181,7 +181,7 @@ extern "C" {
     {"GetInt",            (PyCFunction)GetInt,            METH_VARARGS, "int  GetInt(uid,key)"},
     {"SetInt",            (PyCFunction)SetInt,            METH_VARARGS, "void SetInt(uid,key,value)"},
     {"DeleteInt",         (PyCFunction)DeleteInt,         METH_VARARGS, "void DeleteInt(uid,key)"},
-    //{"SubscribeInt",      (PyCFunction)SubscribeInt,      METH_VARARGS, "void SubscribeInt(uid,key,callback)"},
+    {"SubscribeInt",      (PyCFunction)SubscribeInt,      METH_VARARGS, "void SubscribeInt(uid,key,callback)"},
 	
     {NULL,NULL}           /* sentinel */
   };
