@@ -34,9 +34,5 @@ LIBRARY     bafl.lib
 //MACRO __DO_LOGGING__
 
 SOURCE		properties.cpp
-//SOURCE		propertyobserver.cpp
-//SOURCE		activeproperty.cpp
-//SOURCE			ao_property.cpp
-//SOURCE property.cpp
-//SOURCE propertymonitor.cpp
-DEFFILE kf__properties.def
+//DEFFILE kf__properties.def
+
