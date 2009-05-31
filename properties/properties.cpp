@@ -2,7 +2,7 @@
 // Properties extension for python
 // --------------------------------------
 // (c) Copyright 2009 Mark Hurenkamp
-// 
+//
 // This software is licensed under GPL v2
 // ======================================
 
@@ -16,45 +16,45 @@
 class CPropertyNotifier: public CActive
 {
 public:
-    static CPropertyNotifier* NewL(); 
-	~CPropertyNotifier();
-	void Subscribe(TUid aUid, TInt aKey,PyObject *aCallback);
+    static CPropertyNotifier* NewL();
+    ~CPropertyNotifier();
+    void Subscribe(TUid aUid, TInt aKey,PyObject *aCallback);
 protected:
     CPropertyNotifier();
-	void ConstructL();
-	virtual void RunL();
-	virtual void DoCancel();
-	//virtual TInt RunError(TInt aError);
-	
-	RProperty iProperty;
-	PyObject *iCallback;
+    void ConstructL();
+    virtual void RunL();
+    virtual void DoCancel();
+    //virtual TInt RunError(TInt aError);
+
+    RProperty iProperty;
+    PyObject *iCallback;
 };
 
-CPropertyNotifier* CPropertyNotifier::NewL() 
+CPropertyNotifier* CPropertyNotifier::NewL()
 {
     CPropertyNotifier* self = new (ELeave) CPropertyNotifier();
-	CleanupStack::PushL(self);
-	self->ConstructL();
-	CleanupStack::Pop(self);
-	return self;
-} 
+    CleanupStack::PushL(self);
+    self->ConstructL();
+    CleanupStack::Pop(self);
+    return self;
+}
 
-CPropertyNotifier::~CPropertyNotifier() 
+CPropertyNotifier::~CPropertyNotifier()
 {
     Cancel();
 }
 
-void CPropertyNotifier::Subscribe(TUid aUid, TInt aKey, PyObject *aCallback) 
+void CPropertyNotifier::Subscribe(TUid aUid, TInt aKey, PyObject *aCallback)
 {
     iProperty.Attach(aUid,aKey);
-	iProperty.Subscribe(iStatus);
-	iCallback = aCallback;
-	Py_XINCREF(aCallback);
-	SetActive();
+    iProperty.Subscribe(iStatus);
+    iCallback = aCallback;
+    Py_XINCREF(aCallback);
+    SetActive();
 }
 
 CPropertyNotifier::CPropertyNotifier()
-:CActive(CActive::EPriorityStandard) 
+:CActive(CActive::EPriorityStandard)
 {
 }
 
@@ -68,15 +68,15 @@ void CPropertyNotifier::RunL()
     // Call the python callback function
 
     PyGILState_STATE state;
-	state = PyGILState_Ensure();
+    state = PyGILState_Ensure();
     PyObject *rslt = PyObject_CallObject(iCallback, NULL);
-    if (rslt) 
+    if (rslt)
     {
-		Py_XDECREF(rslt);
-	}
-	Py_XDECREF(iCallback);
-	iCallback = NULL;
-	PyGILState_Release(state);
+        Py_XDECREF(rslt);
+    }
+    Py_XDECREF(iCallback);
+    iCallback = NULL;
+    PyGILState_Release(state);
 }
 
 void CPropertyNotifier::DoCancel()
@@ -90,84 +90,84 @@ void CPropertyNotifier::DoCancel()
 extern "C" PyObject *
 DefineInt(PyObject *self, PyObject *args)
 {
-	RProperty myProperty;
-	TUid uid;
-	TInt key;
+    RProperty myProperty;
+    TUid uid;
+    TInt key;
 
-    if (PyArg_ParseTuple(args, "ii", &uid, &key)) 
-	{
-		TRAPD(error,
-			myProperty.Define( uid, key, RProperty::EInt);
-		);
-		RETURN_ERROR_OR_PYNONE(error);
-    }	
+    if (PyArg_ParseTuple(args, "ii", &uid, &key))
+    {
+        TRAPD(error,
+            myProperty.Define( uid, key, RProperty::EInt);
+        );
+        RETURN_ERROR_OR_PYNONE(error);
+    }
     return NULL;
 }
 
 extern "C" PyObject *
 GetInt(PyObject *self, PyObject *args)
 {
-	RProperty myProperty;
-	TUid uid;
-	TInt key;
-	TInt result;
-    if (PyArg_ParseTuple(args, "ii", &uid, &key)) 
-	{
-		myProperty.Get( uid, key, result);
-    }	
-	return Py_BuildValue("i", result);
+    RProperty myProperty;
+    TUid uid;
+    TInt key;
+    TInt result;
+    if (PyArg_ParseTuple(args, "ii", &uid, &key))
+    {
+        myProperty.Get( uid, key, result);
+    }
+    return Py_BuildValue("i", result);
 }
 
 extern "C" PyObject *
 SetInt(PyObject *self, PyObject *args)
 {
-	RProperty myProperty;
-	TUid uid;
-	TInt key;
-	TInt value;
-    if (PyArg_ParseTuple(args, "iii", &uid, &key, &value)) 
-	{
-		TRAPD(error,
-			myProperty.Set( uid, key, value);
-		);
-		RETURN_ERROR_OR_PYNONE(error);
-    }	
+    RProperty myProperty;
+    TUid uid;
+    TInt key;
+    TInt value;
+    if (PyArg_ParseTuple(args, "iii", &uid, &key, &value))
+    {
+        TRAPD(error,
+            myProperty.Set( uid, key, value);
+        );
+        RETURN_ERROR_OR_PYNONE(error);
+    }
     return NULL;
 }
 
 extern "C" PyObject *
 DeleteInt(PyObject *self, PyObject *args)
 {
-	RProperty myProperty;
-	TUid uid;
-	TInt key;
-    if (PyArg_ParseTuple(args, "ii", &uid, &key)) 
-	{
-		TRAPD(error,
-			myProperty.Delete( uid, key);
-		);
-		RETURN_ERROR_OR_PYNONE(error);
-	}	
+    RProperty myProperty;
+    TUid uid;
+    TInt key;
+    if (PyArg_ParseTuple(args, "ii", &uid, &key))
+    {
+        TRAPD(error,
+            myProperty.Delete( uid, key);
+        );
+        RETURN_ERROR_OR_PYNONE(error);
+    }
     return NULL;
 }
 
-extern "C" PyObject * 
-SubscribeInt(PyObject* self, PyObject* args) 
+extern "C" PyObject *
+SubscribeInt(PyObject* self, PyObject* args)
 {
     PyObject* callback = NULL;
-	TUid uid;
-	TInt key;
-	CPropertyNotifier *notifier = CPropertyNotifier::NewL();
-	
-    if (!PyArg_ParseTuple(args, "iiO:SubscribeInt", &uid, &key, &callback)) 
-        return NULL;  
+    TUid uid;
+    TInt key;
+    CPropertyNotifier *notifier = CPropertyNotifier::NewL();
+
+    if (!PyArg_ParseTuple(args, "iiO:SubscribeInt", &uid, &key, &callback))
+        return NULL;
 
     if (!PyCallable_Check(callback))
-	{
+    {
         PyErr_SetString(PyExc_TypeError, "Callback must be a callable method");
-	    return NULL;
-	}
-	
+        return NULL;
+    }
+
     TRAPD(error,
         notifier->Subscribe(uid,key,callback);
     );
@@ -182,7 +182,7 @@ extern "C" {
     {"SetInt",            (PyCFunction)SetInt,            METH_VARARGS, "void SetInt(uid,key,value)"},
     {"DeleteInt",         (PyCFunction)DeleteInt,         METH_VARARGS, "void DeleteInt(uid,key)"},
     {"SubscribeInt",      (PyCFunction)SubscribeInt,      METH_VARARGS, "void SubscribeInt(uid,key,callback)"},
-	
+
     {NULL,NULL}           /* sentinel */
   };
 
