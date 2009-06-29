@@ -1,10 +1,10 @@
 /*
  ============================================================================
- Name			: properties.cpp
- Author			: Mark Hurenkamp
- Copyright		: Licensed under GPL v2
- Description	: Property class source, python interface to S60
-				  Publish & Subscribe interface
+ Name           : properties.cpp
+ Author         : Mark Hurenkamp
+ Copyright      : Licensed under GPL v2
+ Description    : Property class source, python interface to S60
+                  Publish & Subscribe interface
  ============================================================================
  */
 
