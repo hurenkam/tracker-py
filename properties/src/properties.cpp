@@ -22,7 +22,8 @@ CPropertyUpdater::CPropertyUpdater():CActive(EPriorityStandard)
     iOwnerThreadId = t.Id();
 }
 
-void CPropertyUpdater::ConstructL(RProperty *property, PyObject* callback) {
+void CPropertyUpdater::ConstructL(RProperty *property, PyObject* callback) 
+{
     iProperty = property;
     SetPropertyCallback(callback);
     iProperty->Subscribe(iStatus);
@@ -35,12 +36,9 @@ CPropertyUpdater::~CPropertyUpdater()
     iPropertyCallback = NULL;
 }
 
-  /* Stop the current operation, if any. If a completion callback has
-     been set, DECREF it. */
 void CPropertyUpdater::Stop()
 {
-    SafeCancel(); // DoCancel sets the proper state.
-    // Note that this can indirectly cause this object to be destroyed!
+    SafeCancel();
     Py_XDECREF(iPropertyCallback);
     iPropertyCallback = NULL;
 }
@@ -50,24 +48,16 @@ void CPropertyUpdater::SafeCancel()
     RThread t;
     if (iOwnerThreadId == t.Id())
     {
-        TRAPD(err,
-            Cancel();
-        );
+        TRAPD(err, Cancel(); );
     }
 }
 
 void CPropertyUpdater::RunL()
 {
-    // if iStatus == KErrCancel then we may be in a different thread? Anyway, don't do anything in the cancel case
     if (iStatus != KErrCancel) {
         PyGILState_STATE state = PyGILState_Ensure();
         //PyEval_RestoreThread(PYTHON_TLS->thread_state);
-        //PyObject* args = iLocationRequestor->processResultL(iStatus, true, true);
-        //if (args != NULL)
-        {
-            //InvokePropertyCallback(args);
-            InvokePropertyCallback(Py_BuildValue("()"));
-        }
+        InvokePropertyCallback(Py_BuildValue("()"));
         //PyEval_SaveThread();
         PyGILState_Release(state);
         iProperty->Subscribe(iStatus);
@@ -95,8 +85,6 @@ void CPropertyUpdater::InvokePropertyCallback(PyObject *arg)
     }
     Py_XDECREF(arg);
 }
-
-
 
 
 
@@ -311,6 +299,8 @@ static void property_del(sProperty* self)
 static PyMethodDef property_methods[] =
 {
     { "_dummy_",    (PyCFunction)property_define,         METH_VARARGS, "" },
+    { "Define",     (PyCFunction)property_define,         METH_STATIC,  "" },
+    { "Delete",     (PyCFunction)property_delete,         METH_STATIC,  "" },
     { "Attach",     (PyCFunction)property_attach,         METH_VARARGS, "" },
     { "Subscribe",  (PyCFunction)property_subscribe,      METH_VARARGS, "" },
     { "Get",        (PyCFunction)property_get,            METH_VARARGS, "" },
@@ -380,8 +370,6 @@ static PyTypeObject tProperty = {
 
 static const PyMethodDef properties_methods[] =
 {
-    { "Define",     (PyCFunction)property_define,        METH_VARARGS, ""},
-    { "Delete",     (PyCFunction)property_delete,        METH_VARARGS, ""},
     { "GetSid",     (PyCFunction)GetSid,                 METH_VARARGS, ""},
     { 0, 0 }
 };
@@ -446,7 +434,6 @@ DL_EXPORT(void) initproperties()
 {
     PyObject *m, *d;
 
-    //tProperty.tp_new = PyType_GenericNew;
     if (PyType_Ready(&tProperty) < 0)
         return;
 
