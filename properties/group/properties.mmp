@@ -1,0 +1,49 @@
+/*
+============================================================================
+ Name		: properties.mmp
+ Author	  : Mark Hurenkamp
+ Copyright   : This software is licenced under GPL v2
+ Description : This is the project specification file for properties.
+============================================================================
+*/
+
+TARGET		  kf_properties.pyd
+TARGETTYPE	  dll
+UID 0x1000008d 0xEF012A0D
+
+USERINCLUDE	 ..\src
+SYSTEMINCLUDE   \epoc32\include \Epoc32\include\stdapis \Epoc32\include\python25
+
+SOURCEPATH	  ..\src
+
+SOURCE		  properties.cpp
+
+// In order to use .def files to freeze code you must use one or more DEFFILE lines;
+// see the ones commented out below for examples.
+// By default, the build tools look for the WINSCW def file in a BWINS directory
+// (at the same level as the directory containing the mmp file), 
+// the GCC ARM def file in a BMARM directory, and the ARMV5 def file in a EABI directory. 
+// If your .def files are stored in these default locations, you can simply specify the
+// .def filename(s) with no path. If you want to store .def files in non-default 
+// locations, you will need to specify the paths in the DEFFILE statement(s).
+
+//The following commented out code shows how the build system uses the implicit
+// location for defiles. To create the DEF files Choose Project > Freeze Exports from Carbide
+// or run 'abld freeze' from the command-line
+//#if defined (WINS)
+//  DEFFILE ..\bwins\properties.def
+//#elif defined (GCC32)
+//  DEFFILE ..\bmarm\properties.def
+//#else 
+//  DEFFILE ..\eabi\properties.def
+//#endif
+
+nostrictdef
+
+LIBRARY		 euser.lib eikcdlg.lib eikctl.lib avkon.lib python25.lib
+
+#ifdef ENABLE_ABIV2_MODE
+DEBUGGABLE_UDEBONLY
+#endif
+
+CAPABILITY LocalServices Location NetworkServices PowerMgmt ProtServ ReadDeviceData ReadUserData SurroundingsDD SwEvent TrustedUI UserEnvironment WriteDeviceData WriteUserData

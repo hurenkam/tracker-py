@@ -1,0 +1,18 @@
+/*
+============================================================================
+ Name		: bld.inf
+ Author	  : Mark Hurenkamp
+ Copyright   : This software is licenced under GPL v2
+ Description : This file provides the information required for building the
+				whole of a properties.
+============================================================================
+*/
+
+PRJ_PLATFORMS
+DEFAULT
+
+PRJ_EXPORTS
+..\src\properties.h
+
+PRJ_MMPFILES
+properties.mmp
