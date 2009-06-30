@@ -9,7 +9,7 @@
 ;
 ; UID is the dll's UID
 ;
-#{"Properties module for PyS60 1.9.x"},(0xEF012A0D),1,0,1
+#{"Properties module for PyS60 1.9.x"},(0xEF012A0D),1,0,2
 
 ;Localised Vendor name
 %{"Vendor-EN"}
