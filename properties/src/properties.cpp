@@ -22,7 +22,7 @@ CPropertyUpdater::CPropertyUpdater():CActive(EPriorityStandard)
     iOwnerThreadId = t.Id();
 }
 
-void CPropertyUpdater::ConstructL(RProperty *property, PyObject* callback) 
+void CPropertyUpdater::ConstructL(RProperty *property, PyObject* callback)
 {
     iProperty = property;
     SetPropertyCallback(callback);
@@ -188,6 +188,22 @@ static PyObject* property_subscribe(sProperty* self, PyObject* args)
     return Py_None;
 }
 
+static PyObject* property_cancel(sProperty* self, PyObject* /*args*/)
+{
+    TInt error;
+
+    TRAP(error, {
+    	self->updater->Stop();
+    	delete self->updater;
+    	self->updater = NULL;
+    });
+    if (error)
+        return SPyErr_SetFromSymbianOSErr(error);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 static PyObject* property_setint(sProperty* self, PyObject* args)
 {
     TInt error;
@@ -303,6 +319,7 @@ static PyMethodDef property_methods[] =
     { "Delete",     (PyCFunction)property_delete,         METH_STATIC,  "" },
     { "Attach",     (PyCFunction)property_attach,         METH_VARARGS, "" },
     { "Subscribe",  (PyCFunction)property_subscribe,      METH_VARARGS, "" },
+    { "Cancel",     (PyCFunction)property_cancel,         METH_VARARGS, "" },
     { "Get",        (PyCFunction)property_get,            METH_VARARGS, "" },
     { "Set",        (PyCFunction)property_set,            METH_VARARGS, "" },
     { 0, 0 }
