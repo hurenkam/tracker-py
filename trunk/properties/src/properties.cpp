@@ -192,13 +192,16 @@ static PyObject* property_cancel(sProperty* self, PyObject* /*args*/)
 {
     TInt error;
 
-    TRAP(error, {
-    	self->updater->Stop();
-    	delete self->updater;
-    	self->updater = NULL;
-    });
-    if (error)
-        return SPyErr_SetFromSymbianOSErr(error);
+    if (self->updater != NULL)
+    {
+		TRAP(error, {
+			self->updater->Stop();
+			delete self->updater;
+			self->updater = NULL;
+		});
+		if (error)
+			return SPyErr_SetFromSymbianOSErr(error);
+    }
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -343,13 +346,20 @@ property_init(sProperty *self, PyObject *args, PyObject *kwds)
     return 0;
 }
 
+static void
+property_dealloc(sProperty* self)
+{
+	property_cancel(self,NULL);
+    self->ob_type->tp_free((PyObject*)self);
+}
+
 static PyTypeObject tProperty = {
     PyObject_HEAD_INIT(NULL)
     0,                                                 // ob_size
     "properties.Property",                             // tp_name
     sizeof(sProperty),                                 // tp_basicsize
     0,                                                 // tp_itemsize
-    (destructor)property_del,                          // tp_dealloc
+    (destructor)property_dealloc,                      // tp_dealloc
     0,                                                 // tp_print
     0,                                                 // tp_getattr
     0,                                                 // tp_setattr
