@@ -16,7 +16,7 @@ SYSTEMINCLUDE   \epoc32\include \Epoc32\include\stdapis \Epoc32\include\python25
 
 SOURCEPATH	  ..\src
 
-SOURCE		  properties.cpp
+SOURCE		  property.cpp module.cpp propertyupdater.cpp
 
 // In order to use .def files to freeze code you must use one or more DEFFILE lines;
 // see the ones commented out below for examples.

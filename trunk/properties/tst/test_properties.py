@@ -13,8 +13,7 @@ def RunSidTests():
     print "Test GetSid... ",
     sid = GetSid()
     #print sid,
-    #if sid == 4028634395L:  # emulator sid
-    if sid == 537013993L:   # on-device sid
+    if sid == 4028634395L:
         print "ok!"
     else:
         print "failed!"
@@ -23,11 +22,11 @@ def RunEIntTests():
     global sid
     print "Test EInt... "
     Wait("Define...")
-    Property.Define(sid,1,0)
+    Property.Define(sid,1,Property.EInt)
     Wait("Create...")
     n = Property()
     Wait("Attach...")
-    n.Attach(sid,1,EInt)
+    n.Attach(sid,1,Property.EInt)
     Wait("Set...")
     n.Set(5)
     Wait("Get...")
@@ -46,11 +45,11 @@ def RunETextTests():
     global sid
     print "Test EText... "
     Wait("Define...")
-    Property.Define(sid,1,EText)
+    Property.Define(sid,1,Property.EText)
     Wait("Create...")
     t = Property()
     Wait("Attach...")
-    t.Attach(sid,1,EText)
+    t.Attach(sid,1,Property.EText)
     Wait("Set...")
     t.Set("Hello world!")
     Wait("Get...")
@@ -77,16 +76,16 @@ def RunSubscribeTests():
         r = p.Get()
         #print r,
         result.append(r)
-
+        
     global p
     global sid
     global result
     print "Test Subscribe & Callback... "
     Wait("Define...")
-    Property.Define(sid,0x10,EInt)
+    Property.Define(sid,0x10,Property.EInt)
     p = Property()
     Wait("Attach...")
-    p.Attach(sid,0x10,EInt)
+    p.Attach(sid,0x10,Property.EInt)
     Wait("Set(0)...")
     p.Set(0)
     Wait("Subscribe...")
@@ -114,4 +113,4 @@ print "Running tests for properties module..."
 RunSidTests()
 RunEIntTests()
 RunETextTests()
-RunSubscribeTests()print "Done!"
+RunSubscribeTests()print "Done!" 
