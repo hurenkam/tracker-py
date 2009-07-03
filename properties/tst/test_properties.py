@@ -13,7 +13,8 @@ def RunSidTests():
     print "Test GetSid... ",
     sid = GetSid()
     #print sid,
-    if sid == 4028634395L:
+    #if sid == 4028634395L:  # emulator sid
+    if sid == 537013993L:   # on-device sid
         print "ok!"
     else:
         print "failed!"
