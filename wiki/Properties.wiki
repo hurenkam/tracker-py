@@ -1,0 +1,61 @@
+[http://code.google.com/p/tracker-py/wiki/About About]
+
+== Features ==
+
+The properties extension is basically a wrapper around the RProperty C++ class, which is used by
+amoungst others the PowerState API and the System Agent API to publish system information.
+
+There are methods available to retrieve this information, and to subscribe to changes so that
+your application gets notified when the info changes.
+
+=== GetSid() function ===
+This function returns the SID of the current process. It is strongly advised to use this
+value if you wish to create new properties. Creating properties with a UID other than the
+SID of the current process may require special capabilities.
+
+=== Property class ===
+This class implements Define, Attach, Get, Set, Subscribe, Cancel and Delete methods.
+
+==== static Property.Define(uid,key,type) ====
+This static function can be used to define your own properties. It takes 3 parameters,
+the Uid, the Key, and the Type of the new property.
+
+Available types are:
+  * Property.EInt
+  * Property.EText / Property.EByteArray
+  * Property.ELargeText / Property.ELargeByteArray
+  
+Uid & Key must together uniquely identify the property.
+
+==== Property.__init__() ====
+The init method does not take any arguments (other than the standard self argument),
+you can use the Attach method to associate it with a system property.
+
+==== Property.Attach(uid,key,type) ====
+This method can be used to attach a previously created instance to a system property
+specified by uid & key, and of the specified type.
+
+==== Property.Get(size=None) ====
+The Get method will return the content of the attached property. In case of a Text
+or ByteArray property, an optional size parameter can be used to set the max size of
+the buffer to be returned (defaults to 128).
+
+==== Property.Set(value) ====
+Set the attached property to the specified value. Subscribers will be informed of the
+change.
+
+==== Property.Subscribe(callback) ====
+Subscribe to changes of the attached property, the callback function will be called
+whenever the system detects a change in the property.
+
+==== Property.Cancel() ====
+Cancel an outstanding Subscribe
+
+==== static Property.Delete(uid,key) ====
+Delete (undefine) the specified property.
+
+== Todo ==
+  * Implement static Get/Set functions for convenience
+  * Add more predefined constants for system resources (backup/restore/shutdown)
+
+== Known Bugs ==
