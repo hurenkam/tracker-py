@@ -16,15 +16,18 @@ SID of the current process may require special capabilities.
 === Property class ===
 This class implements Define, Attach, Get, Set, Subscribe, Cancel and Delete methods.
 
+==== constant attributes ====
+The following constants are defined, and can be used to identify a type when attaching
+or defining a property:
+  * EInt
+  * EText
+  * EByteArray
+  * ELargeByteArray
+
 ==== static Property.Define(uid,key,type) ====
 This static function can be used to define your own properties. It takes 3 parameters,
 the Uid, the Key, and the Type of the new property.
 
-Available types are:
-  * Property.EInt
-  * Property.EText / Property.EByteArray
-  * Property.ELargeText / Property.ELargeByteArray
-  
 Uid & Key must together uniquely identify the property.
 
 ==== Property.__init__() ====
@@ -53,6 +56,35 @@ Cancel an outstanding Subscribe
 
 ==== static Property.Delete(uid,key) ====
 Delete (undefine) the specified property.
+
+=== PowerState class ===
+This class only contains the following constants:
+  * KPSUidHWRMPowerState
+  * KHWRMBatteryLevel
+    * EBatteryLevelUnknown
+    * EBatteryLevelLevel0
+    * EBatteryLevelLevel1
+    * EBatteryLevelLevel2
+    * EBatteryLevelLevel3
+    * EBatteryLevelLevel4
+    * EBatteryLevelLevel5
+    * EBatteryLevelLevel6
+    * EBatteryLevelLevel7
+
+  * KHWRMBatteryStatus
+    * EBatteryStatusUnknown
+    * EBatteryStatusOk
+    * EBatteryStatusLow
+    * EBatteryStatusEmpty
+
+  * KHWRMChargingStatus
+    * EChargingStatusError
+    * EChargingStatusNotConnected
+    * EChargingStatusCharging
+    * EChargingStatusNotCharging
+    * EChargingStatusAlmostComplete
+    * EChargingStatusChargingComplete
+    * EChargingStatusChargingContinued
 
 == Todo ==
   * Implement static Get/Set functions for convenience
