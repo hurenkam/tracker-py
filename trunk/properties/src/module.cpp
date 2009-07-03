@@ -32,43 +32,7 @@ static const PyMethodDef module_methods[] =
 
 static sConstant module_constants[] =
 {
-    // e32property defines
-        { "EInt",                               RProperty::EInt },
-        { "EByteArray",                         RProperty::EByteArray },
-        { "ELargeByteArray",                    RProperty::ELargeByteArray },
-        { "EText",                              RProperty::EText },
-        { "ELargeText",                         RProperty::ELargeText },
-
-    // hwrmpowerstate defines
-        { "KPSUidHWRMPowerState",               KPSUidHWRMPowerState.iUid },
-        { "KHWRMBatteryLevel",                  KHWRMBatteryLevel },
-        { "KHWRMBatteryStatus",                 KHWRMBatteryStatus },
-        { "KHWRMChargingStatus",                KHWRMChargingStatus },
-
-        { "EBatteryLevelUnknown",               EBatteryLevelUnknown },
-        { "EBatteryLevelLevel0",                EBatteryLevelLevel0 },
-        { "EBatteryLevelLevel1",                EBatteryLevelLevel1 },
-        { "EBatteryLevelLevel2",                EBatteryLevelLevel2 },
-        { "EBatteryLevelLevel3",                EBatteryLevelLevel3 },
-        { "EBatteryLevelLevel4",                EBatteryLevelLevel4 },
-        { "EBatteryLevelLevel5",                EBatteryLevelLevel5 },
-        { "EBatteryLevelLevel6",                EBatteryLevelLevel6 },
-        { "EBatteryLevelLevel7",                EBatteryLevelLevel7 },
-
-        { "EBatteryStatusUnknown",              EBatteryStatusUnknown },
-        { "EBatteryStatusOk",                   EBatteryStatusOk },
-        { "EBatteryStatusLow",                  EBatteryStatusLow },
-        { "EBatteryStatusEmpty",                EBatteryStatusEmpty },
-
-        { "EChargingStatusError",               EChargingStatusError },
-        { "EChargingStatusNotConnected",        EChargingStatusNotConnected },
-        { "EChargingStatusCharging",            EChargingStatusCharging },
-        { "EChargingStatusNotCharging",         EChargingStatusNotCharging },
-        { "EChargingStatusAlmostComplete",      EChargingStatusAlmostComplete },
-        { "EChargingStatusChargingComplete",    EChargingStatusChargingComplete },
-        { "EChargingStatusChargingContinued",   EChargingStatusChargingContinued },
-
-        { 0, 0 }
+    { 0, 0 }
 };
 
 void PyModule_AddConstants(PyObject *d, sConstant *c)
