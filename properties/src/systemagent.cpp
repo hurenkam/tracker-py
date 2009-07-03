@@ -12,6 +12,7 @@
 #include <hwrmpowerstatesdkpskeys.h>
 #include <e32base.h>
 #include <e32property.h>
+#include <sacls.h>
 #include "symbian_python_ext_util.h"
 #include "module.h"
 #include "systemagent.h"
