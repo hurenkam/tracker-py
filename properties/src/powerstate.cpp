@@ -68,7 +68,7 @@ powerstate_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 }
 
 static int
-powerstate_init(sProperty *self, PyObject *args, PyObject *kwds)
+powerstate_init(sPowerState *self, PyObject *args, PyObject *kwds)
 {
     return 0;
 }

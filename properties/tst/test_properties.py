@@ -114,4 +114,9 @@ print "Running tests for properties module..."
 RunSidTests()
 RunEIntTests()
 RunETextTests()
-RunSubscribeTests()print "Done!" 
+RunSubscribeTests()
+print Property.__dict__.keys()
+print PowerState.__dict__.keys()
+print SystemAgent.__dict__.keys()
+
+print "Done!" 
