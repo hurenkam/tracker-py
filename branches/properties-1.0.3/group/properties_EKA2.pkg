@@ -1,0 +1,23 @@
+; Installation file for properties dll
+;
+; This is an auto-generated PKG file by Carbide.
+; This file uses variables specific to Carbide builds that will not work
+; on command-line builds. If you want to use this generated PKG file from the
+; command-line tools you will need to modify the variables with the appropriate
+; values: $(EPOCROOT), $(PLATFORM), $(TARGET)
+
+;
+; UID is the dll's UID
+;
+#{"Properties module for PyS60 1.9.x"},(0xEF012A0D),1,0,3
+
+;Localised Vendor name
+%{"Vendor-EN"}
+
+; Supports S60 v 3.0
+[0x101F7961], 0, 0, 0, {"Series60ProductID"}
+
+;Unique Vendor name
+:"Vendor"
+
+"$(EPOCROOT)Epoc32\release\$(PLATFORM)\$(TARGET)\kf_properties.pyd"		  -"!:\sys\bin\kf_properties.pyd"
