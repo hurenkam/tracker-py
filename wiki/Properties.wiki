@@ -86,6 +86,87 @@ This class only contains the following constants:
     * EChargingStatusChargingComplete
     * EChargingStatusChargingContinued
 
+=== SystemAgent class ===
+This class only contains the following constants:
+  * KUidProfile
+  * KUidPhonePwr
+    * ESAPhoneOff
+    * ESAPhoneOn
+
+  * KUidSIMStatus
+    * ESASimOk
+    * ESASimNotPresent
+    * ESASimRejected
+
+  * KUidNetworkStatus
+    * ESANetworkAvailable
+    * ESANetworkUnAvailable
+
+  * KUidNetworkStrength
+    * ESANetworkStrengthNone
+    * ESANetworkStrengthLow
+    * ESANetworkStrengthMedium
+    * ESANetworkStrengthHigh
+    * ESANetworkStrengthUnknown
+
+  * KUidChargerStatus
+    * ESAChargerConnected
+    * ESAChargerDisconnected
+    * ESAChargerNotCharging
+
+  * KUidBatteryStrength
+    * ESABatteryAlmostEmpty
+    * ESABatteryLow
+    * ESABatteryFull
+
+  * KUidCurrentCall
+    * ESACallNone
+    * ESACallVoice
+    * ESACallFax
+    * ESACallData
+    * ESACallAlerting
+    * ESACallRinging
+    * ESACallAlternating
+    * ESACallDialling
+    * ESACallAnswering
+    * ESACallDisconnecting
+
+  * KUidDataPort
+    * ESADataPortIdle
+    * ESADataPortBusy
+
+  * KUidInboxStatus
+    * ESAInboxEmpty
+    * ESADocumentsInInbox
+
+  * KUidOutboxStatus
+    * ESAOutboxEmpty
+    * ESADocumentsInOutbox
+
+  * KUidClock
+    * ESAAm
+    * ESAPm
+
+  * KUidAlarm
+    * ESAAlarmOff
+    * ESAAlarmOn
+
+  * KUidIrdaStatus
+    * ESAIrLoaded
+    * ESAIrDiscoveredPeer
+    * ESAIrLostPeer
+    * ESAIrConnected
+    * ESAIrBlocked
+    * ESAIrDisConnected
+    * ESAIrUnloaded
+
+  * KSAUidSoftwareInstallKeyValue
+  * KSAUidJavaInstallKeyValue
+  * KUidSwiLatestInstallation
+  * KUidJmiLatestInstallation
+  * KUidUnifiedCertstoreFlag
+  * KUidBackupRestoreKey
+
 == Todo ==
   * Implement static Get/Set functions for convenience
   * Add more predefined constants for system resources (backup/restore/shutdown)
