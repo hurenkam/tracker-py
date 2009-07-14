@@ -29,7 +29,7 @@ class Event(Property):
         else:
             s = Property.Get(self,self.size)
             value = struct.unpack(self.format,s)
-            print self.format, value
+            #print self.format, value
             return value
 
     def Set(self,*values):

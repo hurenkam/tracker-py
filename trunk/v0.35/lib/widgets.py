@@ -933,7 +933,12 @@ class OptionForm(Dialog):
 
             l = s["label"]
             if s["type"] == "list":
-                v = s["list"][s["value"]]
+                try:
+                    v = s["list"][s["value"]]
+                except:
+                    DumpExceptionInfo()
+                    print "Error in item: ", self.list[i]
+                    v = None
                 #if s["value"] > len(s["list"]):
                 #    v = s["list"][s["value"]]
                 #else:
