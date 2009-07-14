@@ -4,31 +4,51 @@ from datatypes import *
 
 loglevels += ["dash!","dash"]
 
-def Init(registry):
-    global d
-    d = DashView(registry)
+def ServerInit(server):
+    pass
 
-def Done():
+def ServerDone(server):
+    pass
+
+def ClientInit(client):
+    global d
+    d = DashView(client)
+
+def ClientDone(client):
     global d
     d.Quit()
 
+EKeyUp =     1
+EKeyDown =   2
+EKeySelect = 3
+
+EKeyGpsBase  = 0x0100
+EKeyEvtPosition = EKeyGpsBase + 1
+EKeyEvtCourse   = EKeyGpsBase + 2
+EKeyEvtSatinfo  = EKeyGpsBase + 3
+EKeyEvtWpt      = EKeyGpsBase + 4
+EKeyEvtTrkpt    = EKeyGpsBase + 5
+
+EKeyEvtMonitor  = 0x0201
+EKeyEvtBattery  = 0x0203
+EKeyEvtTimer    = 0x0204
 
 
 class AltitudeOptions(OptionForm):
-    def __init__(self,registry):
+    def __init__(self,client):
         Log("dash","DashView::GaugeOptions()")
         self.tolerance = [ [10,20, 50,100,200, 500,1000,2000, 5000],
                            [30,60,150,300,600,1500,3000,6000,15000] ]
         self.interval =    [1,5,15,30,60,120,240,480,960]
         OptionForm.__init__(self,"Altitude Options",[])
-        self.registry = registry
-        self.registry.ConfigAdd( { "setting":"alt_type", "description":u"Altitude gauge type",
+        self.client = client
+        self.client.ConfigAdd( { "setting":"alt_type", "description":u"Altitude gauge type",
                                    "default":"alt", "query":None } )
-        self.registry.ConfigAdd( { "setting":"alt_units", "description":u"Units used for altitude gauge",
+        self.client.ConfigAdd( { "setting":"alt_units", "description":u"Units used for altitude gauge",
                                    "default":"meters", "query":None } )
-        self.registry.ConfigAdd( { "setting":"alt_tolerance", "description":u"Tolerance used for ascent/descent calculation",
+        self.client.ConfigAdd( { "setting":"alt_tolerance", "description":u"Tolerance used for ascent/descent calculation",
                                    "default":100, "query":None } )
-        self.registry.ConfigAdd( { "setting":"alt_interval", "description":u"Interval (in minutes) used to calculate average altitude",
+        self.client.ConfigAdd( { "setting":"alt_interval", "description":u"Interval (in minutes) used to calculate average altitude",
                                    "default":5, "query":None } )
         self.LoadOptions()
         self.Draw()
@@ -41,7 +61,7 @@ class AltitudeOptions(OptionForm):
             ]
 
         list = self.list[0]["list"]
-        type = self.registry.ConfigGetValue("alt_type")
+        type = self.client.ConfigGetValue("alt_type")
         if type not in list:
             index = 0
         else:
@@ -51,7 +71,7 @@ class AltitudeOptions(OptionForm):
             self.ItemChanged(0)
 
         list = self.list[1]["list"]
-        units = self.registry.ConfigGetValue("alt_units")
+        units = self.client.ConfigGetValue("alt_units")
         if units not in list:
             index = 0
         else:
@@ -65,12 +85,12 @@ class AltitudeOptions(OptionForm):
     def SaveOptions(self):
         t = self.GetType()
         u = self.GetUnits()
-        self.registry.ConfigSetValue("alt_type",t)
-        self.registry.ConfigSetValue("alt_units",u)
+        self.client.ConfigSetValue("alt_type",t)
+        self.client.ConfigSetValue("alt_units",u)
         if t == "ascent" or t == "descent":
-            self.registry.ConfigSetValue("alt_tolerance",self.GetTolerance())
+            self.client.ConfigSetValue("alt_tolerance",self.GetTolerance())
         if t == "avg-alt":
-            self.registry.ConfigSetValue("alt_interval",self.GetInterval())
+            self.client.ConfigSetValue("alt_interval",self.GetInterval())
 
     def GetType(self):
         return self.GetValue(0)
@@ -118,19 +138,19 @@ class AltitudeOptions(OptionForm):
 
 
 class DistanceOptions(OptionForm):
-    def __init__(self,registry):
+    def __init__(self,client):
         Log("dash","DashView::GaugeOptions()")
         self.tolerance = [ [1, 3,10, 30,100, 300,1000, 3000,10000],
                            [3,10,30,100,300,1000,3000,10000,30000] ]
         OptionForm.__init__(self,"Distance Options",[])
-        self.registry = registry
-        self.registry.ConfigAdd( { "setting":"dist_type", "description":u"Distance gauge type",
+        self.client = client
+        self.client.ConfigAdd( { "setting":"dist_type", "description":u"Distance gauge type",
                                    "default":"trip", "query":None } )
-        self.registry.ConfigAdd( { "setting":"dist_units", "description":u"Units used for distance gauge",
+        self.client.ConfigAdd( { "setting":"dist_units", "description":u"Units used for distance gauge",
                                    "default":"km", "query":None } )
-        self.registry.ConfigAdd( { "setting":"dist_tolerance", "description":u"Tolerance used for trip/total calculation",
+        self.client.ConfigAdd( { "setting":"dist_tolerance", "description":u"Tolerance used for trip/total calculation",
                                    "default":10, "query":None } )
-        self.registry.ConfigAdd( { "setting":"dist_tolunits", "description":u"Units used for distance tolerance",
+        self.client.ConfigAdd( { "setting":"dist_tolunits", "description":u"Units used for distance tolerance",
                                    "default":"meters", "query":None } )
         self.LoadOptions()
         self.Draw()
@@ -144,7 +164,7 @@ class DistanceOptions(OptionForm):
             ]
 
         list = self.list[0]["list"]
-        type = self.registry.ConfigGetValue("dist_type")
+        type = self.client.ConfigGetValue("dist_type")
         if type not in list:
             index = 0
         else:
@@ -154,7 +174,7 @@ class DistanceOptions(OptionForm):
             self.ItemChanged(0)
 
         list = self.list[1]["list"]
-        units = self.registry.ConfigGetValue("dist_units")
+        units = self.client.ConfigGetValue("dist_units")
         if units not in list:
             index = 0
         else:
@@ -165,7 +185,7 @@ class DistanceOptions(OptionForm):
 
         if len(self.list[3]):
             list = self.list[3]["list"]
-            units = self.registry.ConfigGetValue("dist_tolunits")
+            units = self.client.ConfigGetValue("dist_tolunits")
             if units not in list:
                 index = 0
             else:
@@ -179,10 +199,10 @@ class DistanceOptions(OptionForm):
     def SaveOptions(self):
         t = self.GetType()
         u = self.GetUnits()
-        self.registry.ConfigSetValue("dist_type",t)
-        self.registry.ConfigSetValue("dist_units",u)
+        self.client.ConfigSetValue("dist_type",t)
+        self.client.ConfigSetValue("dist_units",u)
         if t == "total" or t == "trip":
-            self.registry.ConfigSetValue("dist_tolerance",self.GetTolerance())
+            self.client.ConfigSetValue("dist_tolerance",self.GetTolerance())
 
     def GetType(self):
         return self.GetValue(0)
@@ -220,11 +240,11 @@ class DistanceOptions(OptionForm):
 
 
 class TimeOptions(OptionForm):
-    def __init__(self,registry):
+    def __init__(self,client):
         Log("dash","TimeOptions::__init__()")
         OptionForm.__init__(self,"Time Options",[])
-        self.registry = registry
-        self.registry.ConfigAdd( { "setting":"time_type", "description":u"Altitude gauge type",
+        self.client = client
+        self.client.ConfigAdd( { "setting":"time_type", "description":u"Altitude gauge type",
                                    "default":"clock", "query":None } )
         self.LoadOptions()
         self.Draw()
@@ -237,7 +257,7 @@ class TimeOptions(OptionForm):
 
     def SaveOptions(self):
         t = self.GetType()
-        self.registry.ConfigSetValue("time_type",t)
+        self.client.ConfigSetValue("time_type",t)
 
     def GetType(self):
         return self.GetValue(0)
@@ -248,15 +268,15 @@ class TimeOptions(OptionForm):
 
 
 class SpeedOptions(OptionForm):
-    def __init__(self,registry):
+    def __init__(self,client):
         Log("dash","DashView::GaugeOptions()")
         OptionForm.__init__(self,"Distance Options",[])
-        self.registry = registry
-        self.registry.ConfigAdd( { "setting":"speed_type", "description":u"Speed gauge type",
+        self.client = client
+        self.client.ConfigAdd( { "setting":"speed_type", "description":u"Speed gauge type",
                                    "default":"trip", "query":None } )
-        self.registry.ConfigAdd( { "setting":"speed_units", "description":u"Units used for speed gauge",
+        self.client.ConfigAdd( { "setting":"speed_units", "description":u"Units used for speed gauge",
                                    "default":"km", "query":None } )
-        self.registry.ConfigAdd( { "setting":"speed_interval", "description":u"Interval used for average speed calculation",
+        self.client.ConfigAdd( { "setting":"speed_interval", "description":u"Interval used for average speed calculation",
                                    "default":300, "query":None } )
         self.intervals = [ 5, 15, 30, 60, 120, 300, 900, 1800, 3600, 7200, 18000 ]
         self.LoadOptions()
@@ -270,7 +290,7 @@ class SpeedOptions(OptionForm):
             ]
 
         list = self.list[0]["list"]
-        type = self.registry.ConfigGetValue("speed_type")
+        type = self.client.ConfigGetValue("speed_type")
         if type not in list:
             index = 0
         else:
@@ -280,7 +300,7 @@ class SpeedOptions(OptionForm):
             self.ItemChanged(0)
 
         list = self.list[1]["list"]
-        units = self.registry.ConfigGetValue("speed_units")
+        units = self.client.ConfigGetValue("speed_units")
         if units not in list:
             index = 0
         else:
@@ -291,7 +311,7 @@ class SpeedOptions(OptionForm):
 
         if len(self.list[2]):
             list = self.list[2]["list"]
-            interval = self.registry.ConfigGetValue("speed_interval")
+            interval = self.client.ConfigGetValue("speed_interval")
             if interval not in self.intervals:
                 index = 6
             else:
@@ -305,12 +325,12 @@ class SpeedOptions(OptionForm):
     def SaveOptions(self):
         t = self.GetType()
         u = self.GetUnits()
-        self.registry.ConfigSetValue("speed_type",t)
-        self.registry.ConfigSetValue("speed_units",u)
+        self.client.ConfigSetValue("speed_type",t)
+        self.client.ConfigSetValue("speed_units",u)
         if t == "avg-speed":
             list = self.list[2]["list"]
             index = list.index(self.GetInterval())
-            self.registry.ConfigSetValue("speed_interval",self.intervals[index])
+            self.client.ConfigSetValue("speed_interval",self.intervals[index])
 
     def GetType(self):
         return self.GetValue(0)
@@ -344,15 +364,15 @@ class SpeedOptions(OptionForm):
 
 
 class MonitorOptions(OptionForm):
-    def __init__(self,registry):
+    def __init__(self,client):
         Log("dash","MonitorOptions::__init__()")
         OptionForm.__init__(self,"Monitor Options",[])
-        self.registry = registry
-        self.registry.ConfigAdd( { "setting":"mon_type", "description":u"Monitor gauge type",
+        self.client = client
+        self.client.ConfigAdd( { "setting":"mon_type", "description":u"Monitor gauge type",
                                    "default":"wpt", "query":None } )
-        self.registry.ConfigAdd( { "setting":"mon_wpt", "description":u"Monitor gauge selected waypoint",
+        self.client.ConfigAdd( { "setting":"mon_wpt", "description":u"Monitor gauge selected waypoint",
                                    "default":"home", "query":None } )
-        self.registry.ConfigAdd( { "setting":"mon_rte", "description":u"Monitor gauge selected route",
+        self.client.ConfigAdd( { "setting":"mon_rte", "description":u"Monitor gauge selected route",
                                    "default":"home", "query":None } )
         self.LoadOptions()
         self.Draw()
@@ -365,7 +385,7 @@ class MonitorOptions(OptionForm):
             ]
 
         list = self.list[0]["list"]
-        type = self.registry.ConfigGetValue("mon_type")
+        type = self.client.ConfigGetValue("mon_type")
         if type not in list:
             index = 0
         else:
@@ -382,13 +402,14 @@ class MonitorOptions(OptionForm):
 
     def OnWptDone(self,signal):
         Log("dash*","MonitorOptions::OnWptDone()")
-        self.registry.Signal( { "type":"db_disconnect", "id":"monitor", "signal":"wpt_found" } )
-        self.registry.Signal( { "type":"db_disconnect", "id":"monitor", "signal":"wpt_done" } )
+
+        #self.registry.Signal( { "type":"db_disconnect", "id":"monitor", "signal":"wpt_found" } )
+        #self.registry.Signal( { "type":"db_disconnect", "id":"monitor", "signal":"wpt_done" } )
 
         list = self.list[1]["list"]
         NaN = None
         nan = None
-        wpt = self.registry.ConfigGetValue("mon_wpt")
+        wpt = self.client.ConfigGetValue("mon_wpt")
 
         if wpt not in list:
             index = 0
@@ -402,11 +423,11 @@ class MonitorOptions(OptionForm):
         self.CalculateBox()
 
     def SaveOptions(self):
-        self.registry.ConfigSetValue("mon_type",self.GetType())
+        self.client.ConfigSetValue("mon_type",self.GetType())
         if self.GetType() == "waypoint":
             name = self.GetWaypoint()
-            self.registry.ConfigSetValue("mon_wpt",name)
-            self.registry.Signal( { "type":"wpt_monitor",  "id":"map", "name":name } )
+            self.client.ConfigSetValue("mon_wpt",name)
+            #self.registry.Signal( { "type":"wpt_monitor",  "id":"map", "name":name } )
 
     def GetType(self):
         return self.GetValue(0)
@@ -428,9 +449,9 @@ class MonitorOptions(OptionForm):
             t = self.GetType()
             if t == "waypoint":
                 self.list[1] = { "label":"Waypoint", "type":"list", "value":0, "list":[] }
-                self.registry.Signal( { "type":"db_connect", "id":"monitor", "signal":"wpt_found", "handler":self.OnWptFound } )
-                self.registry.Signal( { "type":"db_connect", "id":"monitor", "signal":"wpt_done",  "handler":self.OnWptDone } )
-                self.registry.Signal( { "type":"wpt_search", "id":"monitor", "ref":"monitor_wpt_ref" } )
+                #self.registry.Signal( { "type":"db_connect", "id":"monitor", "signal":"wpt_found", "handler":self.OnWptFound } )
+                #self.registry.Signal( { "type":"db_connect", "id":"monitor", "signal":"wpt_done",  "handler":self.OnWptDone } )
+                #self.registry.Signal( { "type":"wpt_search", "id":"monitor", "ref":"monitor_wpt_ref" } )
             else:
                 self.list[1] = { }
 
@@ -441,9 +462,9 @@ class MonitorOptions(OptionForm):
 
 
 class DashView(View):
-    def __init__(self,registry):
+    def __init__(self,client):
         Log("dash","DashView::__init__()")
-        self.registry = registry
+        self.client = client
         from time import time
 
         self.menu = {}
@@ -453,10 +474,10 @@ class DashView(View):
         self.positionwidget = PositionWidget((200,15))
         self.wptgauge       = WaypointGauge(None)
         self.satgauge       = SatelliteGauge(None)
-        self.speedgauge     = SpeedGauge(registry,None)
-        self.altgauge       = AltitudeGauge(registry,None)
-        self.timegauge      = TimeGauge(registry,None)
-        self.distancegauge  = DistanceGauge(registry,None)
+        self.speedgauge     = SpeedGauge(client,None)
+        self.altgauge       = AltitudeGauge(client,None)
+        self.timegauge      = TimeGauge(client,None)
+        self.distancegauge  = DistanceGauge(client,None)
         self.gauges = [
                 self.wptgauge,
                 self.timegauge,
@@ -466,11 +487,11 @@ class DashView(View):
                 self.satgauge,
             ]
         self.dialogs = [
-                MonitorOptions(registry),
-                TimeOptions(registry),
-                DistanceOptions(registry),
-                AltitudeOptions(registry),
-                SpeedOptions(registry),
+                MonitorOptions(client),
+                TimeOptions(client),
+                DistanceOptions(client),
+                AltitudeOptions(client),
+                SpeedOptions(client),
                 Dialog("Satellite Options","Apply","Cancel"),
             ]
         self.spots = [
@@ -481,25 +502,42 @@ class DashView(View):
                 ((160,80),  (80,80)),
                 ((160,160), (80,80)),
                 ]
-        self.registry.ConfigAdd( { "setting":"dash_zoomedgauge", "description":u"Enlarged gauge",
+        self.client.ConfigAdd( { "setting":"dash_zoomedgauge", "description":u"Enlarged gauge",
                                    "default":0, "query":None } )
-        self.zoomedgauge = self.registry.ConfigGetValue("dash_zoomedgauge")
+        self.zoomedgauge = self.client.ConfigGetValue("dash_zoomedgauge")
 
+        self.client.RegisterEvents({
+                EKeyEvtPosition: ( self.OnPosition, "fffh" ),
+                EKeyEvtCourse:   ( self.OnCourse,   "ff" ),
+                EKeyEvtSatinfo:  ( self.OnSatinfo,  "bb" ),
+                EKeyEvtMonitor:  ( self.OnMonitor,  "f" ),
+                EKeyEvtBattery:  ( self.OnBattery,  "bb" ),
+                EKeyEvtTimer:    ( self.OnClock,    "f" ),
+            })
+        self.client.RegisterCommands([
+                #("GpsStart", EKeyCmdGpsStart, ""),
+                #("GpsStop",  EKeyCmdGpsStop,  ""),
+                #self.GpsGetPosition,
+                #self.GpsGetCourse,
+                #self.GpsGetSatinfo,
+                #self.GpsGetSatpos,
+            ])
+        #self.client.RegisterKeys({
+        #        EKeyUp:        self.MoveUp,
+        #        EKeyDown:      self.MoveDown,
+        #        EKeySelect:    self.GaugeOptions,
+        #    })
         self.menuwidget = TextWidget("Menu",fgcolor=Color["white"],bgcolor=Color["darkblue"])
         self.editwidget = TextWidget("Options",fgcolor=Color["white"],bgcolor=Color["darkblue"])
         self.exitwidget = TextWidget("Exit",fgcolor=Color["white"],bgcolor=Color["darkblue"])
         self.satwidget = BarWidget((15,50),bars=5,range=10)
         self.batwidget = BarWidget((15,50),bars=5,range=7)
 
-        View.__init__(self,(240,320))
-        self.registry.UIViewAdd(self)
+        # StartGps(10)
+        # StartTimer(1,now)
 
-        self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"dash", "handler":self.OnClock } )
-        self.registry.Signal( { "type":"timer_start", "id":"dash", "interval":1, "start":time() } )
-        self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"position",  "handler":self.OnPosition } )
-        self.registry.Signal( { "type":"gps_start",   "id":"dash", "tolerance":10 } )
-        self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"monitor",  "handler":self.OnMonitor } )
-        self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"battery",  "handler":self.OnBattery } )
+        View.__init__(self,(240,320))
+        self.client.UIViewAdd(self)
         self.KeyAdd("up",self.MoveUp)
         self.KeyAdd("down",self.MoveDown)
         self.KeyAdd("select",self.GaugeOptions)
@@ -508,7 +546,7 @@ class DashView(View):
         Log("dash","DashView::GaugeOptions()")
         #d = AltitudeOptions()
         d = self.dialogs[self.zoomedgauge]
-        self.registry.UIShowDialog(d,self.ProcessGaugeOptions)
+        self.client.UIShowDialog(d,self.ProcessGaugeOptions)
 
     def ProcessGaugeOptions(self,d):
         print "Dialog result:", d.result
@@ -516,20 +554,20 @@ class DashView(View):
     def MoveUp(self,key):
         Log("dash","DashView::MoveUp()")
         self.zoomedgauge = (self.zoomedgauge -1) % (len(self.spots))
-        self.registry.ConfigSetValue("dash_zoomedgauge",self.zoomedgauge)
+        self.client.ConfigSetValue("dash_zoomedgauge",self.zoomedgauge)
         self.Resize()
-        self.registry.UIViewRedraw()
+        self.client.UIViewRedraw()
 
     def MoveDown(self,key):
         Log("dash","DashView::MoveDown()")
         self.zoomedgauge = (self.zoomedgauge +1) % (len(self.spots))
-        self.registry.ConfigSetValue("dash_zoomedgauge",self.zoomedgauge)
+        self.client.ConfigSetValue("dash_zoomedgauge",self.zoomedgauge)
         self.Resize()
-        self.registry.UIViewRedraw()
+        self.client.UIViewRedraw()
 
     def RedrawView(self):
         Log("dash*","DashView::RedrawView()")
-        self.registry.UIViewRedraw()
+        self.client.UIViewRedraw()
 
     def OnClock(self,signal):
         Log("dash*","DashView::OnClock()")
@@ -548,28 +586,29 @@ class DashView(View):
         else:
             self.satwidget.UpdateValues(used,0)
 
-    def OnPosition(self,position):
-        Log("dash*","DashView::OnPosition(",position,")")
-        self.UpdateSignal(position["used_satellites"],position["satellites"])
-        self.positionwidget.UpdatePosition(self.registry.DatumFormat((position["latitude"],position["longitude"])))
+    #def OnPosition(self,position):
+    def OnPosition(self,time,lat,lon,alt):
+        Log("dash*","DashView::OnPosition(",time,lat,lon,alt,")")
+        #self.UpdateSignal(position["used_satellites"],position["satellites"])
+        self.positionwidget.UpdatePosition(self.client.DatumFormat((lat,lon)))
 
-        list = position['satlist']
-        if len(list) > 0:
-            self.satgauge.UpdateList(list)
+        #list = position['satlist']
+        #if len(list) > 0:
+        #    self.satgauge.UpdateList(list)
 
-        if position["ref"] != "dash":
-            return
+        #if position["ref"] != "dash":
+        #    return
 
-        lat,lon = position["latitude"],position["longitude"]
-        if lat == None or lon == None:
-            return
+        #lat,lon = position["latitude"],position["longitude"]
+        #if lat == None or lon == None:
+        #    return
 
-        self.wptgauge.UpdateValues(position["heading"],None,None)
-        self.speedgauge.UpdateValue(position["speed"])
-        self.altgauge.UpdateValue(position["altitude"])
-        d = position["distance"]
-        if d != None:
-            self.distancegauge.UpdateValues(d,None)
+        #self.wptgauge.UpdateValues(position["heading"],None,None)
+        #self.speedgauge.UpdateValue(position["speed"])
+        self.altgauge.UpdateValue(alt)
+        #d = position["distance"]
+        #if d != None:
+        #    self.distancegauge.UpdateValues(d,None)
 
         try:
             self.Draw()
@@ -577,19 +616,28 @@ class DashView(View):
         except:
             DumpExceptionInfo()
 
-    def OnBattery(self,batterystatus):
+    def OnCourse(self,speed,heading):
+        self.wptgauge.UpdateValues(heading,None,None)
+        self.speedgauge.UpdateValue(speed)
+
+    def OnSatinfo(self,inview,used):
+        self.course = {
+                "inview": inview,
+                "used": used,
+            }
+    def OnBattery(self,ch,lv,st):
         Log("dash","DashView::OnBattery(",batterystatus,")")
-        ch = batterystatus["chargingstatus"]
-        lv = batterystatus["batterylevel"]
-        st = batterystatus["batterystatus"]
+        #ch = batterystatus["chargingstatus"]
+        #lv = batterystatus["batterylevel"]
+        #st = batterystatus["batterystatus"]
         if ch < 1:
-            self.registry.UISetScreensaver(True)
+            self.client.UISetScreensaver(True)
             if st == 0:
                 self.batwidget.UpdateValues(lv,0)
             else:
                 self.batwidget.UpdateValues(0,lv)
         else:
-            self.registry.UISetScreensaver(False)
+            self.client.UISetScreensaver(False)
             self.batwidget.UpdateValues(0,7)
 
     def OnMonitor(self,signal):
@@ -703,8 +751,8 @@ class DashView(View):
 
     def Quit(self):
         Log("dash","DashView::Quit()")
-        self.registry.Signal( { "type":"db_disconnect", "id":"dash", "signal":"dash" } )
-        self.registry.Signal( { "type":"timer_stop",    "id":"dash" } )
-        self.registry.Signal( { "type":"db_disconnect", "id":"dash", "signal":"position" } )
-        self.registry.UIViewDel(self)
-        self.registry = None
+        #self.registry.Signal( { "type":"db_disconnect", "id":"dash", "signal":"dash" } )
+        #self.registry.Signal( { "type":"timer_stop",    "id":"dash" } )
+        #self.registry.Signal( { "type":"db_disconnect", "id":"dash", "signal":"position" } )
+        self.client.UIViewDel(self)
+        self.client = None
