@@ -1,4 +1,5 @@
 from helpers import *
+import datums
 
 loglevels += ["lrgps","lrgps*","lrgps#","lrgps!"]
 
@@ -11,9 +12,10 @@ EKeyCmdTrkStop  = EKeyGpsBase + 4
 
 EKeyEvtPosition = EKeyGpsBase + 1
 EKeyEvtCourse   = EKeyGpsBase + 2
-EKeyEvtSatinfo  = EKeyGpsBase + 3
-EKeyEvtWpt      = EKeyGpsBase + 4
-EKeyEvtTrkpt    = EKeyGpsBase + 5
+EKeyEvtDistance = EKeyGpsBase + 3
+EKeyEvtSatinfo  = EKeyGpsBase + 4
+EKeyEvtWpt      = EKeyGpsBase + 5
+EKeyEvtTrkpt    = EKeyGpsBase + 6
 
 # Generic return codes
 EResultReady = 1
@@ -47,6 +49,7 @@ class LrGpsServer:
         self.server = server
         self.server.RegisterEvents({
                 EKeyEvtPosition: "fffh",
+                EKeyEvtDistance: "i",
                 EKeyEvtCourse:   "ff",
                 EKeyEvtSatinfo:  "bb",
             })
@@ -55,6 +58,8 @@ class LrGpsServer:
                 EKeyCmdGpsStop:  ( self.OnGpsStop,  "" ),
             })
         self.requestor = None
+        self.previous = None
+        self.mindistance = 10 # meters
 
     def Done(self,server):
         self.server.DelCommands(
@@ -66,6 +71,28 @@ class LrGpsServer:
                 EKeyEvtCourse,
                 EKeyEvtSatinfo,
             )
+
+    def CalculateDistance(self):
+        Log("gps*","Gps::CalculateDistance()")
+        distance = 0
+        bearing = 0
+
+        time,lat1,lon1,alt = self.position
+        if self.previous != None:
+            time,lat2,lon2,alt = self.previous
+            distance,bearing = datums.CalculateDistanceAndBearing( (lat1,lon1), (lat2,lon2) )
+            if distance > self.mindistance:
+                self.previous = self.position
+            else:
+                distance = 0
+        else:
+            self.previous = self.position
+
+        Log("gps#","Gps::CalculateDistance() result: %f" % distance)
+        return distance
+
+    def PublishDistance(self,distance):
+        self.server.SendEvent(EKeyEvtDistance,distance)
 
     def PublishPosition(self,*position):
         self.server.SendEvent(EKeyEvtPosition,*position)
@@ -97,16 +124,19 @@ class LrGpsServer:
                 course = (0,0)
                 satinfo = (0,0)
 
-            position=(
+            self.position=(
                     time,
                     eval(str(data[1])),     # latitude
                     eval(str(data[2])),     # longitude
                     eval(str(data[3]))      # altitude
                     )
+            distance = self.CalculateDistance()
 
-            Log("lrgps","OnPosition(): ", position)
+            Log("lrgps","OnPosition(): ", self.position)
 
-            self.PublishPosition(*position)
+            self.PublishPosition(*self.position)
+            if distance > 0:
+                self.PublishPosition(distance)
             self.PublishCourse(*course)
             self.PublishSatinfo(*satinfo)
             return EResultOk
@@ -142,11 +172,6 @@ class LrGpsServer:
 class LrGpsClient:
     def __init__(self,client):
         self.client = client
-        #self.client.RegisterEvents({
-        #       EKeyEvtPosition: ( self.OnPosition, "fffh" ),
-        #        EKeyEvtCourse:   ( self.OnCourse,   "ff" ),
-        #        EKeyEvtSatinfo:  ( self.OnSatinfo,  "bb" ),
-        #    })
         self.client.RegisterCommands([
                 ("GpsStart", EKeyCmdGpsStart, ""),
                 ("GpsStop",  EKeyCmdGpsStop,  ""),
@@ -169,6 +194,10 @@ class LrGpsClient:
                 "inview": 0,
                 "used": 0,
             }
+        self.satinfo = {
+                "inview": 0,
+                "used": 0,
+            }
         self.requestor = None
 
     def Done(self):
@@ -180,46 +209,22 @@ class LrGpsClient:
                 "GpsGetSatinfo",
                 "GpsGetSatpos",
             )
-        #self.client.DelEvents(
-        #        EKeyEvtPosition,
-        #        EKeyEvtCourse,
-        #        EKeyEvtSatinfo
-        #    )
-
-    def OnPosition(self,time,lat,lon,alt):
-        self.position = {
-                "time" : time,
-                "latitude" : lat,
-                "longitude" : lon,
-                "altitude" : alt,
-            }
-
-    def OnCourse(self,speed,heading):
-        self.course = {
-                "speed": speed,
-                "heading": heading,
-            }
-
-    def OnSatinfo(self,inview,used):
-        self.course = {
-                "inview": inview,
-                "used": used,
-            }
 
     def GpsGetPosition(self):
-        self.OnPosition(self.client.GetEvent(EKeyEvtPosition))
+        self.position["time"], self.position["latitude"], self.position["longitude"], self.position["altitude"] = self.client.GetEvent(EKeyEvtPosition)
         return self.position
 
     def GpsGetCourse(self):
-        self.OnCourse(*self.client.GetEvent(EKeyEvtCourse))
+        self.course["speed"], self.course["heading"] = self.client.GetEvent(EKeyEvtCourse)
         return self.course
 
     def GpsGetSatinfo(self):
-        self.OnSatinfo(*self.client.GetEvent(EKeyEvtSatinfo))
+        self.satinfo["inview"], self.satinfo["used"] = self.client.GetEvent(EKeyEvtSatinfo)
         return self.position
 
     def GpsGetSatpos(self):
         Log("lrgps*","LRGps::GetSatelliteData()")
+        self.GpsGetSatinfo()
         import locationrequestor as lr
         list = []
         for index in range(self.satinfo["inview"]):

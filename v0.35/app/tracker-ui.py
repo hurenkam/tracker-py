@@ -54,8 +54,8 @@ class TrackerUi(Client):
     def Run(self):
         self.ui.UIMenuAdd( self.ServerStart,  "Start",   "Server" )
         self.ui.UIMenuAdd( self.ServerStop,   "Stop",    "Server" )
-        self.ui.UIMenuAdd( self.GpsStart,     "Start",   "Gps" )
-        self.ui.UIMenuAdd( self.GpsStop,      "Sop",     "Gps" )
+        self.ui.UIMenuAdd( self.GpsStart,     "Start",   "GPS" )
+        self.ui.UIMenuAdd( self.GpsStop,      "Stop",    "GPS" )
         self.ui.UIMenuRedraw()
         self.ui.UIRun()
 
