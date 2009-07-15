@@ -1,6 +1,8 @@
 from helpers import *
 from widgets import *
 from datatypes import *
+from event import *
+from properties import *
 
 loglevels += ["dash!","dash"]
 
@@ -25,9 +27,10 @@ EKeySelect = 3
 EKeyGpsBase  = 0x0100
 EKeyEvtPosition = EKeyGpsBase + 1
 EKeyEvtCourse   = EKeyGpsBase + 2
-EKeyEvtSatinfo  = EKeyGpsBase + 3
-EKeyEvtWpt      = EKeyGpsBase + 4
-EKeyEvtTrkpt    = EKeyGpsBase + 5
+EKeyEvtDistance = EKeyGpsBase + 3
+EKeyEvtSatinfo  = EKeyGpsBase + 4
+EKeyEvtWpt      = EKeyGpsBase + 5
+EKeyEvtTrkpt    = EKeyGpsBase + 6
 
 EKeyEvtMonitor  = 0x0201
 EKeyEvtBattery  = 0x0203
@@ -508,33 +511,29 @@ class DashView(View):
 
         self.client.RegisterEvents({
                 EKeyEvtPosition: ( self.OnPosition, "fffh" ),
+                EKeyEvtDistance: ( self.OnDistance, "i" ),
                 EKeyEvtCourse:   ( self.OnCourse,   "ff" ),
                 EKeyEvtSatinfo:  ( self.OnSatinfo,  "bb" ),
                 EKeyEvtMonitor:  ( self.OnMonitor,  "f" ),
-                EKeyEvtBattery:  ( self.OnBattery,  "bb" ),
                 EKeyEvtTimer:    ( self.OnClock,    "f" ),
             })
-        self.client.RegisterCommands([
-                #("GpsStart", EKeyCmdGpsStart, ""),
-                #("GpsStop",  EKeyCmdGpsStop,  ""),
-                #self.GpsGetPosition,
-                #self.GpsGetCourse,
-                #self.GpsGetSatinfo,
-                #self.GpsGetSatpos,
-            ])
-        #self.client.RegisterKeys({
-        #        EKeyUp:        self.MoveUp,
-        #        EKeyDown:      self.MoveDown,
-        #        EKeySelect:    self.GaugeOptions,
-        #    })
+        self.eBattery = Event(
+            sid=PowerState.KPSUidHWRMPowerState,
+            key=PowerState.KHWRMBatteryLevel,
+            callback=self.OnBatteryLevel)
+        self.eBatteryStatus = Event(
+            sid=PowerState.KPSUidHWRMPowerState,
+            key=PowerState.KHWRMBatteryStatus,
+            callback=self.OnBatteryStatus)
+        self.eCharger = Event(
+            sid=PowerState.KPSUidHWRMPowerState,
+            key=PowerState.KHWRMChargingStatus,
+            callback=self.OnChargerStatus)
         self.menuwidget = TextWidget("Menu",fgcolor=Color["white"],bgcolor=Color["darkblue"])
         self.editwidget = TextWidget("Options",fgcolor=Color["white"],bgcolor=Color["darkblue"])
         self.exitwidget = TextWidget("Exit",fgcolor=Color["white"],bgcolor=Color["darkblue"])
         self.satwidget = BarWidget((15,50),bars=5,range=10)
         self.batwidget = BarWidget((15,50),bars=5,range=7)
-
-        # StartGps(10)
-        # StartTimer(1,now)
 
         View.__init__(self,(240,320))
         self.client.UIViewAdd(self)
@@ -586,25 +585,9 @@ class DashView(View):
         else:
             self.satwidget.UpdateValues(used,0)
 
-    #def OnPosition(self,position):
     def OnPosition(self,time,lat,lon,alt):
         Log("dash*","DashView::OnPosition(",time,lat,lon,alt,")")
-        #self.UpdateSignal(position["used_satellites"],position["satellites"])
         self.positionwidget.UpdatePosition(self.client.DatumFormat((lat,lon)))
-
-        #list = position['satlist']
-        #if len(list) > 0:
-        #    self.satgauge.UpdateList(list)
-
-        #if position["ref"] != "dash":
-        #    return
-
-        #lat,lon = position["latitude"],position["longitude"]
-        #if lat == None or lon == None:
-        #    return
-
-        #self.wptgauge.UpdateValues(position["heading"],None,None)
-        #self.speedgauge.UpdateValue(position["speed"])
         self.altgauge.UpdateValue(alt)
         #d = position["distance"]
         #if d != None:
@@ -616,20 +599,51 @@ class DashView(View):
         except:
             DumpExceptionInfo()
 
+    def OnDistance(self,distance):
+        self.distancegauge.UpdateValues(distance,None)
+
     def OnCourse(self,speed,heading):
         self.wptgauge.UpdateValues(heading,None,None)
         self.speedgauge.UpdateValue(speed)
 
     def OnSatinfo(self,inview,used):
-        self.course = {
-                "inview": inview,
-                "used": used,
-            }
-    def OnBattery(self,ch,lv,st):
+        if used < 4:
+            self.satwidget.UpdateValues(used,inview)
+        else:
+            self.satwidget.UpdateValues(used,0)
+
+        list = self.client.GpsGetSatpos()
+        if len(list) > 0:
+            self.satgauge.UpdateList(list)
+
+    def UpdateBatteryWidget():
+        if self.bcharger < 1:
+            self.client.UISetScreensaver(True)
+            if self.bstatus == 0:
+                self.batwidget.UpdateValues(self.blevel,0)
+            else:
+                self.batwidget.UpdateValues(0,self.blevel)
+        else:
+            self.client.UISetScreensaver(False)
+            self.batwidget.UpdateValues(0,7)
+
+    def OnBatteryLevel(self,level):
+        self.blevel = level
+        UpdateBatteryWidget()
+
+    def OnBatteryStatus(self,status):
+        self.bstatus = status
+        UpdateBatteryWidget()
+
+    def OnChargerStatus(self,status):
+        self.bcharger = status
+        UpdateBatteryWidget()
+
+    def _OnBattery(self,batterystatus):
         Log("dash","DashView::OnBattery(",batterystatus,")")
-        #ch = batterystatus["chargingstatus"]
-        #lv = batterystatus["batterylevel"]
-        #st = batterystatus["batterystatus"]
+        ch = batterystatus["chargingstatus"]
+        lv = batterystatus["batterylevel"]
+        st = batterystatus["batterystatus"]
         if ch < 1:
             self.client.UISetScreensaver(True)
             if st == 0:
