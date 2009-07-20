@@ -589,9 +589,6 @@ class DashView(View):
         Log("dash*","DashView::OnPosition(",time,lat,lon,alt,")")
         self.positionwidget.UpdatePosition(self.client.DatumFormat((lat,lon)))
         self.altgauge.UpdateValue(alt)
-        #d = position["distance"]
-        #if d != None:
-        #    self.distancegauge.UpdateValues(d,None)
 
         try:
             self.Draw()
@@ -612,9 +609,9 @@ class DashView(View):
         else:
             self.satwidget.UpdateValues(used,0)
 
-        list = self.client.GpsGetSatpos()
-        if len(list) > 0:
-            self.satgauge.UpdateList(list)
+        #list = self.client.GpsGetSatpos()
+        #if len(list) > 0:
+        #    self.satgauge.UpdateList(list)
 
     def UpdateBatteryWidget():
         if self.bcharger < 1:
@@ -629,7 +626,7 @@ class DashView(View):
 
     def OnBatteryLevel(self,level):
         self.blevel = level
-        UpdateBatteryWidget()
+        self.UpdateBatteryWidget()
 
     def OnBatteryStatus(self,status):
         self.bstatus = status
