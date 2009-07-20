@@ -42,7 +42,10 @@ class Event(Property):
 
     def Callback(self):
         if self.callback != None:
-            self.callback(*self.Get())
+            if self.format == "i":
+                self.callback(self.Get())
+            else:
+                self.callback(*self.Get())
 
     def Done(self):
         if self.callback != None:
