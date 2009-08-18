@@ -38,7 +38,7 @@ Color = {
     }
 
 Defaults = {
-        "basedirs": ["e:\\data\\tracker\\","c:\\data\\tracker\\"],
+        "basedirs": ["e:\\data\\tracker040\\","c:\\data\\tracker040\\"],
         "plugindir": "plugins",
     }
 
