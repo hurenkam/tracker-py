@@ -450,7 +450,7 @@ class DashView(View):
         self.trip = 0.0
         self.starttime = time()
 
-        self.positionwidget = PositionWidget((200,15))
+        self.positionwidget = PositionWidget((440,25))
         self.wptgauge       = WaypointGauge(None)
         self.satgauge       = SatelliteGauge(None)
         self.speedgauge     = SpeedGauge(registry,None)
@@ -491,7 +491,7 @@ class DashView(View):
         self.satwidget = BarWidget((15,50),bars=5,range=10)
         self.batwidget = BarWidget((15,50),bars=5,range=7)
 
-        View.__init__(self,(240,320))
+        View.__init__(self,(480,360))
         self.registry.UIViewAdd(self)
 
         self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"dash", "handler":self.OnClock } )
@@ -656,47 +656,46 @@ class DashView(View):
                         (0,0,w,h),
                         0)
 
-        self.DrawRectangle((0,270,240,50),linecolor=Color["darkblue"],fillcolor=Color["darkblue"])
-
+        self.DrawRectangle((0,310,480,50),linecolor=Color["darkblue"],fillcolor=Color["darkblue"])
         w,h = self.positionwidget.GetSize()
         self.Blit(
             self.positionwidget,
-            (20,275,20+w,275+h),
+            (20,315,20+w,315+h),
             (0,0,w,h),
             0)
 
         w,h = self.menuwidget.GetSize()
         self.Blit(
             self.menuwidget,
-            (20,320-h,20+w,320),
+            (20,360-h,20+w,360),
             (0,0,w,h),
             0)
 
         w,h = self.editwidget.GetSize()
         self.Blit(
             self.editwidget,
-            (120-w/2,320-h,120+w,320),
+            (240-w/2,360-h,240+w,360),
             (0,0,w,h),
             0)
 
         w,h = self.exitwidget.GetSize()
         self.Blit(
             self.exitwidget,
-            (220-w,320-h,220,320),
+            (460-w,360-h,460,360),
             (0,0,w,h),
             0)
 
         w,h = self.satwidget.GetSize()
         self.Blit(
             self.satwidget,
-            (0,270,w,270+h),
+            (0,310,w,310+h),
             (0,0,w,h),
             0)
 
         w,h = self.batwidget.GetSize()
         self.Blit(
             self.batwidget,
-            (225,270,225+w,270+h),
+            (465,310,465+w,310+h),
             (0,0,w,h),
             0)
 

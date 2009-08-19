@@ -25,7 +25,7 @@ class UserInterface:
         self.view = None
         self.previousview = None
         #self.application = None
-        self.application = Application("Tracker",(240,320))
+        self.application = Application("Tracker",(480,360))
         self.application.RedrawMenu()
         self.application.KeyAdd("left",self.UIViewPrevious)
         self.application.KeyAdd("right",self.UIViewNext)
