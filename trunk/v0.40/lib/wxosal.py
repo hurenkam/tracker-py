@@ -11,6 +11,8 @@ def RGBColor(r,g,b):
 
 Color = {
           "black":'#000000',
+          "black1":'#000000',
+          "grey":'#808080',
           "white":'#ffffff',
           "yellow":'#ffffc0',
           "darkblue":'#0000ff',
@@ -356,7 +358,7 @@ class Widget:
             self.dc.Blit(x1,y1,w,h,widget.dc,x3,y3)
 
 class AppFrame(wx.Frame):
-    def __init__(self,title="---",size=(450,475)):
+    def __init__(self,title="---",size=(210,235)):
         wx.Frame.__init__(self,None,wx.ID_ANY, title, size=size)
 
         # A Statusbar in the bottom of the window

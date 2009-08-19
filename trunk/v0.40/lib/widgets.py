@@ -41,7 +41,7 @@ class TextWidget(Widget):
 
     def Draw(self):
         Widget.Draw(self)
-        self.DrawText( (self.vpad,self.hpad ), u'%s' % self.text)
+        self.DrawText( (self.vpad,self.hpad ), u'%s' % self.text, size=2)
 
 
 class PositionWidget(Widget):
@@ -66,13 +66,13 @@ class PositionWidget(Widget):
 
         w,h = self.GetTextSize(text)
         y = int((s[1]-h) / 2.0)
-        self.DrawText( (5,y), text, size=0.7)
+        self.DrawText( (5,y), text, size=1.2)
 
 class BarWidget(Widget):
 
-    def __init__(self,size=None,c1=Color["bar_c1"],c2=Color["bar_c2"],range=100,bars=7):
+    def __init__(self,size=None,c1=Color["bar_c1"],c2=Color["bar_c2"],range=100,bars=7,bgcolor=Color["bar_bg"]):
         Widget.__init__(self)
-        self.bgcolor = Color["bar_bg"]
+        self.bgcolor = bgcolor
         self.v1=40
         self.v2=80
         self.SetParams(c1,c2,range,bars)

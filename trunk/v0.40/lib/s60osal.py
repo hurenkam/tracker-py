@@ -9,6 +9,8 @@ def RGBColor(r,g,b):
 
 Color = {
           "black":0x000000,
+          "black1":0x000000,
+          "grey":0x808080,
           "white":0xffffff,
           "yellow":0xffffc0,
           "darkblue":0x0000ff,
@@ -287,14 +289,19 @@ class Application(View):
         self.subitems = {}
         self.keylist = {}
         View.__init__(self,(x+8,y+6))
-        ui.app.screen='full'
-        ui.app.title = u"Tracker v0.20a"
+        ui.app.title = u"Tracker v0.40a"
+        try:
+            ui.app.directional_pad = False
+            ui.app.screen='full_max'
+        except:
+            ui.app.screen='full'
         canvas = ui.Canvas(
             event_callback=self.OnS60Key,
             redraw_callback=self.OnS60Redraw,
             resize_callback=self.OnS60Resize
             )
         ui.app.body = canvas
+
         ui.app.exit_key_handler=self.OnS60Exit
         self.screensaver = True
 
