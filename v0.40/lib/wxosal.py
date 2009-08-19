@@ -356,7 +356,7 @@ class Widget:
             self.dc.Blit(x1,y1,w,h,widget.dc,x3,y3)
 
 class AppFrame(wx.Frame):
-    def __init__(self,title="---",size=(210,235)):
+    def __init__(self,title="---",size=(450,475)):
         wx.Frame.__init__(self,None,wx.ID_ANY, title, size=size)
 
         # A Statusbar in the bottom of the window
