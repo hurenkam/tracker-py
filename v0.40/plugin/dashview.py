@@ -12,7 +12,57 @@ def Done():
     global d
     d.Quit()
 
+themes = {
+    "n97" : {
+        "touch": True,
+        "resolution": (640,360),
+        "bgcolor": Color["black"],
+        "fgcolor": Color["white"],
+        "bgwidget" : Color["grey"],
+        "spots": [
+            ((170,5),     (300,300)),
+            ((490,205),   (100,100)),
+            ((490,105),   (100,100)),
+            ((490,5),     (100,100)),
+            ((10,155),    (150,150)),
+            ((10,5),      (150,150)),
+        ],
+        "menu":     (50,360,100,-50,1.5),
+        "exit":     (620,360,-100,-50,1.5),
+        "position": (170,350,300,-30,1.2),
+    },
+    "n95" : {
+        "touch": False,
+        "resolution": (240,320),
+        "bgcolor": Color["darkblue"],
+        "fgcolor": Color["white"],
+        "bgwidget" : Color["grey"],
+        "spots": [
+            ((0,80),    (160,160)),
+            ((0,0),     (80,80)),
+            ((80,0),    (80,80)),
+            ((160,0),   (80,80)),
+            ((160,80),  (80,80)),
+            ((160,160), (80,80)),
+        ],
+        "menu":     (20,320,60,-20,0.7),
+        "edit":     (90,320,60,-20,0.7),
+        "exit":     (20,320,60,-20,0.7),
+        "position": (0,25,200,15,0.7),
+    }
+}
+selectedtheme = themes["n97"]
 
+def GetRectangles(x,y,w,h,s):
+    #print x,y,w,h,s
+    if w < 0:
+        x = x + w
+        w = -1 * w
+    if h < 0:
+        y = y + h
+        h = -1 * h
+    #print "(",x,y,x+w,y+w,")","(",0,0,w,h,")"
+    return (x, y, x+w, y+w), (0,0,w,h)
 
 class AltitudeOptions(OptionForm):
     def __init__(self,registry):
@@ -445,12 +495,14 @@ class DashView(View):
         Log("dash","DashView::__init__()")
         self.registry = registry
         from time import time
+        self.resolution = selectedtheme["resolution"]
 
         self.menu = {}
         self.trip = 0.0
         self.starttime = time()
 
-        self.positionwidget = PositionWidget((440,25))
+        p = selectedtheme["position"]
+        self.positionwidget = PositionWidget((abs(p[2]),abs(p[3])))
         self.wptgauge       = WaypointGauge(None)
         self.satgauge       = SatelliteGauge(None)
         self.speedgauge     = SpeedGauge(registry,None)
@@ -473,25 +525,18 @@ class DashView(View):
                 SpeedOptions(registry),
                 Dialog("Satellite Options","Apply","Cancel"),
             ]
-        self.spots = [
-                ((0,80),    (160,160)),
-                ((0,0),     (80,80)),
-                ((80,0),    (80,80)),
-                ((160,0),   (80,80)),
-                ((160,80),  (80,80)),
-                ((160,160), (80,80)),
-                ]
+        self.spots = selectedtheme["spots"]
         self.registry.ConfigAdd( { "setting":"dash_zoomedgauge", "description":u"Enlarged gauge",
                                    "default":0, "query":None } )
         self.zoomedgauge = self.registry.ConfigGetValue("dash_zoomedgauge")
 
-        self.menuwidget = TextWidget("Menu",fgcolor=Color["white"],bgcolor=Color["darkblue"])
-        self.editwidget = TextWidget("Options",fgcolor=Color["white"],bgcolor=Color["darkblue"])
-        self.exitwidget = TextWidget("Exit",fgcolor=Color["white"],bgcolor=Color["darkblue"])
-        self.satwidget = BarWidget((15,50),bars=5,range=10)
-        self.batwidget = BarWidget((15,50),bars=5,range=7)
+        self.menuwidget = TextWidget("Menu",fgcolor=selectedtheme["fgcolor"],bgcolor=selectedtheme["bgcolor"])
+        self.editwidget = TextWidget("Options",fgcolor=selectedtheme["fgcolor"],bgcolor=selectedtheme["bgcolor"])
+        self.exitwidget = TextWidget("Exit",fgcolor=selectedtheme["fgcolor"],bgcolor=selectedtheme["bgcolor"])
+        self.satwidget = BarWidget((15,50),bars=5,range=10,bgcolor=selectedtheme["bgcolor"])
+        self.batwidget = BarWidget((15,50),bars=5,range=7,bgcolor=selectedtheme["bgcolor"])
 
-        View.__init__(self,(480,360))
+        View.__init__(self,self.resolution)
         self.registry.UIViewAdd(self)
 
         self.registry.Signal( { "type":"db_connect",  "id":"dash", "signal":"dash", "handler":self.OnClock } )
@@ -600,29 +645,15 @@ class DashView(View):
 
     def Resize(self,rect=None):
         Log("dash*","DashView::Resize()")
-        View.Resize(self,(240,320))
+        View.Resize(self,self.resolution)
 
         #if size == (320,240):
         if False:
-            self.spots = [
-                    ((98,40),   (160,160)),
-                    ((0,20),    (100,100)),
-                    ((0,120),   (100,100)),
-                    ((250,20),  (70,70)),
-                    ((260,90),  (60,60)),
-                    ((250,150), (70,70)),
-                    ]
+            self.spots = selectedtheme["spots"]
             self.satwidget.Resize((50,15))
             self.batwidget.Resize((50,15))
         else:
-            self.spots = [
-                    ((0,80),    (160,160)),
-                    ((0,0),     (80,80)),
-                    ((80,0),    (80,80)),
-                    ((160,0),   (80,80)),
-                    ((160,80),  (80,80)),
-                    ((160,160), (80,80)),
-                    ]
+            self.spots = selectedtheme["spots"]
             self.satwidget.Resize((15,50))
             self.batwidget.Resize((15,50))
 
@@ -656,46 +687,32 @@ class DashView(View):
                         (0,0,w,h),
                         0)
 
-        self.DrawRectangle((0,310,480,50),linecolor=Color["darkblue"],fillcolor=Color["darkblue"])
-        w,h = self.positionwidget.GetSize()
-        self.Blit(
-            self.positionwidget,
-            (20,315,20+w,315+h),
-            (0,0,w,h),
-            0)
+        self.DrawRectangle((0,self.resolution[1]-50,self.resolution[0],50),linecolor=selectedtheme["bgcolor"],fillcolor=selectedtheme["bgcolor"])
 
-        w,h = self.menuwidget.GetSize()
-        self.Blit(
-            self.menuwidget,
-            (20,360-h,20+w,360),
-            (0,0,w,h),
-            0)
+        r1,r2 = GetRectangles(*selectedtheme["position"])
+        self.Blit( self.positionwidget, r1, r2, 0 )
 
-        w,h = self.editwidget.GetSize()
-        self.Blit(
-            self.editwidget,
-            (240-w/2,360-h,240+w,360),
-            (0,0,w,h),
-            0)
+        r1,r2 = GetRectangles(*selectedtheme["menu"])
+        self.Blit( self.menuwidget, r1, r2, 0 )
 
-        w,h = self.exitwidget.GetSize()
-        self.Blit(
-            self.exitwidget,
-            (460-w,360-h,460,360),
-            (0,0,w,h),
-            0)
+        if "edit" in selectedtheme.keys():
+            r1,r2 = GetRectangles(*selectedtheme["edit"])
+            self.Blit( self.menuwidget, r1, r2, 0 )
+
+        r1,r2 = GetRectangles(*selectedtheme["exit"])
+        self.Blit( self.exitwidget, r1, r2, 0 )
 
         w,h = self.satwidget.GetSize()
         self.Blit(
             self.satwidget,
-            (0,310,w,310+h),
+            (0,self.resolution[1]-50,w,self.resolution[1]-50+h),
             (0,0,w,h),
             0)
 
         w,h = self.batwidget.GetSize()
         self.Blit(
             self.batwidget,
-            (465,310,465+w,310+h),
+            (self.resolution[0]-15,self.resolution[1]-50,self.resolution[0]-15+w,self.resolution[1]-50+h),
             (0,0,w,h),
             0)
 

@@ -8,6 +8,59 @@ loglevels += ["map!"]
 Zoom =     [ 0.5, 0.75, 1.0, 1.5, 2.0 ]
 Scroll =   [ 100,   20,  10,   5,   1 ]
 
+themes = {
+    "n97" : {
+        "touch": True,
+        "resolution": (640,360),
+        "bgcolor": Color["black"],
+        "fgcolor": Color["white"],
+        "bgwidget" : Color["grey"],
+        "spots": [
+            ((150,0),     (300,300)),
+            ((450,200),   (100,100)),
+            ((450,100),   (100,100)),
+            ((450,0),     (100,100)),
+            ((0,150),     (150,150)),
+            ((0,0),       (150,150)),
+        ],
+        "menu":     (50,360,100,-50,1.5),
+        "exit":     (620,360,-100,-50,1.5),
+        "position": (170,350,300,-30,1.2),
+    },
+    "n95" : {
+        "touch": False,
+        "resolution": (240,320),
+        "bgcolor": Color["darkblue"],
+        "fgcolor": Color["white"],
+        "bgwidget" : Color["grey"],
+        "spots": [
+            ((0,80),    (160,160)),
+            ((0,0),     (80,80)),
+            ((80,0),    (80,80)),
+            ((160,0),   (80,80)),
+            ((160,80),  (80,80)),
+            ((160,160), (80,80)),
+        ],
+        "menu":     (20,320,60,-20,0.7),
+        "edit":     (90,320,60,-20,0.7),
+        "exit":     (20,320,60,-20,0.7),
+        "position": (0,25,200,15,0.7),
+    }
+}
+selectedtheme = themes["n97"]
+
+def GetRectangles(x,y,w,h,s):
+    #print x,y,w,h,s
+    if w < 0:
+        x = x + w
+        w = -1 * w
+    if h < 0:
+        y = y + h
+        h = -1 * h
+    #print "(",x,y,x+w,y+w,")","(",0,0,w,h,")"
+    return (x, y, x+w, y+w), (0,0,w,h)
+
+
 def Init(registry):
     global m
     m = MapView(registry)
@@ -664,7 +717,6 @@ class MapWidget(Widget):
             self.DrawCursor((w/2,h/2),c)
             self.DrawArrow((w/2,h/2),c)
 
-
 class MapView(View):
     def __init__(self,registry):
         Log("map","MapView::__init__()")
@@ -672,21 +724,23 @@ class MapView(View):
         #self.registry.PluginAdd("simgps")
         #self.registry.PluginAdd("uiregistry")
         from time import time
+        self.resolution = selectedtheme["resolution"]
 
-        self.positionwidget = PositionWidget((440,25))
+        p = selectedtheme["position"]
+        self.positionwidget = PositionWidget((abs(p[2]),abs(p[3])))
         self.mapwidget = MapWidget(None)
-        self.mapwidget.Resize((470,300))
-        self.menuwidget = TextWidget("Menu",fgcolor=Color["white"],bgcolor=Color["darkblue"])
-        self.editwidget = TextWidget("Find map",fgcolor=Color["white"],bgcolor=Color["darkblue"])
-        self.exitwidget = TextWidget("Exit",fgcolor=Color["white"],bgcolor=Color["darkblue"])
-        self.satwidget = BarWidget((15,50),bars=5,range=10)
-        self.batwidget = BarWidget((15,50),bars=5,range=7)
+        self.mapwidget.Resize((self.resolution[0]-10,self.resolution[1]-60))
+        self.menuwidget = TextWidget("Menu",fgcolor=selectedtheme["fgcolor"],bgcolor=selectedtheme["bgcolor"])
+        self.editwidget = TextWidget("Find map",fgcolor=selectedtheme["fgcolor"],bgcolor=selectedtheme["bgcolor"])
+        self.exitwidget = TextWidget("Exit",fgcolor=selectedtheme["fgcolor"],bgcolor=selectedtheme["bgcolor"])
+        self.satwidget = BarWidget((15,50),bars=5,range=10,bgcolor=selectedtheme["bgcolor"])
+        self.batwidget = BarWidget((15,50),bars=5,range=7,bgcolor=selectedtheme["bgcolor"])
         self.currentposition = None
         self.showwaypoints = True
         self.oldaddwpt = None
 
         #View.__init__(self)
-        View.__init__(self,(480,360))
+        View.__init__(self,self.resolution)
         self.registry.UIViewAdd(self)
 
         self.registry = registry
@@ -1090,50 +1144,35 @@ class MapView(View):
         Widget.Draw(self)
         self.Blit(
             self.mapwidget,
-            (5,5,475,305),
-            (0,0,470,300),
+            (5,5,self.resolution[0]-5,self.resolution[1]-55),
+            (0,0,self.resolution[0]-10,self.resolution[1]-60),
             0)
 
-        self.DrawRectangle((0,310,480,50),linecolor=Color["darkblue"],fillcolor=Color["darkblue"])
-        w,h = self.positionwidget.GetSize()
-        self.Blit(
-            self.positionwidget,
-            (20,315,20+w,315+h),
-            (0,0,w,h),
-            0)
+        self.DrawRectangle((0,self.resolution[1]-50,self.resolution[0],50),linecolor=selectedtheme["bgcolor"],fillcolor=selectedtheme["bgcolor"])
+        r1,r2 = GetRectangles(*selectedtheme["position"])
+        self.Blit( self.positionwidget, r1, r2, 0 )
 
-        w,h = self.menuwidget.GetSize()
-        self.Blit(
-            self.menuwidget,
-            (20,360-h,20+w,360),
-            (0,0,w,h),
-            0)
+        r1,r2 = GetRectangles(*selectedtheme["menu"])
+        self.Blit( self.menuwidget, r1, r2, 0 )
 
-        w,h = self.editwidget.GetSize()
-        self.Blit(
-            self.editwidget,
-            (240-w/2,360-h,240+w,360),
-            (0,0,w,h),
-            0)
+        if "edit" in selectedtheme.keys():
+            r1,r2 = GetRectangles(*selectedtheme["edit"])
+            self.Blit( self.menuwidget, r1, r2, 0 )
 
-        w,h = self.exitwidget.GetSize()
-        self.Blit(
-            self.exitwidget,
-            (460-w,360-h,460,360),
-            (0,0,w,h),
-            0)
+        r1,r2 = GetRectangles(*selectedtheme["exit"])
+        self.Blit( self.exitwidget, r1, r2, 0 )
 
         w,h = self.satwidget.GetSize()
         self.Blit(
             self.satwidget,
-            (0,310,w,310+h),
+            (0,self.resolution[1]-50,w,self.resolution[1]-50+h),
             (0,0,w,h),
             0)
 
         w,h = self.batwidget.GetSize()
         self.Blit(
             self.batwidget,
-            (465,310,465+w,310+h),
+            (self.resolution[0]-15,self.resolution[1]-50,self.resolution[0]-15+w,self.resolution[1]-50+h),
             (0,0,w,h),
             0)
 
