@@ -549,6 +549,7 @@ class DashView(View):
         self.KeyAdd("down",self.MoveDown)
         self.KeyAdd("select",self.GaugeOptions)
 
+
     def GaugeOptions(self,key):
         Log("dash","DashView::GaugeOptions()")
         #d = AltitudeOptions()
