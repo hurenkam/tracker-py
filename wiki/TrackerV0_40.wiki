@@ -7,8 +7,8 @@ WishList | RoadMap | CodeArchitecture
 
 === Development version: No packages released yet ===
 
-http://tracker-py.googlecode.com/svn/trunk/v0.40/screenshots/Scr000003.jpg.jpg
-http://tracker-py.googlecode.com/svn/trunk/v0.40/screenshots/Scr000006.jpg.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.40/screenshots/Scr000003.jpg
+http://tracker-py.googlecode.com/svn/trunk/v0.40/screenshots/Scr000006.jpg
 
 == Working features ==
   * Dashview with gauges (speed, distance, altitude, heading, signal, time)
