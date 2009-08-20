@@ -39,13 +39,13 @@ http://tracker-py.googlecode.com/svn/trunk/v0.40/screenshots/Scr000006.jpg.jpg
   * Menu button doesn't respond yet
 
 == Dependencies ==
-  * [http://sourceforge.net/project/showfiles.php?group_id=154155 pyS60] 1.9.x (mandatory)
+  * [https://garage.maemo.org/frs/?group_id=854 pyS60] 1.9.x (mandatory)
   * [https://www.iyouit.eu/portal/software.aspx Landmarks module] (recommended)
   * [https://www.iyouit.eu/portal/software.aspx LocationRequestor module] (recommended)
   * [http://sourceforge.net/project/showfiles.php?group_id=132176 Envy module] (recommended)
   * [http://cyke64.googlepages.com Misty module] (recommended)
 
-Off course [http://sourceforge.net/project/showfiles.php?group_id=154155 pyS60]
+Off course [https://garage.maemo.org/frs/?group_id=854 pyS60]
 is needed, tracker.py is written in python, so it needs an interpreter.
 
 The [https://www.iyouit.eu/portal/software.aspx Landmarks module]
