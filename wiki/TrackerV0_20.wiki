@@ -2,6 +2,7 @@
 [http://code.google.com/p/tracker-py/wiki/TrackerV0_14 v0.14] |
 [http://code.google.com/p/tracker-py/wiki/TrackerV0_20 v0.20] |
 [http://code.google.com/p/tracker-py/wiki/TrackerV0_30 v0.30] |
+[http://code.google.com/p/tracker-py/wiki/TrackerV0_40 v0.40] |
 WishList | RoadMap | CodeArchitecture
 
 === Current stable: Version 0.20.6 ===
