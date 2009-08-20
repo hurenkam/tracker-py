@@ -19,7 +19,7 @@ http://tracker-py.googlecode.com/svn/trunk/v0.14k/screenshots/dash_fullscreen.jp
 
 The main purpose of Tracker.py, is to support this goal as much as possible. You
 can take a picture with the camera (I generally use a 3Mpix setting, but tested
-with 5Mpix as well), move it to the e:\maps directory (rename it to your liking),
+with 5Mpix as well), move it to the maps directory (rename it to your liking),
 and then load it in Tracker.py.
 Once loaded, it requires at least 2 reference points to be set, and then it is ready
 for use. I usually calibrate a new map twice, first a short 15 minute walk to gather
