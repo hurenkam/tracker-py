@@ -305,6 +305,42 @@ class Application(View):
         ui.app.exit_key_handler=self.OnS60Exit
         self.screensaver = True
 
+        canvas.bind(EButton1Down, self.MenuButtonDown, ((20,310),(120,360)))
+        canvas.bind(EButton1Down, self.ExitButtonDown, ((520,310),(620,360)))
+        #canvas.bind(EButton1Down, self.Down, ((0,0),(640,300)))
+        #canvas.bind(EButton1Up,   self.Up, ((0,0),(640,300)))
+
+    def Down(self,pos=(0,0)):
+        self.pos = pos
+
+    def Up(self,pos=(0,0)):
+        if self.pos == None:
+            return
+
+        deltax = pos[0] - self.pos[0]
+        deltay = pos[1] - self.pos[1]
+        self.pos = None
+
+        if (abs(deltax) > abs(deltay)) and (deltax > 50):
+            self.OnKey("right")
+            return
+        if (abs(deltax) > abs(deltay)) and (deltax < 50):
+            self.OnKey("left")
+            return
+        if (abs(deltax) < abs(deltay)) and (deltay > 50):
+            self.OnKey("down")
+            return
+        if (abs(deltax) < abs(deltay)) and (deltay < 50):
+            self.OnKey("up")
+            return
+        self.OnKey("select")
+
+    def MenuButtonDown(self,*args):
+        pass
+
+    def ExitButtonDown(self,*args):
+        self.OnS60Exit()
+
     def Run(self):
         self.running = True
         while self.running:
