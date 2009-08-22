@@ -65,6 +65,8 @@ Key = {
             "8":EKey8,
             #"home":wx.WXK_HOME,
             #"end":wx.WXK_END,
+            "leftsoftkey":EKeyLeftSoftkey,
+            "rightsoftkey":EKeyRightSoftkey,
             "select":EKeySelect,
             #"tab":wx.WXK_TAB,
             #"back":wx.WXK_BACK,
@@ -336,7 +338,12 @@ class Application(View):
         self.OnKey("select")
 
     def MenuButtonDown(self,*args):
-        pass
+        try:
+            from keypress import simulate_key
+            from key_codes import *
+            simulate_key(EKeyLeftSoftkey,EScancodeLeftSoftkey)
+        except:
+            pass
 
     def ExitButtonDown(self,*args):
         self.OnS60Exit()
@@ -414,6 +421,10 @@ class Application(View):
         return False
 
     def OnS60Key(self,event):
+        if "keycode" not in event.keys():
+            print event
+            return
+
         keycode = event['keycode']
         if keycode in Key.values():
             key = FindKey(keycode)
