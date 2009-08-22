@@ -2,6 +2,7 @@ import appuifw as ui
 import e32
 import math
 from key_codes import *
+from appuifw import EEventKeyDown, EEventKeyUp, EEventKey
 from graphics import *
 
 def RGBColor(r,g,b):
@@ -71,6 +72,13 @@ Key = {
             #"tab":wx.WXK_TAB,
             #"back":wx.WXK_BACK,
     }
+
+def PosInArea(pos,area):
+    x,y = pos
+    (x1,y1),(x2,y2) = area
+    if x >= x1 and x <= x2 and y >= y1 and y <= y2:
+        return True
+    return False
 
 def Sleep(sleeptime):
     return e32.ao_sleep(sleeptime)
@@ -298,7 +306,7 @@ class Application(View):
         except:
             ui.app.screen='full'
         canvas = ui.Canvas(
-            event_callback=self.OnS60Key,
+            event_callback=self.OnS60Event,
             redraw_callback=self.OnS60Redraw,
             resize_callback=self.OnS60Resize
             )
@@ -307,53 +315,27 @@ class Application(View):
         ui.app.exit_key_handler=self.OnS60Exit
         self.screensaver = True
 
-        canvas.bind(EButton1Down, self.MenuButtonDown, ((20,310),(120,360)))
-        canvas.bind(EButton1Down, self.ExitButtonDown, ((520,310),(620,360)))
-        #canvas.bind(EButton1Down, self.Down, ((0,0),(640,300)))
-        #canvas.bind(EButton1Up,   self.Up, ((0,0),(640,300)))
-
-    def Down(self,pos=(0,0)):
-        self.pos = pos
-
-    def Up(self,pos=(0,0)):
-        if self.pos == None:
-            return
-
-        deltax = pos[0] - self.pos[0]
-        deltay = pos[1] - self.pos[1]
-        self.pos = None
-
-        if (abs(deltax) > abs(deltay)) and (deltax > 50):
-            self.OnKey("right")
-            return
-        if (abs(deltax) > abs(deltay)) and (deltax < 50):
-            self.OnKey("left")
-            return
-        if (abs(deltax) < abs(deltay)) and (deltay > 50):
-            self.OnKey("down")
-            return
-        if (abs(deltax) < abs(deltay)) and (deltay < 50):
-            self.OnKey("up")
-            return
-        self.OnKey("select")
-
-    def MenuButtonDown(self,*args):
+    def MenuButtonPushed(self,*args):
+        print "MenuButtonDown"
         try:
-            from keypress import simulate_key
-            from key_codes import *
-            simulate_key(EKeyLeftSoftkey,EScancodeLeftSoftkey)
+            import keypress
+            keypress.simulate_key(EKeyLeftSoftkey,EScancodeLeftSoftkey)
         except:
             pass
 
-    def ExitButtonDown(self,*args):
+    def ExitButtonPushed(self,*args):
         self.OnS60Exit()
 
     def Run(self):
         self.running = True
+        count = 60
         while self.running:
             if not self.screensaver:
                 e32.reset_inactivity()
             e32.ao_sleep(0.5)
+            #count = count -1
+            #if count == 0:
+            #   self.running = False
 
     def OnViewExit(self,view):
         #print "onviewexit"
@@ -420,9 +402,66 @@ class Application(View):
 
         return False
 
-    def OnS60Key(self,event):
+    def OnS60Event(self,event):
+        if event["type"] == EButton1Down:
+            return self.OnS60PenDown(event["pos"])
+
+        if event["type"] == EDrag:
+            return self.OnS60PenDrag(event["pos"])
+
+        if event["type"] == EButton1Up:
+            return self.OnS60PenUp(event["pos"])
+
+        if event["type"] == EEventKeyDown:
+            return None
+
+        if event["type"] == EEventKeyUp:
+            return None
+
+        if event["type"] == EEventKey:
+            return self.OnS60Key(event['keycode'])
+
+        print "unknown event:", event
+
+    def OnS60PenDown(self,pos=(0,0)):
+        print "OnS60PenDown",pos
+        self.pos = pos
+
+    def OnS60PenDrag(self,pos=(0,0)):
+        print "OnS60PenDrag",pos
+
+    def OnS60PenUp(self,pos=(0,0)):
+        print "OnS60PenUp",pos
+
+        if PosInArea(pos,((20,310),(120,360))):
+            return self.MenuButtonPushed()
+
+        if PosInArea(pos,((520,310),(620,360))):
+            return self.ExitButtonPushed()
+
+        deltax = pos[0] - self.pos[0]
+        deltay = pos[1] - self.pos[1]
+        self.pos = None
+
+        if (abs(deltax) > abs(deltay)) and (deltax > 50):
+            return self.OnKey("right")
+        if (abs(deltax) > abs(deltay)) and (deltax < 50):
+            return self.OnKey("left")
+        if (abs(deltax) < abs(deltay)) and (deltay > 50):
+            return self.OnKey("down")
+        if (abs(deltax) < abs(deltay)) and (deltay < 50):
+            return self.OnKey("up")
+
+        return self.OnKey("select")
+
+    def OnS60Key(self,keycode):
+        if keycode in Key.values():
+            key = FindKey(keycode)
+            self.OnKey(key)
+
+    def _OnS60Key(self,event):
         if "keycode" not in event.keys():
-            print event
+            #print event
             return
 
         keycode = event['keycode']
