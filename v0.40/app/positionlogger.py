@@ -13,7 +13,11 @@ loglevels += [
 
 THRESHOLD_DISTANCE = 0
 THRESHOLD_TIME = 5
-UTMELLIPSOID = "International"
+UTMELLIPSOID = "WGS-84"
+
+hasfix = False
+count = 0
+table = []
 
 class LRGps:
     def __init__(self,callback=None):
@@ -43,6 +47,10 @@ class LRGps:
         return "%4.4i-%2.2i-%2.2iT%2.2i:%2.2i:%2.2iZ" % gt[:6]
 
     def CallBack(self,data):
+        global hasfix
+        global count
+        global table
+
         def EvalData(d):
             NaN = None
             nan = None
@@ -81,7 +89,15 @@ class LRGps:
 
         #print "<trkpt lat=\"%f\" lon=\"%f\">\n<ele>%f</ele>\n<time>%f</time>\n</trkpt>\n" % (lat,lon,alt,time)
         if lat != None and lon != None:
-            print "%s %7.4fN %7.4fE %4.1f" % (ts,lat,lon,alt)
+            if hasfix is True:
+                count = count + 1
+            else:
+                table.append(count)
+                count = 1
+
+            hasfix = True
+
+            #print "%s %7.4fN %7.4fE %4.1f" % (ts,lat,lon,alt)
             try:
                 if self.prev == None or self.time == None:
                     self.prev = (lat,lon)
@@ -100,6 +116,14 @@ class LRGps:
                         self.time = t
             except:
                 DumpExceptionInfo()
+        else:
+            if hasfix is False:
+                count = count + 1
+            else:
+                table.append(count)
+                count = 1
+
+            hasfix = False
 
         if self.callback != None:
             self.callback(pos,course,sats)
@@ -164,6 +188,10 @@ class Application:
         ui.app.body = self.canvas
         self.StartLogger()
 
+    def DrawBox(self,(x,y,w,h),space=0,bg=0xc0c0c0):
+        Log("lrgps*","Application::DrawBox()")
+        self.img.rectangle(((x,y),(x+w,y+h)),outline=bg,fill=bg)
+
     def DrawTextBox(self,(x,y,w,h),text,space=0,fg=0x000000,bg=0xc0c0c0):
         Log("lrgps*","Application::DrawTextBox()")
         space = space + 2
@@ -174,7 +202,7 @@ class Application:
         Log("lrgps*","Application::DrawWgs84()")
         self.DrawTextBox((10,10,100,35),"WGS84:",fg=0xc0c0c0,bg=0x202020)
         t,lat,lon,alt,hor,vert = self.pos
-        print "DrawWgs84:",lat,lon
+        #print "DrawWgs84:",lat,lon
         if lat != None and lon != None:
             self.DrawTextBox((120,10,220,35),"%8.5fN %8.5fE" % (lat,lon))
         else:
@@ -208,6 +236,45 @@ class Application:
         else:
             self.DrawTextBox((120,130,220,35),"not available")
 
+    def DrawAltitude(self):
+        Log("lrgps*","Application::DrawAltitude()")
+        self.DrawTextBox((10,170,100,35),"Alt:",fg=0xc0c0c0,bg=0x202020)
+        t,lat,lon,alt,hor,vert = self.pos
+        if alt != None:
+            self.DrawTextBox((120,170,220,35),"%6.1f" % alt)
+        else:
+            self.DrawTextBox((120,170,220,35),"not available")
+
+    def DrawTable(self):
+        def CalcTotal():
+            total=0
+            for i in table:
+                total = total + i
+            return total + count
+        def CalcFraction(i):
+            t = CalcTotal()
+            if t > 0:
+                w = 220.0/t * i
+                return w
+            else:
+                return 0
+
+        Log("lrgps*","Application::DrawTable()")
+        self.DrawTextBox((10,210,100,35),"Track:",fg=0xc0c0c0,bg=0x202020)
+        self.DrawBox((120-4,210-2,220+8,35+4),bg=0xc0c0c0)
+        p = 120
+        colors = (0xc08080,0x80c080)
+        j = 0
+        for i in table:
+            w = CalcFraction(i)
+            self.DrawBox((p,210+5,w,35-10),bg=colors[j % 2])
+            j = j + 1
+            p = p + w
+
+        w = CalcFraction(count)
+        self.DrawBox((p,210+5,w,35-10),bg=colors[j % 2])
+
+
     def Draw(self):
         Log("lrgps*","Application::Draw()")
         self.img.clear(0x202020)
@@ -215,6 +282,8 @@ class Application:
         self.DrawUTM()
         self.DrawAccuracy()
         self.DrawCourse()
+        self.DrawAltitude()
+        self.DrawTable()
 
     def OnGps(self,pos,course,sats):
         Log("lrgps*","Application::OnGps(",pos,")")
