@@ -201,8 +201,14 @@ class Application:
         ui.app.menu = [(u"Restart", self.OnRestart), (u"Mark Waypoint", self.OnWaypoint)]
 
     def OnRestart(self):
+        global table
+        global hasfix
+        global count
         try:
             self.gps.CloseFile()
+            hasfix = False
+            count = 0
+            table = []
             self.gps.OpenFile(self.GetFileName())
             ui.note(u"New track started", "conf")
         except:
