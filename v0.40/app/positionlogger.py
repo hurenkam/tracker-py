@@ -3,6 +3,7 @@ import appuifw as ui
 import graphics
 import sysinfo
 import e32
+import landmarks
 from datums import CalculateDistanceAndBearing, latlon_to_utm
 from helpers import *
 loglevels += [
@@ -135,20 +136,31 @@ class LRGps:
             self.requestor.Close()
             self.requestor = None
 
+    def OpenGpxFile(self,name):
+        Log("lrgps","LRGps::OpenGpxFile()")
+
+        gpxfile = file(name,"w")
+        gpxfile.write("<gpx\n")
+        gpxfile.write("  version=\"1.0\"\n")
+        gpxfile.write("  creator=\"Tracker.py 0.20 - http://tracker-py.googlecode.com\"\n")
+        gpxfile.write("  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n")
+        gpxfile.write("  xmlns=\"http://www.topografix.com/GPX/1/0\"\n")
+        gpxfile.write("  xsi:schemaLocation=\"http://www.topografix.com/GPX/1/0 http:/www.topografix.com/GPX/1/0/gpx.xsd\">\n")
+        return gpxfile
+
     def OpenFile(self,name):
         Log("lrgps","LRGps::OpenFile()")
         if self.trackfile != None:
             return
 
-        self.trackfile = file(name,"w")
-        self.trackfile.write("<gpx\n")
-        self.trackfile.write("  version=\"1.0\"\n")
-        self.trackfile.write("  creator=\"Tracker.py 0.20 - http://tracker-py.googlecode.com\"\n")
-        self.trackfile.write("  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n")
-        self.trackfile.write("  xmlns=\"http://www.topografix.com/GPX/1/0\"\n")
-        self.trackfile.write("  xsi:schemaLocation=\"http://www.topografix.com/GPX/1/0 http:/www.topografix.com/GPX/1/0/gpx.xsd\">\n")
+        self.trackfile = self.OpenGpxFile(name)
         self.trackfile.write("<trk><name>%s</name>\n" % name)
         self.trackfile.write("<trkseg>\n")
+
+    def CloseGpxFile(self,gpxfile):
+        Log("lrgps","LRGps::CloseGpxFile()")
+        gpxfile.write("</gpx>")
+        gpxfile.close()
 
     def CloseFile(self):
         Log("lrgps","LRGps::CloseFile()")
@@ -157,16 +169,14 @@ class LRGps:
 
         self.trackfile.write("</trkseg>\n")
         self.trackfile.write("</trk>\n")
-        self.trackfile.write("</gpx>")
-        self.trackfile.close()
+        self.CloseGpxFile(self.trackfile)
         self.trackfile = None
 
     def WritePoint(self,lat,lon,alt,time):
-        Log("lrgps!","LRGps::WritePoint()")
+        Log("lrgps*","LRGps::Writepoint()")
         if self.trackfile == None:
             return
         self.trackfile.write("<trkpt lat=\"%f\" lon=\"%f\">\n<ele>%f</ele>\n<time>%s</time>\n</trkpt>\n\n" % (lat,lon,alt,time) )
-
 
 
 class Application:
@@ -183,10 +193,60 @@ class Application:
         self.sats=(t,None,None)
         self.drawlock = e32.Ao_lock()
         self.drawlock.signal()
-        self.canvas = ui.Canvas(redraw_callback=self.OnRedraw,resize_callback=self.OnResize)
+        self.canvas = ui.Canvas(redraw_callback=self.OnRedraw,resize_callback=self.OnResize,event_callback=self.OnEvent)
         ui.app.directional_pad = False
         ui.app.body = self.canvas
+        self.lmdb = landmarks.OpenDefaultDatabase()
         self.StartLogger()
+        ui.app.menu = [(u"Restart", self.OnRestart), (u"Mark Waypoint", self.OnWaypoint)]
+
+    def OnRestart(self):
+        try:
+            self.gps.CloseFile()
+            self.gps.OpenFile(self.GetFileName())
+            ui.note(u"New track started", "conf")
+        except:
+            ui.note(u"Failed to restart track", "error")
+            DumpExceptionInfo()
+
+    def GetDefaultCategoryId(self):
+        tsc = landmarks.CreateCatNameCriteria(u'Waypoints')
+        search = self.lmdb.CreateSearch()
+        operation = search.StartCategorySearch(tsc, landmarks.ECategorySortOrderNameAscending, 0)
+        operation.Execute()
+        if search.NumOfMatches() > 0:
+            return search.MatchIterator().Next()
+        else:
+            return None
+
+    def OnWaypoint(self):
+        t,lat,lon,alt,hor,vert = self.pos
+        if lat == None:
+            ui.note(u"Unable to mark waypoint", "error")
+            return
+
+        try:
+            name = self.GetWaypointName()
+
+            landmark = landmarks.CreateLandmark()
+            landmark.SetLandmarkName(u'%s' % name)
+            landmark.SetPosition(lat,lon,alt,0,0)
+            catid = self.GetDefaultCategoryId()
+            if catid is not None:
+                landmark.AddCategory(catid)
+            lmid = self.lmdb.AddLandmark(landmark)
+            landmark.Close()
+
+            ui.note(u"Waypoint marked: %s" % name, "conf")
+        except:
+            ui.note(u"Unable to mark waypoint", "error")
+            DumpExceptionInfo()
+
+    def OnEvent(self,event):
+        try:
+            pass
+        except:
+            DumpExceptionInfo()
 
     def DrawBox(self,(x,y,w,h),space=0,bg=0xc0c0c0):
         Log("lrgps*","Application::DrawBox()")
@@ -337,11 +397,17 @@ class Application:
         self.StopLogger()
         self.SetSystemApp(False)
         del self.img
+        self.lmdb.Close()
 
     def GetFileName(self):
         Log("lrgps","Application::GetFileName()")
         gt = time.gmtime(time.time())
         return "e:\\data\\tracks\\track-%4.4i%2.2i%2.2iT%2.2i%2.2i%2.2iZ.gpx" % gt[:6]
+
+    def GetWaypointName(self):
+        Log("lrgps","Application::GetWaypointName()")
+        gt = time.gmtime(time.time())
+        return "wpt-%4.4i%2.2i%2.2iT%2.2i%2.2i%2.2iZ" % gt[:6]
 
     def SetSystemApp(self,system):
         Log("lrgps","Application::SetSystemApp()")
