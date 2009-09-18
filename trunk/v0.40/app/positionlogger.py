@@ -1,11 +1,18 @@
+import sys
+sys.path.append("e:\\python\\lib")
+
 import time
 import appuifw as ui
 import graphics
 import sysinfo
 import e32
 import landmarks
+import struct
+import pickle
+
 from datums import CalculateDistanceAndBearing, latlon_to_utm
 from helpers import *
+from properties import *
 loglevels += [
       "lrgps!",
       "lrgps",
@@ -19,6 +26,7 @@ UTMELLIPSOID = "WGS-84"
 hasfix = False
 count = 0
 table = []
+track = []
 
 class LRGps:
     def __init__(self,callback=None):
@@ -51,6 +59,7 @@ class LRGps:
         global hasfix
         global count
         global table
+        global track
 
         def EvalData(d):
             NaN = None
@@ -110,11 +119,13 @@ class LRGps:
                         self.WritePoint(lat,lon,alt,ts)
                         self.prev = (lat,lon)
                         self.time = t
-
-                    if THRESHOLD_TIME > 0 and (t - self.time) > THRESHOLD_TIME:
-                        self.WritePoint(lat,lon,alt,ts)
-                        self.prev = (lat,lon)
-                        self.time = t
+                        track.append(pos)
+                    else:
+                        if THRESHOLD_TIME > 0 and (t - self.time) > THRESHOLD_TIME:
+                            self.WritePoint(lat,lon,alt,ts)
+                            self.prev = (lat,lon)
+                            self.time = t
+                            track.append(pos)
             except:
                 DumpExceptionInfo()
         else:
@@ -129,6 +140,39 @@ class LRGps:
         if self.callback != None:
             self.callback(pos,course,sats)
 
+        self.PublishPosition(pos)
+        self.PublishCourse(course)
+        self.PublishSatinfo(sats)
+        self.PublishTrack(track)
+
+    def PublishPosition(self,pos):
+        global Position
+        s = struct.pack("fffhff",*pos)
+        try:
+            Position.Set(s)
+        except:
+            DumpExceptionInfo()
+
+    def PublishCourse(self,course):
+        global Course
+        s = struct.pack("fffff",*course)
+        try:
+            Course.Set(s)
+        except:
+            DumpExceptionInfo()
+
+    def PublishSatinfo(self,sats):
+        pass
+
+    def PublishTrack(self,track):
+        return
+
+        global Track
+        s = pickle.dumps(track)
+        try:
+            Track.Set(s)
+        except:
+            DumpExceptionInfo()
 
     def StopGps(self):
         Log("lrgps","LRGps::StopGps()")
@@ -149,6 +193,7 @@ class LRGps:
         return gpxfile
 
     def OpenFile(self,name):
+        global track
         Log("lrgps","LRGps::OpenFile()")
         if self.trackfile != None:
             return
@@ -156,6 +201,7 @@ class LRGps:
         self.trackfile = self.OpenGpxFile(name)
         self.trackfile.write("<trk><name>%s</name>\n" % name)
         self.trackfile.write("<trkseg>\n")
+        track = []
 
     def CloseGpxFile(self,gpxfile):
         Log("lrgps","LRGps::CloseGpxFile()")
@@ -432,5 +478,30 @@ class Application:
         self.exitlock.wait()
         self.Done()
 
+
+EKeyPosition = 0x101
+EKeyCourse   = 0x102
+EKeyTrack    = 0x103
+
+sid = GetSid()
+Position = Property()
+Property.Define(sid,EKeyPosition,Property.EText)
+Position.Attach(sid,EKeyPosition,Property.EText)
+
+Course = Property()
+Property.Define(sid,EKeyCourse,Property.EText)
+Course.Attach(sid,EKeyCourse,Property.EText)
+
+Track = Property()
+Property.Define(sid,EKeyTrack,Property.ELargeText)
+Track.Attach(sid,EKeyTrack,Property.ELargeText)
+
 app = Application()
 app.Run()
+
+Property.Delete(sid,EKeyPosition)
+Property.Delete(sid,EKeyCourse)
+
+print sid
+
+
