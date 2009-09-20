@@ -34,8 +34,8 @@
      inkscape:zoom="7.465414"
      inkscape:cx="22.115305"
      inkscape:cy="28.036985"
-     inkscape:window-x="20"
-     inkscape:window-y="20"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
      inkscape:current-layer="svg2722" />
   <metadata
      id="metadata2737">
@@ -466,7 +466,7 @@
   </defs>
   <g
      id="layer1"
-     transform="translate(-0.4514726,3.0697766)">
+     transform="matrix(1.0163731,0,0,1.2887962,9.9370094e-2,-2.1961023)">
     <g
        transform="matrix(2.417561e-2,0,0,2.086758e-2,45.12765,40.1536)"
        id="g6707">
@@ -673,7 +673,8 @@
        style="fill:#000000;fill-opacity:0.36363639" />
   </g>
   <g
-     id="g5776">
+     id="g5776"
+     transform="translate(0,2.0092657)">
     <g
        id="g2724"
        transform="matrix(0.5772089,-1.2064647e-3,4.3652492e-3,0.5761745,25.424932,23.496321)">
