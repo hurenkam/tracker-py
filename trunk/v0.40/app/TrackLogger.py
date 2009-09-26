@@ -19,8 +19,8 @@ loglevels += [
       #"lrgps*"
     ]
 
-THRESHOLD_DISTANCE = 0
-THRESHOLD_TIME = 5
+THRESHOLD_DISTANCE = 100
+THRESHOLD_TIME = 0
 UTMELLIPSOID = "WGS-84"
 
 hasfix = False
@@ -117,12 +117,14 @@ class LRGps:
 
                     if THRESHOLD_DISTANCE > 0 and d > THRESHOLD_DISTANCE:
                         self.WritePoint(lat,lon,alt,ts)
+                        self.PublishTrackPoint(pos)
                         self.prev = (lat,lon)
                         self.time = t
                         track.append(pos)
                     else:
                         if THRESHOLD_TIME > 0 and (t - self.time) > THRESHOLD_TIME:
                             self.WritePoint(lat,lon,alt,ts)
+                            self.PublishTrackPoint(pos)
                             self.prev = (lat,lon)
                             self.time = t
                             track.append(pos)
@@ -150,6 +152,14 @@ class LRGps:
         s = struct.pack("fffhff",*pos)
         try:
             Position.Set(s)
+        except:
+            DumpExceptionInfo()
+
+    def PublishTrackPoint(self,pos):
+        global TrackPoint
+        s = struct.pack("fffhff",*pos)
+        try:
+            TrackPoint.Set(s)
         except:
             DumpExceptionInfo()
 
@@ -479,9 +489,10 @@ class Application:
         self.Done()
 
 
-EKeyPosition = 0x101
-EKeyCourse   = 0x102
-EKeyTrack    = 0x103
+EKeyPosition   = 0x101
+EKeyCourse     = 0x102
+EKeyTrackPoint = 0x103
+EKeyTrack      = 0x104
 
 sid = GetSid()
 Position = Property()
@@ -491,6 +502,10 @@ Position.Attach(sid,EKeyPosition,Property.EText)
 Course = Property()
 Property.Define(sid,EKeyCourse,Property.EText)
 Course.Attach(sid,EKeyCourse,Property.EText)
+
+TrackPoint = Property()
+Property.Define(sid,EKeyTrackPoint,Property.EText)
+TrackPoint.Attach(sid,EKeyTrackPoint,Property.EText)
 
 Track = Property()
 Property.Define(sid,EKeyTrack,Property.ELargeText)
