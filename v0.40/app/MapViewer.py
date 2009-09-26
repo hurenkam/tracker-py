@@ -410,8 +410,8 @@ class Application:
                     items.append(u"%s" % key)
                 index = ui.selection_list(items)
                 if index != None:
-                    ui.note(u"Loading map %s" % maps.keys()[0], "info")
-                    self.LoadMap(maps.keys()[0])
+                    ui.note(u"Loading map %s" % keys[index], "info")
+                    self.LoadMap(keys[index])
             else:
                 ui.note(u"No maps available", "info")
         except:
