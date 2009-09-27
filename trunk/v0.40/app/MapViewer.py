@@ -13,6 +13,8 @@ import pickle
 import os
 import math
 import datums
+from key_codes import *
+from appuifw import EEventKeyDown, EEventKeyUp, EEventKey
 
 from graphics import *
 from helpers import *
@@ -327,7 +329,7 @@ class Application:
         self.size=(2582,1944)
         self.name=None
         self.filename=None
-        self.iscalibrated = False
+        self.scrollmode = False
         t = time.time()
         self.pos=(t,None,None,None,None,None)
         self.course=(t,None,None,None,None)
@@ -340,7 +342,8 @@ class Application:
         ui.app.menu = [
             (u"Mark Waypoint", self.OnMarkWaypoint),
             (u"Select Map", self.OnSelectMap),
-            (u"Find Map", self.OnFindMap)
+            (u"Find Map", self.OnFindMap),
+            (u"My Position", self.OnMyPosition)
             ]
 
     def StartLogger(self):
@@ -363,7 +366,8 @@ class Application:
                 self.pos = pos
             if self.map == None or self.mapimage == None:
                 return
-            self.map.SetCursor(lat,lon)
+            if self.scrollmode == False:
+                self.map.SetCursor(lat,lon)
             self.Draw()
             self.OnRedraw()
         except:
@@ -429,12 +433,44 @@ class Application:
             ui.note(u"Loading map %s" % keys[index], "info")
             self.LoadMap(keys[index])
 
+    def OnMyPosition(self):
+        self.scrollmode = False
+        self.Draw()
+        self.OnRedraw()
+
     def OnEvent(self,event):
         Log("viewer*","Application::OnEvent()")
         try:
-            pass
+            if event["type"] == EButton1Down:
+                self.OnButton1Down(event["pos"])
+            if event["type"] == EDrag:
+                self.OnDrag(event["pos"])
+            if event["type"] == EButton1Up:
+                self.OnButton1Up(event["pos"])
+            if event["type"] == EEventKeyDown:
+                return
+            if event["type"] == EEventKeyUp:
+                return
+            if event["type"] == EEventKey:
+                return
         except:
             DumpExceptionInfo()
+
+    def OnButton1Down(self,pos):
+        self.downpos = pos
+
+    def OnDrag(self,pos):
+        self.scrollmode = True
+        dx = self.downpos[0] - pos[0]
+        dy = self.downpos[1] - pos[1]
+        x,y = self.map.cursor
+        self.downpos = pos
+        self.map.cursor = (x+dx,y+dy)
+        self.Draw()
+        self.OnRedraw()
+
+    def OnButton1Up(self,pos):
+        self.downpos = None
 
     def OnResize(self,rect=None):
         Log("viewer","Application::OnResize(",None,")")
@@ -501,6 +537,7 @@ class Application:
             self.mapimage = Image.open(u"%s" % self.map.filename)
             self.Draw()
             self.OnRedraw()
+            self.scrollmode = False
 
     def FindMapsForPosition(self,pos):
         t,lat,lon,alt,hor,vert = pos
@@ -540,8 +577,10 @@ class Application:
             t[1] = t[1] - s[1]
             s[1] = 0
         if s[2] > w:
+            t[2] = t[2] - s[2] + w
             s[2] = w
         if s[3] > h:
+            t[3] = t[3] - s[3] + h
             s[3] = h
         #print t,s
 
@@ -577,7 +616,10 @@ class Application:
         if self.mapimage != None:
             self.DrawMap()
         w,h = self.img.size
-        self.DrawCursor((w/2,h/2))
+        if self.scrollmode == True:
+            self.DrawCursor((w/2,h/2),0x404040)
+        else:
+            self.DrawCursor((w/2,h/2))
 
     def Run(self):
         Log("viewer","Application::Run()")
